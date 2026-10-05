@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/security/auth_service.dart';
+import '../core/widgets/hairline_vault.dart';
 import 'main_navigation_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -29,10 +30,17 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success) {
+      // Allow 3D vault door swing open animation to play out
+      await Future.delayed(const Duration(milliseconds: 2100));
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 350),
+            pageBuilder: (context, anim1, anim2) => const MainNavigationScreen(),
+            transitionsBuilder: (context, anim, anim2, child) =>
+                FadeTransition(opacity: anim, child: child),
+          ),
         );
       }
     } else {
@@ -46,10 +54,17 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleBiometricLogin() async {
     final authenticated = await AuthService.instance.authenticateWithBiometrics();
     if (authenticated) {
+      setState(() => _isLoading = true);
+      await Future.delayed(const Duration(milliseconds: 2100));
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 350),
+            pageBuilder: (context, anim1, anim2) => const MainNavigationScreen(),
+            transitionsBuilder: (context, anim, anim2, child) =>
+                FadeTransition(opacity: anim, child: child),
+          ),
         );
       }
     } else {
@@ -71,40 +86,41 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Logo & Brand Icon
+                // Hairline Interactive Vault Figure with 3D Door Occlusion Over Title
                 Center(
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: VaultColors.badgeBg,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: VaultColors.accent.withValues(alpha: 0.5)),
-                    ),
-                    child: const Icon(
-                      Icons.brightness_low_rounded,
-                      color: VaultColors.accent,
-                      size: 28,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Center(
-                  child: Text(
-                    'VAULTED',
-                    style: VaultTypography.sans(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 2,
-                      color: VaultColors.ink,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Center(
-                  child: Text(
-                    'Account for everything you own.',
-                    style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink2),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.topCenter,
+                    children: [
+                      // Title & Subtitle positioned right below the vault body
+                      Padding(
+                        padding: const EdgeInsets.only(top: 198),
+                        child: Column(
+                          children: [
+                            Text(
+                              'VAULTED',
+                              style: VaultTypography.sans(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 2,
+                                color: VaultColors.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Account for everything you own.',
+                              style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink2),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Vault Figure rendered on top so 3D swinging door sweeps across 'VAULTED' text!
+                      HairlineVault(
+                        size: 180,
+                        isUnlocking: _isLoading,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 36),

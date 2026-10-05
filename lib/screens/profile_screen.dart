@@ -18,6 +18,61 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 1. BRAND HEADER (Matching HomeVaultScreen)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.brightness_low_rounded,
+                        color: VaultColors.accent,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'VAULT',
+                        style: VaultTypography.sans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                          color: VaultColors.ink,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '·  PROFILE',
+                        style: VaultTypography.mono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.2,
+                          color: VaultColors.ink2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: VaultColors.card,
+                      border: Border.all(color: VaultColors.hairline, width: 1),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'A',
+                      style: VaultTypography.sans(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: VaultColors.ink,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
               Text(
                 'ACCOUNT & SYSTEM',
                 style: VaultTypography.mono(

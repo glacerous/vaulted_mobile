@@ -58,13 +58,13 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                     icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: VaultColors.ink),
                     onPressed: () => Navigator.pop(context, true),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Center(
                       child: Padding(
-                        padding: EdgeInsets.only(right: 36),
+                        padding: const EdgeInsets.only(right: 36),
                         child: Text(
                           'Add subscription',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                          style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w600, color: VaultColors.ink),
                         ),
                       ),
                     ),
@@ -91,10 +91,10 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                       child: TextField(
                         controller: _searchController,
                         style: VaultTypography.sans(fontSize: 13.5, color: VaultColors.ink),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           border: InputBorder.none,
                           hintText: 'Search a subscription...',
-                          hintStyle: TextStyle(fontSize: 13.5, color: VaultColors.ink3),
+                          hintStyle: VaultTypography.sans(fontSize: 13.5, color: VaultColors.ink3),
                         ),
                         onChanged: (val) => setState(() => _searchQuery = val),
                       ),

@@ -119,6 +119,20 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     }
   }
 
+  String _getZoneCity(String zone) {
+    switch (zone) {
+      case 'WITA':
+        return 'Makassar';
+      case 'WIT':
+        return 'Jayapura';
+      case 'London':
+        return 'London';
+      case 'WIB':
+      default:
+        return 'Jakarta';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final query = _searchController.text.trim().toLowerCase();
@@ -138,6 +152,8 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
           cat.toLowerCase().contains(_selectedCategory.toLowerCase());
     }).toList();
 
+    final heroDrop = _globalDrops.first;
+
     return Scaffold(
       backgroundColor: VaultColors.background,
       body: SafeArea(
@@ -146,81 +162,83 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
           children: [
             SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 80),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
-
-                  // 1. REFINED EDITORIAL HEADER
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'MARKET DROPS',
-                              style: VaultTypography.mono(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.2,
-                                color: VaultColors.accent,
-                              ),
+                  // 1. EDITORIAL HEADER
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'MARKET RADAR',
+                            style: VaultTypography.mono(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.3,
+                              color: VaultColors.accent,
                             ),
-                            Text(
-                              '$_selectedZone (${_getZoneOffset(_selectedZone)})',
-                              style: VaultTypography.mono(
-                                fontSize: 10.5,
-                                color: VaultColors.ink3,
-                              ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Drop Radar',
+                            style: VaultTypography.sans(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.5,
+                              color: VaultColors.ink,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Market Radar',
-                          style: VaultTypography.sans(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.6,
-                            color: VaultColors.ink,
                           ),
+                        ],
+                      ),
+                      Text(
+                        '$_selectedZone · ${_getZoneOffset(_selectedZone)}',
+                        style: VaultTypography.mono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: VaultColors.ink2,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Track upcoming releases synchronized to your local time.',
-                          style: VaultTypography.sans(
-                            fontSize: 13.5,
-                            color: VaultColors.ink2,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-
-                  const SizedBox(height: 22),
-                  const Divider(color: VaultColors.hairline, height: 1),
-
-                  // 2. UPCOMING DROPS SECTION
-                  _buildUpcomingDropsSection(),
-
                   const SizedBox(height: 14),
 
-                  // 3. THE APPRAISER (MINIGAME)
-                  _buildAppraiserBanner(),
+                  // 2. BENTO CELL: HERO FEATURED DROP (Full Width)
+                  _buildHeroBentoCard(heroDrop),
+                  const SizedBox(height: 12),
 
-                  const SizedBox(height: 18),
+                  // 3. BENTO ROW: TIMEZONE RADAR TILE & THE APPRAISER TILE (2-Column Split)
+                  Row(
+                    children: [
+                      Expanded(child: _buildTimezoneBentoTile()),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildAppraiserBentoTile()),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
 
-                  // 4. CATALOG & INVENTORY SEARCH
-                  _buildCatalogSection(filteredItems),
+                  // 4. BENTO ROW: UPCOMING DROPS (2-Column Pair)
+                  Row(
+                    children: [
+                      Expanded(child: _buildUpcomingDropBentoTile(_globalDrops[1])),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildUpcomingDropBentoTile(_globalDrops[2])),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // 5. BENTO CELL: CATALOG & ORDER BOOK LEDGER (Full Width)
+                  _buildCatalogBentoCard(filteredItems),
                 ],
               ),
             ),
 
-            // 5. ERGONOMIC BOTTOM TIMEZONE DOCK
+            // 6. ERGONOMIC BOTTOM TIMEZONE DOCK
             Positioned(
               left: 0,
               right: 0,
@@ -233,154 +251,131 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  // --- SECTION: UPCOMING DROPS ---
+  // --- BENTO CELLS ---
 
-  Widget _buildUpcomingDropsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'UPCOMING DROPS',
-                style: VaultTypography.mono(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
-                  color: VaultColors.ink2,
-                ),
-              ),
-              Text(
-                '${_globalDrops.length} drops scheduled',
-                style: VaultTypography.sans(
-                  fontSize: 12,
-                  color: VaultColors.ink3,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Hero Drop (Featured)
-        _buildHeroDropItem(_globalDrops[0]),
-
-        const SizedBox(height: 16),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Divider(color: VaultColors.hairline, height: 1),
-        ),
-        const SizedBox(height: 12),
-
-        // Subsequent Drops
-        _buildSubsequentDropItem(_globalDrops[1]),
-        _buildSubsequentDropItem(_globalDrops[2]),
-      ],
-    );
-  }
-
-  Widget _buildHeroDropItem(Map<String, dynamic> drop) {
+  // Bento 1: Featured Hero Drop Card
+  Widget _buildHeroBentoCard(Map<String, dynamic> drop) {
     final dropTime = _getZoneTime(drop, _selectedZone);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+    return Container(
+      decoration: BoxDecoration(
+        color: VaultColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: VaultColors.hairline),
+      ),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Time & Countdown Row
+          // Top Row: Category chip & Live countdown badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: VaultColors.pos,
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: VaultColors.badgeBg,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  (drop['category'] as String).toUpperCase(),
+                  style: VaultTypography.mono(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.6,
+                    color: VaultColors.accent,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    dropTime,
-                    style: VaultTypography.mono(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: VaultColors.accent,
-                    ),
-                  ),
-                ],
+                ),
               ),
-              Text(
-                'Live in ${drop['countdown']}',
-                style: VaultTypography.mono(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: VaultColors.pos,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: VaultColors.posBg,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  'Live in ${drop['countdown']}',
+                  style: VaultTypography.mono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: VaultColors.pos,
+                  ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
 
-          const SizedBox(height: 8),
-          Text(
-            drop['title'] as String,
-            style: VaultTypography.sans(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: VaultColors.ink,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            drop['subtitle'] as String,
-            style: VaultTypography.sans(
-              fontSize: 13,
-              color: VaultColors.ink2,
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          // Artwork + Price + Set Alert Row
+          // Artwork + Title + Description Row
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildArtwork(
                 drop['image'] as String,
-                size: 50,
+                size: 52,
                 fallbackIcon: drop['icon'] as IconData? ??
                     Icons.sports_esports_rounded,
               ),
               const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      drop['title'] as String,
+                      style: VaultTypography.sans(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w600,
+                        color: VaultColors.ink,
+                        letterSpacing: -0.2,
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      drop['subtitle'] as String,
+                      style: VaultTypography.sans(
+                        fontSize: 12,
+                        color: VaultColors.ink2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Divider(color: VaultColors.hairline, height: 1),
+          const SizedBox(height: 12),
+
+          // Bottom Action & Valuation Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'EST. FLOOR PRICE',
+                    'DROP: $dropTime',
                     style: VaultTypography.mono(
-                      fontSize: 9.5,
-                      letterSpacing: 0.8,
-                      color: VaultColors.ink3,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.accent,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     drop['floor_price'] as String,
                     style: VaultTypography.mono(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: VaultColors.ink,
                     ),
                   ),
                 ],
               ),
-              const Spacer(),
-
-              // Set Alert Action Button
               InkWell(
                 onTap: () async {
                   await NotificationService.instance.showWarrantyAlert(
@@ -393,8 +388,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                         backgroundColor: VaultColors.card,
                         content: Text(
                           '🔔 Alert set for ${drop['title']}!',
-                          style:
-                              VaultTypography.sans(color: VaultColors.pos),
+                          style: VaultTypography.sans(color: VaultColors.pos),
                         ),
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -404,25 +398,23 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    border:
-                        Border.all(color: VaultColors.hairline, width: 1.1),
+                    color: VaultColors.ink,
                     borderRadius: BorderRadius.circular(8),
-                    color: VaultColors.cardHover,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.notifications_outlined,
-                          size: 14, color: VaultColors.accent),
-                      const SizedBox(width: 6),
+                          size: 13, color: VaultColors.background),
+                      const SizedBox(width: 5),
                       Text(
                         'Set Alert',
                         style: VaultTypography.sans(
-                          fontSize: 12,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w600,
-                          color: VaultColors.ink,
+                          color: VaultColors.background,
                         ),
                       ),
                     ],
@@ -436,73 +428,62 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  Widget _buildSubsequentDropItem(Map<String, dynamic> drop) {
-    final dropTime = _getZoneTime(drop, _selectedZone);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+  // Bento 2: Local Timebase Bento Tile
+  Widget _buildTimezoneBentoTile() {
+    return Container(
+      height: 138,
+      decoration: BoxDecoration(
+        color: VaultColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: VaultColors.hairline),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildArtwork(
-            drop['image'] as String,
-            size: 42,
-            fallbackIcon:
-                drop['icon'] as IconData? ?? Icons.inventory_2_outlined,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'TIMEBASE',
+                style: VaultTypography.mono(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                  color: VaultColors.ink3,
+                ),
+              ),
+              const Icon(Icons.public_rounded,
+                  size: 14, color: VaultColors.accent),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      dropTime,
-                      style: VaultTypography.mono(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: VaultColors.ink2,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '· in ${drop['countdown']}',
-                      style: VaultTypography.mono(
-                        fontSize: 11,
-                        color: VaultColors.accent,
-                      ),
-                    ),
-                  ],
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _selectedZone,
+                style: VaultTypography.sans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: VaultColors.ink,
+                  letterSpacing: -0.4,
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  drop['title'] as String,
-                  style: VaultTypography.sans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: VaultColors.ink,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                '${_getZoneCity(_selectedZone)} · ${_getZoneOffset(_selectedZone)}',
+                style: VaultTypography.mono(
+                  fontSize: 10.5,
+                  color: VaultColors.accent,
                 ),
-                Text(
-                  drop['category'] as String,
-                  style: VaultTypography.sans(
-                    fontSize: 11.5,
-                    color: VaultColors.ink3,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
           Text(
-            drop['floor_price'] as String,
-            style: VaultTypography.mono(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w600,
-              color: VaultColors.ink,
+            '1-tap switch on dock',
+            style: VaultTypography.sans(
+              fontSize: 10.5,
+              color: VaultColors.ink3,
             ),
           ),
         ],
@@ -510,9 +491,8 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  // --- SECTION: THE APPRAISER (MINIGAME) ---
-
-  Widget _buildAppraiserBanner() {
+  // Bento 3: The Appraiser Bento Tile
+  Widget _buildAppraiserBentoTile() {
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -520,91 +500,71 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
           MaterialPageRoute(builder: (_) => const GameScreen()),
         );
       },
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        decoration: const BoxDecoration(
-          border: Border.symmetric(
-            horizontal: BorderSide(color: VaultColors.hairline, width: 0.9),
-          ),
+        height: 138,
+        decoration: BoxDecoration(
+          color: VaultColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: VaultColors.hairline),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        child: Row(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: VaultColors.badgeBg,
-                border: Border.all(color: VaultColors.hairline),
-              ),
-              child: const Icon(
-                Icons.sports_esports_outlined,
-                size: 18,
-                color: VaultColors.accent,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'The Appraiser',
-                        style: VaultTypography.sans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: VaultColors.ink,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: VaultColors.cardHover,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'MINIGAME',
-                          style: VaultTypography.mono(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.w600,
-                            color: VaultColors.accent,
-                          ),
-                        ),
-                      ),
-                    ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'MINIGAME',
+                  style: VaultTypography.mono(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                    color: VaultColors.accent,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Higher or lower? Test your market pricing knowledge',
-                    style: VaultTypography.sans(
-                      fontSize: 12.5,
-                      color: VaultColors.ink2,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const Icon(Icons.sports_esports_outlined,
+                    size: 15, color: VaultColors.ink3),
+              ],
             ),
-            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'The Appraiser',
+                  style: VaultTypography.sans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: VaultColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Test valuation intuition',
+                  style: VaultTypography.sans(
+                    fontSize: 11,
+                    color: VaultColors.ink2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
             Row(
               children: [
                 Text(
-                  'Play',
+                  'Play Game',
                   style: VaultTypography.sans(
-                    fontSize: 12.5,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w600,
                     color: VaultColors.accent,
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 11,
-                  color: VaultColors.accent,
-                ),
+                const Icon(Icons.arrow_forward_rounded,
+                    size: 11, color: VaultColors.accent),
               ],
             ),
           ],
@@ -613,24 +573,116 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  // --- SECTION: CATALOG & INVENTORY SEARCH ---
+  // Bento 4 & 5: Upcoming Drops Paired Bento Tiles
+  Widget _buildUpcomingDropBentoTile(Map<String, dynamic> drop) {
+    final dropTime = _getZoneTime(drop, _selectedZone);
 
-  Widget _buildCatalogSection(List<Map<String, dynamic>> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Section Header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
-          child: Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: VaultColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: VaultColors.hairline),
+      ),
+      padding: const EdgeInsets.all(13),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildArtwork(
+                drop['image'] as String,
+                size: 36,
+                fallbackIcon:
+                    drop['icon'] as IconData? ?? Icons.inventory_2_outlined,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: VaultColors.cardHover,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  drop['countdown'] as String,
+                  style: VaultTypography.mono(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    color: VaultColors.accent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            drop['title'] as String,
+            style: VaultTypography.sans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: VaultColors.ink,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            drop['category'] as String,
+            style: VaultTypography.sans(
+              fontSize: 10.5,
+              color: VaultColors.ink3,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          const Divider(color: VaultColors.hairline, height: 1),
+          const SizedBox(height: 8),
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'CATALOG',
+                dropTime.contains(' ') ? dropTime.split(' ').first : dropTime,
                 style: VaultTypography.mono(
-                  fontSize: 11,
+                  fontSize: 10.5,
+                  color: VaultColors.ink2,
+                ),
+              ),
+              Text(
+                drop['floor_price'] as String,
+                style: VaultTypography.mono(
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
+                  color: VaultColors.ink,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Bento 6: Asset Catalog & Financial Ledger Bento Card
+  Widget _buildCatalogBentoCard(List<Map<String, dynamic>> items) {
+    return Container(
+      decoration: BoxDecoration(
+        color: VaultColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: VaultColors.hairline),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'CATALOG INVENTORY',
+                style: VaultTypography.mono(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.1,
                   color: VaultColors.ink2,
                 ),
               ),
@@ -643,36 +695,34 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 12),
 
-        // Ergonomic Search Box
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+          // Search Box
+          Container(
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: VaultColors.card,
-              borderRadius: BorderRadius.circular(10),
+              color: VaultColors.background,
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(color: VaultColors.hairline),
             ),
             child: Row(
               children: [
                 const Icon(Icons.search_rounded,
-                    size: 18, color: VaultColors.ink3),
-                const SizedBox(width: 10),
+                    size: 16, color: VaultColors.ink3),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _searchController,
                     style: VaultTypography.sans(
-                        fontSize: 13.5, color: VaultColors.ink),
+                        fontSize: 13, color: VaultColors.ink),
                     decoration: const InputDecoration(
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
                       border: InputBorder.none,
                       hintText: 'Search items, serials...',
                       hintStyle:
-                          TextStyle(fontSize: 13, color: VaultColors.ink3),
+                          TextStyle(fontSize: 12.5, color: VaultColors.ink3),
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
@@ -683,67 +733,63 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                       _searchController.clear();
                       setState(() {});
                     },
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(Icons.close_rounded,
-                          size: 16, color: VaultColors.ink2),
-                    ),
+                    child: const Icon(Icons.close_rounded,
+                        size: 15, color: VaultColors.ink2),
                   ),
               ],
             ),
           ),
-        ),
+          const SizedBox(height: 10),
 
-        const SizedBox(height: 12),
-
-        // Flat Category Filter Tabs
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: ['All', 'Collectibles', 'Tech'].map((cat) {
-              final isSel = _selectedCategory == cat;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedCategory = cat),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 20),
-                  padding: const EdgeInsets.only(bottom: 6),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: isSel ? VaultColors.accent : Colors.transparent,
-                        width: 2,
+          // Category Pills
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: ['All', 'Collectibles', 'Tech'].map((cat) {
+                final isSel = _selectedCategory == cat;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedCategory = cat),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: isSel ? VaultColors.ink : VaultColors.cardHover,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: isSel ? VaultColors.ink : VaultColors.hairline,
+                      ),
+                    ),
+                    child: Text(
+                      cat,
+                      style: VaultTypography.sans(
+                        fontSize: 11.5,
+                        fontWeight: isSel ? FontWeight.w600 : FontWeight.w400,
+                        color:
+                            isSel ? VaultColors.background : VaultColors.ink2,
                       ),
                     ),
                   ),
-                  child: Text(
-                    cat,
-                    style: VaultTypography.sans(
-                      fontSize: 12.5,
-                      fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                      color: isSel ? VaultColors.ink : VaultColors.ink3,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
-        ),
+          const SizedBox(height: 12),
+          const Divider(color: VaultColors.hairline, height: 1),
 
-        const Divider(color: VaultColors.hairline, height: 1),
-
-        // Ledger Rows
-        _buildOrderBookRows(items),
-      ],
+          // Order Book List Items
+          _buildLedgerItems(items),
+        ],
+      ),
     );
   }
 
-  Widget _buildOrderBookRows(List<Map<String, dynamic>> items) {
+  Widget _buildLedgerItems(List<Map<String, dynamic>> items) {
     if (_isLoading) {
       return const Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
+          padding: EdgeInsets.all(24),
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       );
@@ -751,11 +797,11 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
 
     if (items.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(36),
+        padding: const EdgeInsets.all(28),
         alignment: Alignment.center,
         child: Text(
-          'No items matching query.',
-          style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
+          'No matching items found.',
+          style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink3),
         ),
       );
     }
@@ -769,16 +815,16 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
               bottom: BorderSide(color: VaultColors.hairline, width: 0.8),
             ),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+          padding: const EdgeInsets.symmetric(vertical: 11),
           child: Row(
             children: [
               _buildArtwork(
                 item['image_url'] ??
                     'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=100',
-                size: 44,
+                size: 38,
                 fallbackIcon: Icons.inventory_2_outlined,
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -786,20 +832,20 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                     Text(
                       item['name'] as String,
                       style: VaultTypography.sans(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: VaultColors.ink,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1.5),
                     Row(
                       children: [
                         Text(
                           item['category'] as String,
                           style: VaultTypography.sans(
-                            fontSize: 11.5,
+                            fontSize: 11,
                             color: VaultColors.ink2,
                           ),
                         ),
@@ -808,7 +854,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                           Text(
                             ' · ',
                             style: VaultTypography.mono(
-                              fontSize: 10,
+                              fontSize: 9.5,
                               color: VaultColors.ink3,
                             ),
                           ),
@@ -816,7 +862,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                             child: Text(
                               item['serial_number'].toString(),
                               style: VaultTypography.mono(
-                                fontSize: 10.5,
+                                fontSize: 9.5,
                                 color: VaultColors.ink3,
                               ),
                               maxLines: 1,
@@ -829,11 +875,11 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Text(
                 currencyFormatter.format(val),
                 style: VaultTypography.mono(
-                  fontSize: 14.5,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                   color: VaultColors.ink,
                 ),
@@ -845,11 +891,11 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  // --- SECTION: ERGONOMIC FLUSH BOTTOM TIMEZONE DOCK ---
+  // --- ERGONOMIC BOTTOM TIMEZONE DOCK ---
 
   Widget _buildBottomZoneDock() {
     return Container(
-      height: 52,
+      height: 50,
       decoration: const BoxDecoration(
         color: Color(0xFA131312),
         border: Border(
@@ -888,7 +934,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
               Text(
                 zone,
                 style: VaultTypography.sans(
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   color: isSelected ? VaultColors.accent : VaultColors.ink2,
                 ),
@@ -896,7 +942,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
               Text(
                 offset,
                 style: VaultTypography.mono(
-                  fontSize: 9.5,
+                  fontSize: 9,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   color: isSelected
                       ? VaultColors.accent.withValues(alpha: 0.85)

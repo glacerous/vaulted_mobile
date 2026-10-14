@@ -448,7 +448,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                   // Header Action Buttons
                   Row(
                     children: [
-                      // ASCII / ILLUST Mode Toggle (Inspired by ascii.rest)
+                      // DITHER / ILLUST Mode Toggle
                       GestureDetector(
                         onTap: () {
                           HapticFeedback.selectionClick();
@@ -457,27 +457,27 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                           decoration: BoxDecoration(
-                            color: _isAsciiTheme ? const Color(0xFF131518) : VaultColors.cardHover,
+                            color: _isAsciiTheme ? const Color(0xFFE58163).withValues(alpha: 0.15) : VaultColors.cardHover,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: _isAsciiTheme ? const Color(0xFFF97316) : Colors.transparent,
+                              color: _isAsciiTheme ? const Color(0xFFE58163) : Colors.transparent,
                               width: 1,
                             ),
                           ),
                           child: Row(
                             children: [
                               Icon(
-                                _isAsciiTheme ? Icons.terminal_rounded : Icons.auto_awesome_rounded,
-                                size: 12.5,
-                                color: _isAsciiTheme ? const Color(0xFFF97316) : VaultColors.ink,
+                                _isAsciiTheme ? Icons.grain_rounded : Icons.auto_awesome_rounded,
+                                size: 13,
+                                color: _isAsciiTheme ? const Color(0xFFE58163) : VaultColors.ink,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                _isAsciiTheme ? 'ASCII' : 'ILLUST',
+                                _isAsciiTheme ? 'DITHER' : 'ILLUST',
                                 style: VaultTypography.mono(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
-                                  color: _isAsciiTheme ? const Color(0xFFF97316) : VaultColors.ink,
+                                  color: _isAsciiTheme ? const Color(0xFFE58163) : VaultColors.ink,
                                 ),
                               ),
                             ],

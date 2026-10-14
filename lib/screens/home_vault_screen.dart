@@ -383,7 +383,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
           children: [
             Container(width: 38, height: 4, decoration: BoxDecoration(color: VaultColors.hairline, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
-            const ValtoMascot(size: 64, mood: ValtoMood.vigilant),
+            const ValtoMascot(size: 64, mood: ValtoMood.detective),
             const SizedBox(height: 14),
             Text('Valto is listening...', style: VaultTypography.sans(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
@@ -429,7 +429,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 children: [
                   Row(
                     children: [
-                      const ValtoMascot(size: 32, mood: ValtoMood.vigilant),
+                      const ValtoMascot(size: 32, mood: ValtoMood.playful),
                       const SizedBox(width: 10),
                       Text(
                         'VAULTED',
@@ -647,7 +647,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 ),
                 child: Row(
                   children: [
-                    ValtoMascot(size: 42, mood: _valtoMood),
+                    ValtoMascot(
+                      size: 42,
+                      mood: _isDayClosed ? ValtoMood.sleeping : _valtoMood,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(

@@ -474,10 +474,32 @@ class _LoginScreenState extends State<LoginScreen>
       backgroundColor: VaultColors.background, // Warm porcelain
       body: Stack(
         children: [
-          // 1. ORGANIC WARM HORIZON DUNES (Grounding the vault in a tactile luxury landscape)
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _OrganicDunesPainter(),
+          // 1. DITHER PIXEL CANYON LANDSCAPE (Transparent authentic dither art environment)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 20,
+            height: 480,
+            child: ShaderMask(
+              shaderCallback: (rect) {
+                return const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black,
+                    Colors.black,
+                    Colors.black,
+                    Colors.transparent,
+                  ],
+                  stops: [0.0, 0.70, 0.88, 1.0],
+                ).createShader(rect);
+              },
+              blendMode: BlendMode.dstIn,
+              child: Image.asset(
+                'assets/images/dither_landscape.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.bottomCenter,
+              ),
             ),
           ),
 
@@ -523,51 +545,33 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                   ),
 
-                  // 3. CENTER HERO: PROMINENT VALTO HERO WITH LEVITATION & FLOATING ASSET TELEMETRY
+                  // 3. CENTER HERO: VALTO IN RETRO DITHER CANYON
                   Expanded(
                     child: Center(
                       child: AnimatedBuilder(
                         animation: _levitateController,
                         builder: (context, _) {
                           return SizedBox(
-                            width: 320,
-                            height: 280,
+                            width: 250,
+                            height: 240,
                             child: Stack(
                               alignment: Alignment.center,
-                              clipBehavior: Clip.none,
                               children: [
-                                // Ambient soft warm gold aura
-                                Container(
-                                  width: 220,
-                                  height: 220,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: RadialGradient(
-                                      colors: [
-                                        VaultColors.accent.withValues(alpha: 0.18),
-                                        VaultColors.accent.withValues(alpha: 0.04),
-                                        Colors.transparent,
-                                      ],
-                                      stops: const [0.0, 0.55, 1.0],
-                                    ),
-                                  ),
-                                ),
-
-                                // Dynamic diffused floor shadow that expands/contracts with hover
+                                // Dynamic diffused shadow grounded on canyon floor
                                 Positioned(
-                                  bottom: 22,
+                                  bottom: 20,
                                   child: Transform.scale(
                                     scaleX: _shadowAnim.value,
                                     scaleY: 0.85 * _shadowAnim.value,
                                     child: Container(
-                                      width: 125,
+                                      width: 120,
                                       height: 16,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(50),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFF141413).withValues(alpha: 0.12),
-                                            blurRadius: 20,
+                                            color: const Color(0xFF141413).withValues(alpha: 0.16),
+                                            blurRadius: 18,
                                             spreadRadius: 2,
                                           ),
                                         ],
@@ -576,34 +580,12 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                 ),
 
-                                // BIG VALTO HERO (size 190 - crisp 16-bit pixel fidelity)
+                                // VALTO GUARDIAN (16-bit retro pixel cat nestled in the dither valley)
                                 Transform.translate(
                                   offset: Offset(0, _levitateAnim.value),
                                   child: const ValtoMascot(
-                                    size: 190,
+                                    size: 185,
                                     mood: ValtoMood.vigilant,
-                                  ),
-                                ),
-
-                                // FLOATING ASSET PILL 1 (Upper Left: Patek Philippe)
-                                Positioned(
-                                  left: 2,
-                                  top: 36 + (-_levitateAnim.value * 0.7),
-                                  child: const _FloatingAssetChip(
-                                    icon: Icons.watch_outlined,
-                                    title: 'PATEK 5711',
-                                    value: '\$118,500',
-                                  ),
-                                ),
-
-                                // FLOATING ASSET PILL 2 (Lower Right: Porsche 911 GT3)
-                                Positioned(
-                                  right: 2,
-                                  bottom: 50 + (_levitateAnim.value * 0.7),
-                                  child: const _FloatingAssetChip(
-                                    icon: Icons.directions_car_outlined,
-                                    title: '911 GT3 RS',
-                                    value: '\$325,000',
                                   ),
                                 ),
                               ],
@@ -712,171 +694,3 @@ class _LoginScreenState extends State<LoginScreen>
   }
 }
 
-/// Floating tactile luxury asset badge orbiting Valto
-class _FloatingAssetChip extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-
-  const _FloatingAssetChip({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFE8E2D8),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF141413).withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFAF7F2),
-              borderRadius: BorderRadius.circular(13),
-              border: Border.all(color: const Color(0xFFEDE7DC)),
-            ),
-            child: Icon(
-              icon,
-              size: 14,
-              color: VaultColors.accent,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: VaultTypography.mono(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.6,
-                  color: VaultColors.ink,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                value,
-                style: VaultTypography.mono(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2E7D32),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Organic warm horizon dunes painted on the lower canvas, grounding the scene
-class _OrganicDunesPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 1. Distant soft dune (#F3EFE8 -> #EBE3D6)
-    final path1 = Path();
-    path1.moveTo(0, size.height * 0.68);
-    path1.quadraticBezierTo(
-      size.width * 0.32,
-      size.height * 0.62,
-      size.width * 0.68,
-      size.height * 0.70,
-    );
-    path1.quadraticBezierTo(
-      size.width * 0.88,
-      size.height * 0.73,
-      size.width,
-      size.height * 0.71,
-    );
-    path1.lineTo(size.width, size.height);
-    path1.lineTo(0, size.height);
-    path1.close();
-
-    final paint1 = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          const Color(0xFFF3EFE8).withValues(alpha: 0.75),
-          const Color(0xFFEBE3D6).withValues(alpha: 0.85),
-        ],
-      ).createShader(Rect.fromLTWH(0, size.height * 0.62, size.width, size.height * 0.38));
-    canvas.drawPath(path1, paint1);
-
-    // 2. Midground warm dune (#EBE2D4 -> #E2D8C7)
-    final path2 = Path();
-    path2.moveTo(0, size.height * 0.77);
-    path2.quadraticBezierTo(
-      size.width * 0.28,
-      size.height * 0.80,
-      size.width * 0.58,
-      size.height * 0.74,
-    );
-    path2.quadraticBezierTo(
-      size.width * 0.85,
-      size.height * 0.69,
-      size.width,
-      size.height * 0.72,
-    );
-    path2.lineTo(size.width, size.height);
-    path2.lineTo(0, size.height);
-    path2.close();
-
-    final paint2 = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          const Color(0xFFEBE2D4).withValues(alpha: 0.85),
-          const Color(0xFFE2D8C7).withValues(alpha: 0.95),
-        ],
-      ).createShader(Rect.fromLTWH(0, size.height * 0.69, size.width, size.height * 0.31));
-    canvas.drawPath(path2, paint2);
-
-    // 3. Foreground crest highlight stroke
-    final crestPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.50)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-    final crestPath = Path();
-    crestPath.moveTo(0, size.height * 0.77);
-    crestPath.quadraticBezierTo(
-      size.width * 0.28,
-      size.height * 0.80,
-      size.width * 0.58,
-      size.height * 0.74,
-    );
-    crestPath.quadraticBezierTo(
-      size.width * 0.85,
-      size.height * 0.69,
-      size.width,
-      size.height * 0.72,
-    );
-    canvas.drawPath(crestPath, crestPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

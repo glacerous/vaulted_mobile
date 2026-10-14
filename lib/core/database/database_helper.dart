@@ -126,6 +126,26 @@ class DatabaseHelper {
     return null;
   }
 
+  Future<bool> registerUser(String username, String rawPassword, {String? fullName}) async {
+    if (kIsWeb) {
+      return true;
+    }
+    final db = await database;
+    if (db == null) return false;
+    final hash = sha256.convert(utf8.encode(rawPassword)).toString();
+    try {
+      await db.insert('users', {
+        'username': username,
+        'password_hash': hash,
+        'full_name': fullName ?? username,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getItems() async {
     if (kIsWeb) {
       return List.from(_webItems);

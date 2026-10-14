@@ -7,9 +7,9 @@ import '../core/security/auth_service.dart';
 import '../core/widgets/valto_mascot.dart';
 import 'main_navigation_screen.dart';
 
-/// Personalized, high-end onboarding and login screen for VAULTED.
-/// Inspired by the warm, editorial NoteNova mobile aesthetic (Satya / heysatya_).
-/// Features a gentle levitating Valto cat mascot, warm dune landscape, and delightful typography.
+/// Clean luxury onboarding and login screen for VAULTED.
+/// Formatted in the authentic warm porcelain and luxury gold aesthetic.
+/// Features an anchored, animated Valto cat guardian, genuine Sign Up / Sign In flows, and zero AI slop.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -18,8 +18,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
-  final TextEditingController _usernameController = TextEditingController(text: 'azzaky');
-  final TextEditingController _passwordController = TextEditingController(text: 'admin123');
+  final TextEditingController _signInUsernameController = TextEditingController(text: 'azzaky');
+  final TextEditingController _signInPasswordController = TextEditingController(text: 'admin123');
+
+  final TextEditingController _signUpUsernameController = TextEditingController();
+  final TextEditingController _signUpPasswordController = TextEditingController();
 
   late AnimationController _floatController;
   late Animation<double> _floatAnim;
@@ -29,13 +32,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    // Smooth 3.2-second peaceful levitation for Valto
     _floatController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3200),
+      duration: const Duration(milliseconds: 2800),
     )..repeat(reverse: true);
 
-    _floatAnim = Tween<double>(begin: -6.0, end: 6.0).animate(
+    _floatAnim = Tween<double>(begin: -5.0, end: 5.0).animate(
       CurvedAnimation(parent: _floatController, curve: Curves.easeInOutSine),
     );
   }
@@ -43,38 +45,88 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   void dispose() {
     _floatController.dispose();
-    _usernameController.dispose();
-    _passwordController.dispose();
+    _signInUsernameController.dispose();
+    _signInPasswordController.dispose();
+    _signUpUsernameController.dispose();
+    _signUpPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleQuickStart() async {
-    HapticFeedback.mediumImpact();
-    setState(() => _isLoading = true);
-
-    final success = await AuthService.instance.login(
-      _usernameController.text.trim(),
-      _passwordController.text.trim(),
+  void _navigateToApp() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 400),
+        pageBuilder: (context, anim1, anim2) => const MainNavigationScreen(),
+        transitionsBuilder: (context, anim, anim2, child) =>
+            FadeTransition(opacity: anim, child: child),
+      ),
     );
+  }
+
+  Future<void> _handleSignIn(StateSetter setModalState) async {
+    final user = _signInUsernameController.text.trim();
+    final pass = _signInPasswordController.text.trim();
+
+    if (user.isEmpty || pass.isEmpty) return;
+
+    setModalState(() => _isLoading = true);
+    final success = await AuthService.instance.login(user, pass);
+
+    if (!mounted) return;
+    setModalState(() => _isLoading = false);
 
     if (success) {
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 400),
-          pageBuilder: (context, anim1, anim2) => const MainNavigationScreen(),
-          transitionsBuilder: (context, anim, anim2, child) =>
-              FadeTransition(opacity: anim, child: child),
-        ),
-      );
+      Navigator.pop(context); // Close sheet
+      _navigateToApp();
     } else {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Invalid credentials. Please try again.',
+            'Incorrect username or password.',
+            style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+          ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: const Color(0xFF141413),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleSignUp(StateSetter setModalState) async {
+    final user = _signUpUsernameController.text.trim();
+    final pass = _signUpPasswordController.text.trim();
+
+    if (user.isEmpty || pass.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please enter both username and password.',
+            style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+          ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: const Color(0xFF141413),
+        ),
+      );
+      return;
+    }
+
+    setModalState(() => _isLoading = true);
+    final success = await AuthService.instance.register(user, pass);
+
+    if (!mounted) return;
+    setModalState(() => _isLoading = false);
+
+    if (success) {
+      Navigator.pop(context); // Close sheet
+      _navigateToApp();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not create vault. Please try another username.',
             style: VaultTypography.sans(fontSize: 12, color: Colors.white),
           ),
           behavior: SnackBarBehavior.floating,
@@ -90,15 +142,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final authenticated = await AuthService.instance.authenticateWithBiometrics();
     if (authenticated) {
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 400),
-          pageBuilder: (context, anim1, anim2) => const MainNavigationScreen(),
-          transitionsBuilder: (context, anim, anim2, child) =>
-              FadeTransition(opacity: anim, child: child),
-        ),
-      );
+      _navigateToApp();
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
   }
 
-  void _showSignInSheet() {
+  void _showSignUpSheet() {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
@@ -125,18 +169,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       builder: (ctx) => StatefulBuilder(
         builder: (context, setSheetState) {
           return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            ),
+            padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
               decoration: const BoxDecoration(
                 color: VaultColors.card,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0x1A000000),
-                    blurRadius: 30,
+                    color: Color(0x14000000),
+                    blurRadius: 28,
                     offset: Offset(0, -6),
                   ),
                 ],
@@ -147,7 +189,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Sheet Handle
                     Center(
                       child: Container(
                         width: 38,
@@ -159,34 +200,165 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       ),
                     ),
                     const SizedBox(height: 18),
-
-                    // Title
                     Text(
-                      'Access Your Vault',
+                      'Create Your Vault',
                       style: VaultTypography.sans(
-                        fontSize: 18,
+                        fontSize: 19,
                         fontWeight: FontWeight.w700,
                         color: VaultColors.ink,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Sign in with your local credentials or biometric key.',
-                      style: VaultTypography.sans(
-                        fontSize: 12.5,
-                        color: VaultColors.ink2,
+                      'Set up your private, locally encrypted asset vault.',
+                      style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink2),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Username Input
+                    Text('DESIRED USERNAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _signUpUsernameController,
+                      style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. azzaky',
+                        hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
+                        filled: true,
+                        fillColor: VaultColors.background,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.hairline),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.hairline),
+                        ),
                       ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Password Input
+                    Text('MASTER PASSWORD / PIN', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _signUpPasswordController,
+                      obscureText: true,
+                      style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
+                      decoration: InputDecoration(
+                        hintText: 'Minimum 6 characters',
+                        hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
+                        filled: true,
+                        fillColor: VaultColors.background,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.hairline),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.hairline),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : () => _handleSignUp(setSheetState),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF141413),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Create Vault', style: VaultTypography.sans(fontSize: 14.5, fontWeight: FontWeight.w600, color: Colors.white)),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.auto_awesome_rounded, size: 16, color: VaultColors.accent),
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showSignInSheet() {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+              decoration: const BoxDecoration(
+                color: VaultColors.card,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 28,
+                    offset: Offset(0, -6),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 38,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: VaultColors.hairline,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Welcome Back',
+                      style: VaultTypography.sans(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                        color: VaultColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Access your encrypted vault with your credentials.',
+                      style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink2),
                     ),
                     const SizedBox(height: 18),
 
                     // Username
-                    Text(
-                      'USERNAME',
-                      style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2),
-                    ),
+                    Text('USERNAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: _usernameController,
+                      controller: _signInUsernameController,
                       style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
                       decoration: InputDecoration(
                         filled: true,
@@ -205,13 +377,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     const SizedBox(height: 12),
 
                     // Password
-                    Text(
-                      'PASSWORD',
-                      style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2),
-                    ),
+                    Text('PASSWORD', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: _passwordController,
+                      controller: _signInPasswordController,
                       obscureText: true,
                       style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
                       decoration: InputDecoration(
@@ -233,22 +402,25 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     // Unlock Button
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: 52,
                       child: ElevatedButton(
-                        onPressed: () async {
-                          Navigator.pop(ctx);
-                          await _handleQuickStart();
-                        },
+                        onPressed: _isLoading ? null : () => _handleSignIn(setSheetState),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF141413),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                         ),
-                        child: Text(
-                          'Unlock Vault',
-                          style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Unlock Vault', style: VaultTypography.sans(fontSize: 14.5, fontWeight: FontWeight.w600, color: Colors.white)),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
+                                ],
+                              ),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -269,7 +441,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: VaultColors.hairline),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                         ),
                       ),
                     ),
@@ -297,10 +469,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       backgroundColor: VaultColors.background, // Warm porcelain
       body: Stack(
         children: [
-          // 1. SOFT DESERT DUNES & AMBIENT HORIZON (Background landscape)
+          // 1. SOFT DESERT DUNES LANDSCAPE (Gentle warm dunes)
           Positioned.fill(
             child: CustomPaint(
-              painter: _DunesLandscapePainter(),
+              painter: _WarmDunesPainter(),
             ),
           ),
 
@@ -310,53 +482,54 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 12),
               child: Column(
                 children: [
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
-                  // TOP BRAND EMBLEM (Folded luxury tile like NoteNova)
+                  // TOP BRAND EMBLEM (Luxury porcelain squircle with gold folded corner and vault sparkle)
                   Container(
-                    width: 66,
-                    height: 66,
+                    width: 64,
+                    height: 64,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: VaultColors.card,
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: VaultColors.hairline),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF141413).withValues(alpha: 0.05),
-                          blurRadius: 18,
-                          offset: const Offset(0, 6),
+                          color: const Color(0xFF141413).withValues(alpha: 0.04),
+                          blurRadius: 16,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
                     child: Stack(
                       children: [
-                        // Folded corner accent
+                        // Folded corner in warm gold
                         Positioned(
                           top: 0,
                           right: 0,
                           child: Container(
-                            width: 18,
-                            height: 18,
+                            width: 17,
+                            height: 17,
                             decoration: const BoxDecoration(
-                              color: Color(0xFFEBE6DA),
+                              color: Color(0xFFE6DEC9),
                               borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(10),
-                                topRight: Radius.circular(20),
+                                bottomLeft: Radius.circular(9),
+                                topRight: Radius.circular(19),
                               ),
                             ),
                           ),
                         ),
-                        // Center 4-Point Gold Star Sparkle
+                        // Center warm gold luxury star
                         const Center(
                           child: Icon(
                             Icons.auto_awesome_rounded,
-                            size: 28,
-                            color: Color(0xFF2E5BFF), // Vibrant signature royal star
+                            size: 26,
+                            color: VaultColors.accent, // Warm Signature Gold
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
 
                   // BRAND NAME & EDITORIAL SPARKLE
                   Row(
@@ -366,9 +539,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       Text(
                         'VAULTED',
                         style: GoogleFonts.newsreader(
-                          fontSize: 38,
+                          fontSize: 36,
                           fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
+                          letterSpacing: 1.0,
                           color: VaultColors.ink,
                         ),
                       ),
@@ -378,14 +551,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         child: Icon(
                           Icons.auto_awesome_rounded,
                           size: 13,
-                          color: Color(0xFF2E5BFF),
+                          color: VaultColors.accent,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
 
-                  // TAGLINE WITH DELICATE WARM UNDERLINE
+                  // TAGLINE WITH DELICATE WARM GOLD UNDERLINE
                   Column(
                     children: [
                       Row(
@@ -394,7 +567,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           Text(
                             'Account for everything you ',
                             style: VaultTypography.sans(
-                              fontSize: 14,
+                              fontSize: 13.5,
                               fontWeight: FontWeight.w400,
                               color: VaultColors.ink2,
                             ),
@@ -402,166 +575,169 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           Text(
                             'own.',
                             style: VaultTypography.sans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF2E5BFF),
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: VaultColors.ink,
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 3),
-                      // Delicate curved underline
+                      // Delicate curved underline in warm gold
                       CustomPaint(
-                        size: const Size(64, 5),
-                        painter: _SwoopUnderlinePainter(color: const Color(0xFFE08D5B)),
+                        size: const Size(58, 4),
+                        painter: _SwoopUnderlinePainter(color: VaultColors.accent),
                       ),
                     ],
                   ),
 
-                  // 3. CENTER HERO: FLOATING VALTO CAT + SPEECH ANNOTATION
+                  // 3. CENTER HERO: FRAMED VALTO COMPANION WITH DIRECTLY ANCHORED SPEECH BUBBLE
                   Expanded(
-                    child: AnimatedBuilder(
-                      animation: _floatAnim,
-                      builder: (context, child) {
-                        return Transform.translate(
-                          offset: Offset(0, _floatAnim.value),
-                          child: child,
-                        );
-                      },
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Soft Ambient Radiant Aura
-                          Container(
-                            width: 220,
-                            height: 220,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  const Color(0xFF2E5BFF).withValues(alpha: 0.12),
-                                  const Color(0xFFC0A85C).withValues(alpha: 0.08),
-                                  Colors.transparent,
-                                ],
-                                stops: const [0.0, 0.5, 1.0],
-                              ),
-                            ),
-                          ),
-
-                          // Valto Mascot Character (96px, authentic glowing yellow eyes)
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Valto is ready to protect your vault!',
-                                    style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+                    child: Center(
+                      child: AnimatedBuilder(
+                        animation: _floatAnim,
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(0, _floatAnim.value),
+                            child: child,
+                          );
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Grounded Speech Callout (Sitting directly above Valto with a bottom indicator)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: VaultColors.card,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: VaultColors.hairline),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF141413).withValues(alpha: 0.04),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 4),
                                   ),
-                                  duration: const Duration(seconds: 2),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  backgroundColor: const Color(0xFF141413),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              child: const ValtoMascot(
-                                size: 96,
-                                mood: ValtoMood.vigilant,
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Hi, I'm Valto.",
+                                    style: VaultTypography.sans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: VaultColors.ink,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "Your personal vault guardian.",
+                                    style: VaultTypography.sans(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: VaultColors.ink2,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
 
-                          // Curved Speech Annotation: "Hi, I'm Valto..."
-                          Positioned(
-                            bottom: 18,
-                            left: 12,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            // Little Pointer Triangle
+                            CustomPaint(
+                              size: const Size(14, 8),
+                              painter: _BubbleTrianglePainter(),
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Valto Cat on Soft Ambient Halo
+                            Stack(
+                              alignment: Alignment.center,
                               children: [
-                                CustomPaint(
-                                  size: const Size(28, 38),
-                                  painter: _AnnotationPointerPainter(color: const Color(0xFF2E5BFF)),
+                                Container(
+                                  width: 140,
+                                  height: 140,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        VaultColors.accent.withValues(alpha: 0.16),
+                                        Colors.white.withValues(alpha: 0.0),
+                                      ],
+                                      stops: const [0.0, 1.0],
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(width: 4),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Hi, I'm Valto.",
-                                      style: VaultTypography.sans(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF2E5BFF),
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Valto: "Welcome! Your private vault is ready."',
+                                          style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+                                        ),
+                                        duration: const Duration(seconds: 2),
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        backgroundColor: const Color(0xFF141413),
                                       ),
-                                    ),
-                                    const SizedBox(height: 1),
-                                    Text(
-                                      "Your personal vault partner\nwith superpowers.",
-                                      style: VaultTypography.sans(
-                                        fontSize: 11.5,
-                                        height: 1.25,
-                                        fontWeight: FontWeight.w500,
-                                        color: VaultColors.ink2,
-                                      ),
-                                    ),
-                                  ],
+                                    );
+                                  },
+                                  child: const ValtoMascot(
+                                    size: 92,
+                                    mood: ValtoMood.vigilant,
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
 
-                  // 4. BOTTOM ACTION ZONE (Big Royal Pill CTA + Clean "Sign in")
+                  // 4. BOTTOM ACTION ZONE (Jet Obsidian "Sign up ✦" + Clean "Sign in")
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // "Get started ✦" Large Rounded Pill Button
+                      // "Get started — Sign up ✦" Primary CTA Button
                       SizedBox(
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleQuickStart,
+                          onPressed: _showSignUpSheet,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E5BFF), // NoteNova vibrant cobalt
+                            backgroundColor: const Color(0xFF141413), // Signature Oyenza Obsidian
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            shadowColor: const Color(0xFF2E5BFF).withValues(alpha: 0.35),
+                            shadowColor: const Color(0xFF141413).withValues(alpha: 0.25),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(28),
                             ),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Get started',
-                                      style: VaultTypography.sans(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    const Icon(
-                                      Icons.auto_awesome_rounded,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                  ],
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Sign up',
+                                style: VaultTypography.sans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
                                 ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.auto_awesome_rounded,
+                                size: 16,
+                                color: VaultColors.accent, // Signature Luxury Gold Sparkle
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -597,35 +773,35 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
 }
 
-/// Paints the silky, serene dunes landscape at the bottom of the canvas
-class _DunesLandscapePainter extends CustomPainter {
+/// Paints the warm, silky dunes landscape at the bottom of the canvas
+class _WarmDunesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
 
-    // Back gentle sand dune (soft warm sand tone)
+    // Back sand curve (warm porcelain dune)
     final backPaint = Paint()
-      ..color = const Color(0xFFEDE9DE).withValues(alpha: 0.70)
+      ..color = const Color(0xFFEDE9DF).withValues(alpha: 0.85)
       ..style = PaintingStyle.fill;
 
     final backPath = Path()
-      ..moveTo(0, h * 0.78)
-      ..quadraticBezierTo(w * 0.45, h * 0.70, w, h * 0.75)
+      ..moveTo(0, h * 0.82)
+      ..quadraticBezierTo(w * 0.40, h * 0.76, w, h * 0.80)
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();
 
     canvas.drawPath(backPath, backPaint);
 
-    // Front gentle sand dune (soft creamy foreground)
+    // Front sand curve (soft cream dune)
     final frontPaint = Paint()
-      ..color = const Color(0xFFE5E0D3).withValues(alpha: 0.55)
+      ..color = const Color(0xFFE4DFD3).withValues(alpha: 0.70)
       ..style = PaintingStyle.fill;
 
     final frontPath = Path()
-      ..moveTo(0, h * 0.85)
-      ..quadraticBezierTo(w * 0.55, h * 0.80, w, h * 0.83)
+      ..moveTo(0, h * 0.89)
+      ..quadraticBezierTo(w * 0.60, h * 0.84, w, h * 0.87)
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();
@@ -637,7 +813,7 @@ class _DunesLandscapePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Paints the delicate, playful hand-drawn curved underline accent
+/// Paints the delicate curved underline accent in warm gold
 class _SwoopUnderlinePainter extends CustomPainter {
   final Color color;
   _SwoopUnderlinePainter({required this.color});
@@ -661,24 +837,28 @@ class _SwoopUnderlinePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Paints the playful curved pointer line connecting the "Hi, I'm Valto" text to Valto
-class _AnnotationPointerPainter extends CustomPainter {
-  final Color color;
-  _AnnotationPointerPainter({required this.color});
-
+/// Paints the little speech bubble pointer triangle
+class _BubbleTrianglePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withValues(alpha: 0.75)
+      ..color = VaultColors.card
+      ..style = PaintingStyle.fill;
+
+    final borderPaint = Paint()
+      ..color = VaultColors.hairline
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 1.0;
 
     final path = Path()
-      ..moveTo(size.width * 0.2, size.height * 0.85)
-      ..quadraticBezierTo(size.width * 0.8, size.height * 0.65, size.width * 0.6, size.height * 0.1);
+      ..moveTo(0, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..lineTo(size.width, 0)
+      ..close();
 
     canvas.drawPath(path, paint);
+    canvas.drawLine(Offset(0, 0), Offset(size.width / 2, size.height), borderPaint);
+    canvas.drawLine(Offset(size.width / 2, size.height), Offset(size.width, 0), borderPaint);
   }
 
   @override

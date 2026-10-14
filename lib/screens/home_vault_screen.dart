@@ -8,6 +8,7 @@ import '../core/services/valto_ai_service.dart';
 import '../core/services/gemini_service.dart';
 import '../core/widgets/vowl_mascot.dart';
 import '../core/widgets/scenic_cloud_sea_header.dart';
+import '../core/widgets/ascii_cloud_sea_header.dart';
 import 'pillars/inventory_screen.dart';
 import 'pillars/collectibles_hub_screen.dart';
 import 'warranty_lbs_screen.dart';
@@ -36,6 +37,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
 
   bool _isAiProcessing = false;
   VowlMood _vowlMood = VowlMood.vigilant;
+  bool _isAsciiTheme = true; // Default to ASCII mode per user request!
 
   // Live exchange rates (Base USD)
   final Map<String, double> _exchangeRates = {
@@ -446,6 +448,44 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                   // Header Action Buttons
                   Row(
                     children: [
+                      // ASCII / ILLUST Mode Toggle (Inspired by ascii.rest)
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _isAsciiTheme = !_isAsciiTheme);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                          decoration: BoxDecoration(
+                            color: _isAsciiTheme ? const Color(0xFF131518) : VaultColors.cardHover,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _isAsciiTheme ? const Color(0xFFF97316) : Colors.transparent,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _isAsciiTheme ? Icons.terminal_rounded : Icons.auto_awesome_rounded,
+                                size: 12.5,
+                                color: _isAsciiTheme ? const Color(0xFFF97316) : VaultColors.ink,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _isAsciiTheme ? 'ASCII' : 'ILLUST',
+                                style: VaultTypography.mono(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: _isAsciiTheme ? const Color(0xFFF97316) : VaultColors.ink,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -487,14 +527,22 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
               ),
               const SizedBox(height: 18),
 
-              // 2. ANIMATED SUNSET CLOUD-SEA SCENIC HEADER (Oyenza & ascii.rest/cloud-sea style)
-              ScenicCloudSeaHeader(
-                promptController: _promptController,
-                promptFocus: _promptFocus,
-                isAiProcessing: _isAiProcessing,
-                vowlMood: _vowlMood,
-                onSubmit: _handlePromptSubmit,
-              ),
+              // 2. SCENIC CLOUD-SEA HEADER (Interactive ASCII or Illustrated Theme)
+              _isAsciiTheme
+                  ? AsciiCloudSeaHeader(
+                      promptController: _promptController,
+                      promptFocus: _promptFocus,
+                      isAiProcessing: _isAiProcessing,
+                      vowlMood: _vowlMood,
+                      onSubmit: _handlePromptSubmit,
+                    )
+                  : ScenicCloudSeaHeader(
+                      promptController: _promptController,
+                      promptFocus: _promptFocus,
+                      isAiProcessing: _isAiProcessing,
+                      vowlMood: _vowlMood,
+                      onSubmit: _handlePromptSubmit,
+                    ),
               const SizedBox(height: 20),
 
               // 3. FOCAL GLANCE HERO (Giant Net Worth & Status Pill)

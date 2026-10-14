@@ -32,19 +32,10 @@ class ValtoMascot extends StatelessWidget {
   });
 
   String get _assetPath {
-    switch (mood) {
-      case ValtoMood.sleeping:
-        return 'assets/images/valto_sleeping.png';
-      case ValtoMood.happy:
-        return 'assets/images/valto_happy.png';
-      case ValtoMood.detective:
-        return 'assets/images/valto_detective.png';
-      case ValtoMood.peeking:
-        return 'assets/images/valto_peeking.png';
-      case ValtoMood.playful:
-      case ValtoMood.vigilant:
-        return 'assets/images/valto_vigilant.png';
+    if (mood == ValtoMood.sleeping) {
+      return 'assets/images/valto_sleeping.png';
     }
+    return 'assets/images/valto_vigilant.png';
   }
 
   @override

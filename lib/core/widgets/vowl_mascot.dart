@@ -12,10 +12,10 @@ enum ValtoMood {
 typedef VowlMood = ValtoMood;
 typedef VowlMascot = ValtoMascot;
 
-/// Valto — The Authentic Blocky Cat Mascot of VAULTED.
-/// Built with retro pixel/block geometric clarity:
-/// Pointed triangular block ears, wide cat cheeks, glowing amber square eyes,
-/// compact sitting torso, front paws, side haunches, and a curling block tail.
+/// Valto — The Simple Blocky Cat Mascot of VAULTED.
+/// Inspired directly by Claude's Claw'd: warm terracotta block silhouette,
+/// two cute ear blocks, big friendly square eyes, and two stubby paws.
+/// Ultra-minimal 7x5 retro grid that is friendly, charming, and never creepy.
 class ValtoMascot extends StatelessWidget {
   final double size;
   final ValtoMood mood;
@@ -38,61 +38,41 @@ class ValtoMascot extends StatelessWidget {
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _PixelCatPainter(
+        painter: _SimpleBlockyCatPainter(
           mood: mood,
-          bodyColor: color ?? const Color(0xFF141413),
-          eyeColor: eyeColor ?? const Color(0xFFFBBF24),
-          showHat: showHat,
+          bodyColor: color ?? const Color(0xFFCC6B49), // Warm Claude terracotta
+          eyeColor: eyeColor ?? const Color(0xFF141413), // Clean black square eyes
         ),
       ),
     );
   }
 }
 
-class _PixelCatPainter extends CustomPainter {
+class _SimpleBlockyCatPainter extends CustomPainter {
   final ValtoMood mood;
   final Color bodyColor;
   final Color eyeColor;
-  final bool showHat;
 
-  _PixelCatPainter({
+  _SimpleBlockyCatPainter({
     required this.mood,
     required this.bodyColor,
     required this.eyeColor,
-    required this.showHat,
   });
 
-  // 13x11 Authentic Symmetrical Pixel Cat Grid
+  // Simple 7x5 Block Grid:
   // '#' = body block, 'E' = eye block, '.' = transparent
-  static const List<String> _fullCatGrid = [
-    '..#.......#..', // Row 0: Sharp ear tips (cols 2, 10)
-    '.###.....###.', // Row 1: Triangular ear bases (cols 1..3, 9..11)
-    '.###########.', // Row 2: Top crown between ears
-    '.##EE###EE##.', // Row 3: Expressive eyes (cols 3..4, 8..9)
-    '.###########.', // Row 4: Cat muzzle / cheeks
-    '..#########.#', // Row 5: Jaw taper + tail curl tip!
-    '..#########.#', // Row 6: Neck + tail
-    '.##########.#', // Row 7: Sitting torso + tail
-    '.##########.#', // Row 8: Sitting torso + tail
-    '.############', // Row 9: Body connected to tail base
-    '##.##...##.##', // Row 10: 2 paws & 2 folded haunches
-  ];
-
-  // Peeking over omnibar ledge: Head, ears, eyes & two paws on the rim
-  static const List<String> _peekingGrid = [
-    '..#.......#..', // Row 0: Ear tips
-    '.###.....###.', // Row 1: Triangular ears
-    '.###########.', // Row 2: Top crown
-    '.##EE###EE##.', // Row 3: Eyes
-    '.###########.', // Row 4: Muzzle
-    '..##.....##..', // Row 5: Two paws resting on the rim!
+  static const List<String> _catGrid = [
+    '#.....#', // Row 0: Two cute ear blocks on top corners
+    '#######', // Row 1: Crown between ears
+    '#E###E#', // Row 2: Friendly square eyes
+    '#######', // Row 3: Cheeks / chin
+    '..#.#..', // Row 4: Two cute little front paws in the middle
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    final grid = (mood == ValtoMood.peeking) ? _peekingGrid : _fullCatGrid;
-    final cols = grid[0].length; // 13
-    final rows = grid.length;    // 11 or 6
+    const cols = 7;
+    const rows = 5;
 
     final blockSize = (size.width / cols).clamp(1.0, size.height / rows);
     final totalW = blockSize * cols;
@@ -104,17 +84,12 @@ class _PixelCatPainter extends CustomPainter {
       ..color = bodyColor
       ..style = PaintingStyle.fill;
 
-    final borderPaint = Paint()
-      ..color = const Color(0xFF2C2A28)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
-
     final eyePaint = Paint()
       ..color = eyeColor
       ..style = PaintingStyle.fill;
 
     for (int r = 0; r < rows; r++) {
-      final rowStr = grid[r];
+      final rowStr = _catGrid[r];
       for (int c = 0; c < cols; c++) {
         final ch = rowStr[c];
         if (ch == '.') continue;
@@ -122,48 +97,45 @@ class _PixelCatPainter extends CustomPainter {
         final rect = Rect.fromLTWH(
           ox + c * blockSize,
           oy + r * blockSize,
-          blockSize + 0.1, // tiny overlap to prevent subpixel hairline gap
+          blockSize + 0.1,
           blockSize + 0.1,
         );
 
         if (ch == '#') {
           canvas.drawRect(rect, bodyPaint);
-          canvas.drawRect(rect, borderPaint);
         } else if (ch == 'E') {
-          // Draw eye with mood expression
+          // Body base under eye
+          canvas.drawRect(rect, bodyPaint);
+
+          // Render eye according to mood
           if (mood == ValtoMood.happy) {
-            // Happy squint slit
+            // Happy squint slit (^ ^)
             final slitRect = Rect.fromLTWH(
               rect.left,
               rect.top + rect.height * 0.35,
               rect.width,
-              rect.height * 0.35,
+              rect.height * 0.3,
             );
-            canvas.drawRect(rect, bodyPaint);
             canvas.drawRect(slitRect, eyePaint);
           } else if (mood == ValtoMood.sleeping) {
-            // Calm sleeping line
+            // Sleeping closed eye (- -)
             final slitRect = Rect.fromLTWH(
               rect.left,
-              rect.top + rect.height * 0.5,
+              rect.top + rect.height * 0.55,
               rect.width,
               rect.height * 0.25,
             );
-            canvas.drawRect(rect, bodyPaint);
             canvas.drawRect(slitRect, eyePaint);
-          } else if (mood == ValtoMood.detective && c >= 8) {
-            // Right eye has a gold monocle frame
+          } else if (mood == ValtoMood.detective && c == 5) {
+            // Right eye has curious monocle frame
             canvas.drawRect(rect, eyePaint);
-            final monocleRim = Paint()
-              ..color = const Color(0xFFC0A85C)
+            final monoclePaint = Paint()
+              ..color = const Color(0xFFFBBF24)
               ..style = PaintingStyle.stroke
-              ..strokeWidth = 1.0;
-            canvas.drawRect(
-              rect.inflate(blockSize * 0.25),
-              monocleRim,
-            );
+              ..strokeWidth = 1.2;
+            canvas.drawRect(rect.inflate(blockSize * 0.2), monoclePaint);
           } else {
-            // Solid bright square eye block
+            // Standard friendly square eye (like Claw'd)
             canvas.drawRect(rect, eyePaint);
           }
         }
@@ -172,10 +144,9 @@ class _PixelCatPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _PixelCatPainter oldDelegate) {
+  bool shouldRepaint(covariant _SimpleBlockyCatPainter oldDelegate) {
     return oldDelegate.mood != mood ||
         oldDelegate.bodyColor != bodyColor ||
-        oldDelegate.eyeColor != eyeColor ||
-        oldDelegate.showHat != showHat;
+        oldDelegate.eyeColor != eyeColor;
   }
 }

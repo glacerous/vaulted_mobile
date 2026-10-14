@@ -169,21 +169,7 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                   ),
                   const SizedBox(height: 38),
 
-                  // 4. VALTO MASCOT PEEKING + FROSTED GLASS OMNIBAR
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Valto peeking gracefully right over the frosted capsule
-                      Positioned(
-                        top: -34,
-                        right: 32,
-                        child: ValtoMascot(
-                          size: 42,
-                          mood: widget.valtoMood == ValtoMood.vigilant
-                              ? ValtoMood.peeking
-                              : widget.valtoMood,
-                        ),
-                      ),
+                  // 4. FROSTED GLASS OMNIBAR
 
                       // Frosted Glass Capsule
                       ClipRRect(
@@ -271,8 +257,6 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                           ),
                         ),
                       ),
-                    ],
-                  ),
                 ],
               ),
             ),

@@ -429,7 +429,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 children: [
                   Row(
                     children: [
-                      const ValtoMascot(size: 32, mood: ValtoMood.vigilant),
+                      const ValtoMascot(size: 32, mood: ValtoMood.peeking),
                       const SizedBox(width: 10),
                       Text(
                         'VAULTED',

@@ -39,8 +39,9 @@ class ValtoMascot extends StatelessWidget {
         return 'assets/images/valto_happy.png';
       case ValtoMood.detective:
         return 'assets/images/valto_detective.png';
-      case ValtoMood.playful:
       case ValtoMood.peeking:
+        return 'assets/images/valto_peeking.png';
+      case ValtoMood.playful:
       case ValtoMood.vigilant:
         return 'assets/images/valto_vigilant.png';
     }

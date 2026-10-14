@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/colors.dart';
+import 'vowl_mascot.dart';
 
 /// VaultDoor3D — Authentic 3D Isometric Luxury Bank Vault.
 ///
@@ -14,16 +15,19 @@ import '../constants/colors.dart';
 ///    are drawn in a single unified canvas pass (immune to compositor culling, never goes poof).
 /// 4. Integrated 3D door thickness edge perfectly bounded to door height (never oversized).
 /// 5. Recessed Swiss safety deposit box chamber with warm ambient illumination.
+/// 6. Valto mascot perched on the roof who wakes up when the mechanical combination unlocks.
 class VaultDoor3D extends StatefulWidget {
   final double size;
   final bool isUnlocking;
   final VoidCallback? onOpened;
+  final bool showGuardian;
 
   const VaultDoor3D({
     super.key,
     this.size = 190,
     this.isUnlocking = false,
     this.onOpened,
+    this.showGuardian = true,
   });
 
   @override
@@ -33,6 +37,7 @@ class VaultDoor3D extends StatefulWidget {
 class _VaultDoor3DState extends State<VaultDoor3D>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  bool _isTapped = false;
   late Animation<double> _dialSpin;
   late Animation<double> _boltRetract;
   late Animation<double> _doorSwing;
@@ -157,6 +162,10 @@ class _VaultDoor3DState extends State<VaultDoor3D>
 
                     // 4. 3D SWINGING ARMORED DOOR (Swings forward in front of hinges & chamber!)
                     _buildSwingingDoor(doorSize),
+
+                    // 5. VALTO GUARDIAN PERCHED ON TOP ROOF OF SAFE
+                    if (widget.showGuardian)
+                      _buildGuardian(s),
                   ],
                 ),
               ),
@@ -164,6 +173,51 @@ class _VaultDoor3DState extends State<VaultDoor3D>
           ),
         );
       },
+    );
+  }
+
+  /// Sleeping Valto perched on top roof who wakes up when unlocking
+  Widget _buildGuardian(double s) {
+    final progress = _controller.value;
+    final isAwake = widget.isUnlocking && progress >= 0.38;
+
+    ValtoMood mood;
+    if (isAwake) {
+      if (progress >= 0.82) {
+        mood = ValtoMood.happy;
+      } else {
+        mood = ValtoMood.vigilant;
+      }
+    } else if (_isTapped) {
+      mood = ValtoMood.vigilant;
+    } else {
+      mood = ValtoMood.sleeping;
+    }
+
+    final wakeHop = (isAwake && progress >= 0.38 && progress < 0.55) ? -4.0 : 0.0;
+
+    return Positioned(
+      top: -s * 0.16 + wakeHop,
+      left: s * 0.28,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (!widget.isUnlocking) {
+            HapticFeedback.lightImpact();
+            setState(() => _isTapped = true);
+            Future.delayed(const Duration(milliseconds: 1400), () {
+              if (mounted) setState(() => _isTapped = false);
+            });
+          }
+        },
+        child: Tooltip(
+          message: 'Valto Guardian',
+          child: ValtoMascot(
+            size: s * 0.29,
+            mood: mood,
+          ),
+        ),
+      ),
     );
   }
 

@@ -8,12 +8,14 @@ class HairlineVault extends StatelessWidget {
   final double size;
   final bool isUnlocking;
   final VoidCallback? onUnlocked;
+  final bool showGuardian;
 
   const HairlineVault({
     super.key,
     this.size = 180,
     this.isUnlocking = false,
     this.onUnlocked,
+    this.showGuardian = true,
   });
 
   @override
@@ -23,6 +25,7 @@ class HairlineVault extends StatelessWidget {
         size: size,
         isUnlocking: isUnlocking,
         onOpened: onUnlocked,
+        showGuardian: showGuardian,
       ),
     );
   }

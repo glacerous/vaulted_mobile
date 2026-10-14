@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/security/auth_service.dart';
-import '../core/widgets/anatomy_computer.dart';
+import '../core/widgets/hairline_vault.dart';
 import 'main_navigation_screen.dart';
 
 /// Clean luxury onboarding and login screen for VAULTED.
@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _signUpPasswordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isUnlocking = false;
 
   @override
   void dispose() {
@@ -38,12 +39,18 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 400),
+        transitionDuration: const Duration(milliseconds: 500),
         pageBuilder: (context, anim1, anim2) => const MainNavigationScreen(),
         transitionsBuilder: (context, anim, anim2, child) =>
             FadeTransition(opacity: anim, child: child),
       ),
     );
+  }
+
+  void _handleQuickUnlock() {
+    if (_isUnlocking) return;
+    HapticFeedback.heavyImpact();
+    setState(() => _isUnlocking = true);
   }
 
   Future<void> _handleSignIn(StateSetter setModalState) async {
@@ -60,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       Navigator.pop(context); // Close sheet
-      _navigateToApp();
+      setState(() => _isUnlocking = true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -103,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       Navigator.pop(context); // Close sheet
-      _navigateToApp();
+      setState(() => _isUnlocking = true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -124,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final authenticated = await AuthService.instance.authenticateWithBiometrics();
     if (authenticated) {
       if (!mounted) return;
-      _navigateToApp();
+      setState(() => _isUnlocking = true);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -451,10 +458,19 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: VaultColors.background, // Warm porcelain
       body: Stack(
         children: [
-          // 1. SOFT DESERT DUNES LANDSCAPE (Gentle warm dunes)
+          // 1. SUBTLE AMBIENT SURFACE GLOW (Anchoring the safe to the luxury floor)
           Positioned.fill(
-            child: CustomPaint(
-              painter: _WarmDunesPainter(),
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0.0, 0.05),
+                  radius: 0.75,
+                  colors: [
+                    Color(0x0C000000),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
             ),
           ),
 
@@ -464,12 +480,12 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 12),
               child: Column(
                 children: [
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
 
                   // TOP BRAND EMBLEM (Precision tactile vault lock emblem)
                   Container(
-                    width: 58,
-                    height: 58,
+                    width: 56,
+                    height: 56,
                     decoration: BoxDecoration(
                       color: VaultColors.card,
                       borderRadius: BorderRadius.circular(18),
@@ -525,37 +541,44 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 4),
 
-                  // SUBTITLE MONOSPACE TELEMETRY
+                  // ELEGANT SUBTITLE
                   Text(
-                    'ENCRYPTED HARDWARE TERMINAL',
-                    style: VaultTypography.mono(
-                      fontSize: 10,
-                      letterSpacing: 1.5,
-                      fontWeight: FontWeight.w500,
+                    'Account for everything you own.',
+                    style: VaultTypography.sans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
                       color: VaultColors.ink2,
                     ),
                   ),
 
-                  // 3. CENTER HERO: ANATOMY ISOMETRIC DESK COMPUTER WITH 2D VALTO CAT
+                  // 3. CENTER HERO: AUTHENTIC 3D ISOMETRIC BANK VAULT WITH SLEEPING / WAKING VALTO
                   Expanded(
                     child: Center(
-                      child: AnatomyDeskComputer(
-                        onTerminalTap: _showSignInSheet,
-                        onKeyTap: () {},
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          if (!_isUnlocking) _handleQuickUnlock();
+                        },
+                        child: HairlineVault(
+                          size: 200,
+                          isUnlocking: _isUnlocking,
+                          onUnlocked: _navigateToApp,
+                          showGuardian: true,
+                        ),
                       ),
                     ),
                   ),
 
-                  // 4. BOTTOM ACTION ZONE (Clean Obsidian "Sign up" + "Sign in")
+                  // 4. BOTTOM ACTION ZONE (Thumb-zone luxury actions)
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // "Sign up" Primary CTA Button (Zero AI slop, clean arrow)
+                      // "Unlock Vault" Primary CTA Button
                       SizedBox(
                         width: double.infinity,
                         height: 54,
                         child: ElevatedButton(
-                          onPressed: _showSignUpSheet,
+                          onPressed: _isUnlocking ? null : _handleQuickUnlock,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF141413), // Obsidian Jet
                             foregroundColor: Colors.white,
@@ -569,7 +592,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Sign up',
+                                _isUnlocking ? 'Opening Vault...' : 'Unlock Vault',
                                 style: VaultTypography.sans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -577,8 +600,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              const Icon(
-                                Icons.arrow_forward_rounded,
+                              Icon(
+                                _isUnlocking ? Icons.lock_open_rounded : Icons.arrow_forward_rounded,
                                 size: 16,
                                 color: Colors.white,
                               ),
@@ -588,23 +611,53 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // "Sign in" Underlined Link
-                      GestureDetector(
-                        onTap: _showSignInSheet,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                            'Sign in',
-                            style: GoogleFonts.inter(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              color: VaultColors.ink,
-                              decoration: TextDecoration.underline,
-                              decorationColor: VaultColors.ink,
-                              decorationThickness: 1.5,
+                      // Secondary Links: Sign in & Sign up
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: _showSignInSheet,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              child: Text(
+                                'Sign in',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: VaultColors.ink,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: VaultColors.ink,
+                                  decorationThickness: 1.5,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          Text(
+                            '·',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: VaultColors.ink3,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: _showSignUpSheet,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              child: Text(
+                                'Create Vault',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: VaultColors.ink,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: VaultColors.ink,
+                                  decorationThickness: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 10),
 
@@ -642,44 +695,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
-
-/// Paints the warm, silky dunes landscape at the bottom of the canvas
-class _WarmDunesPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    // Back sand curve (warm porcelain dune)
-    final backPaint = Paint()
-      ..color = const Color(0xFFEDE9DF).withValues(alpha: 0.85)
-      ..style = PaintingStyle.fill;
-
-    final backPath = Path()
-      ..moveTo(0, h * 0.82)
-      ..quadraticBezierTo(w * 0.40, h * 0.76, w, h * 0.80)
-      ..lineTo(w, h)
-      ..lineTo(0, h)
-      ..close();
-
-    canvas.drawPath(backPath, backPaint);
-
-    // Front sand curve (soft cream dune)
-    final frontPaint = Paint()
-      ..color = const Color(0xFFE4DFD3).withValues(alpha: 0.70)
-      ..style = PaintingStyle.fill;
-
-    final frontPath = Path()
-      ..moveTo(0, h * 0.89)
-      ..quadraticBezierTo(w * 0.60, h * 0.84, w, h * 0.87)
-      ..lineTo(w, h)
-      ..lineTo(0, h)
-      ..close();
-
-    canvas.drawPath(frontPath, frontPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

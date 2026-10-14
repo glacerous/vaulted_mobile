@@ -109,15 +109,15 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
               ),
             ),
 
-            // 2. SOFT ATMOSPHERIC GRADIENT (Ensures text & omnibar remain razor crisp)
+            // 2. PROTECTIVE ATMOSPHERIC SCRIM (Ensures text & omnibar are effortlessly readable)
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withValues(alpha: 0.30),
-                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.72),
                       Colors.black.withValues(alpha: 0.40),
+                      Colors.black.withValues(alpha: 0.75),
                     ],
                     stops: const [0.0, 0.45, 1.0],
                     begin: Alignment.topCenter,
@@ -134,17 +134,24 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Clean Date line
+                  // Clean Date line in Signature Gold
                   Text(
-                    dateStr,
+                    dateStr.toUpperCase(),
                     style: VaultTypography.mono(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.6,
-                      color: Colors.white.withValues(alpha: 0.90),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                      color: const Color(0xFFC0A85C),
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.9),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
 
                   // Giant Bold Greeting
                   Text(
@@ -154,9 +161,16 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.8,
                       color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.9),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
 
                   // Conversational Prompt Subtitle
                   Text(
@@ -164,7 +178,14 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                     style: VaultTypography.sans(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: Colors.white.withValues(alpha: 0.94),
+                      color: Colors.white.withValues(alpha: 0.92),
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.9),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 38),

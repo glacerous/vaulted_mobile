@@ -497,19 +497,13 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
                 decoration: BoxDecoration(
                   color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF141413).withValues(alpha: 0.03),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: VaultColors.hairline),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Subtitle & Status indicator (Like Oyenza • You're on the waitlist)
+                    // Subtitle & Status indicator
                     Row(
                       children: [
                         Container(
@@ -552,9 +546,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                           onTap: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
                           child: Container(
                             padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: VaultColors.cardHover,
+                            decoration: BoxDecoration(
+                              color: VaultColors.background,
                               shape: BoxShape.circle,
+                              border: Border.all(color: VaultColors.hairline),
                             ),
                             child: Icon(
                               _isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -578,8 +573,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                         Container(
                           padding: const EdgeInsets.all(3),
                           decoration: BoxDecoration(
-                            color: VaultColors.cardHover,
+                            color: VaultColors.background,
                             borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: VaultColors.hairline),
                           ),
                           child: Row(
                             children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
@@ -592,24 +588,15 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                                   decoration: BoxDecoration(
-                                    color: isSel ? VaultColors.card : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: isSel
-                                        ? [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.05),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 1),
-                                            )
-                                          ]
-                                        : null,
+                                    color: isSel ? VaultColors.cardHover : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(7),
                                   ),
                                   child: Text(
                                     curr,
                                     style: VaultTypography.mono(
                                       fontSize: 10,
                                       fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSel ? VaultColors.ink : VaultColors.ink2,
+                                      color: isSel ? VaultColors.accent : VaultColors.ink2,
                                     ),
                                   ),
                                 ),
@@ -630,19 +617,13 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF141413).withValues(alpha: 0.02),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: VaultColors.hairline),
                 ),
                 child: Row(
                   children: [
                     const ValtoMascot(
-                      size: 44,
+                      size: 42,
                       mood: ValtoMood.sleeping,
                     ),
                     const SizedBox(width: 14),
@@ -658,10 +639,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                               ),
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: VaultColors.badgeBg,
                                   borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: VaultColors.accent.withValues(alpha: 0.2)),
                                 ),
                                 child: Text(
                                   '$_streakDays-DAY STREAK 🔥',
@@ -678,7 +660,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                           Text(
                             _todayCount > 0
                                 ? 'Rp ${NumberFormat('#,###').format(_todaySpent)} logged today'
-                                : 'Valto is keeping watch. Vault secure.',
+                                : 'Valto is resting. Vault is secured.',
                             style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
                           ),
                           Text(
@@ -703,7 +685,12 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                         backgroundColor: _isDayClosed ? VaultColors.posBg : VaultColors.cardHover,
                         foregroundColor: _isDayClosed ? VaultColors.pos : VaultColors.ink,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(
+                            color: _isDayClosed ? VaultColors.pos.withValues(alpha: 0.3) : VaultColors.hairline,
+                          ),
+                        ),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       ),
                       child: Text(
@@ -716,88 +703,82 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
               ),
               const SizedBox(height: 24),
 
-              // 5. VAULT PILLARS SECTION (Clean, Airy Mobile Cards)
+              // 5. VAULT PILLARS SECTION (Single Unified Luxury Titanium Card)
               Text(
                 'YOUR VAULT SPACES',
                 style: VaultTypography.mono(fontSize: 10.5, letterSpacing: 1.2, color: VaultColors.ink2),
               ),
               const SizedBox(height: 12),
 
-              // Pillar 1: Steam & Collectibles Hub (Real 38 Synced Items)
-              _buildCleanPillarCard(
-                icon: Icons.sports_esports_rounded,
-                iconColor: VaultColors.accent,
-                title: 'Steam & Gaming Vault',
-                subtitle: '$_steamItemsCount verified items · Live Valve market prices',
-                value: _formatAmount(_collectiblesTotal),
-                badge: 'SYNCED',
-                badgeColor: VaultColors.pos,
-                badgeBg: VaultColors.posBg,
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CollectiblesHubScreen()),
-                  );
-                  _loadVaultData();
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Pillar 2: Hardware & Asset Inventory (MacBook, Warranties, Blockchain)
-              _buildCleanPillarCard(
-                icon: Icons.laptop_mac_rounded,
-                iconColor: VaultColors.ink,
-                title: 'Hardware & Devices',
-                subtitle: 'Laptops, phones & equipment with on-chain proof',
-                value: _formatAmount(_inventoryTotal),
-                badge: 'WARRANTY ACTIVE',
-                badgeColor: VaultColors.accent,
-                badgeBg: VaultColors.badgeBg,
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const InventoryScreen()),
-                  );
-                  _loadVaultData();
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Pillar 3: Valto's Appraisal Minigame
-              _buildCleanPillarCard(
-                icon: Icons.monetization_on_outlined,
-                iconColor: VaultColors.accent,
-                title: "Valto's Appraisal Challenge",
-                subtitle: 'Test your knowledge on real market valuation',
-                value: 'Play',
-                badge: 'MINIGAME',
-                badgeColor: VaultColors.pos,
-                badgeBg: VaultColors.posBg,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const GameScreen()),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Pillar 4: LBS Service Center Radar
-              _buildCleanPillarCard(
-                icon: Icons.near_me_rounded,
-                iconColor: VaultColors.ink2,
-                title: 'LBS Repair Centers',
-                subtitle: 'Find authorized Apple & Samsung repair in Sleman',
-                value: 'Radar',
-                badge: 'GPS SENSOR',
-                badgeColor: VaultColors.ink2,
-                badgeBg: VaultColors.cardHover,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const WarrantyLbsScreen()),
-                  );
-                },
+              Container(
+                decoration: BoxDecoration(
+                  color: VaultColors.card,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: VaultColors.hairline),
+                ),
+                child: Column(
+                  children: [
+                    _buildPillarRow(
+                      icon: Icons.sports_esports_rounded,
+                      iconColor: VaultColors.accent,
+                      title: 'Steam & Gaming Vault',
+                      subtitle: '$_steamItemsCount verified items · Live Valve sync',
+                      value: _formatAmount(_collectiblesTotal),
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const CollectiblesHubScreen()),
+                        );
+                        _loadVaultData();
+                      },
+                    ),
+                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 58, endIndent: 16),
+                    _buildPillarRow(
+                      icon: Icons.laptop_mac_rounded,
+                      iconColor: VaultColors.ink,
+                      title: 'Hardware & Devices',
+                      subtitle: 'Equipment, serials & on-chain proof',
+                      value: _formatAmount(_inventoryTotal),
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const InventoryScreen()),
+                        );
+                        _loadVaultData();
+                      },
+                    ),
+                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 58, endIndent: 16),
+                    _buildPillarRow(
+                      icon: Icons.monetization_on_outlined,
+                      iconColor: VaultColors.accent,
+                      title: "Valto's Appraisal Challenge",
+                      subtitle: 'Market valuation mini-trial',
+                      value: 'Play',
+                      isAction: true,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const GameScreen()),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 58, endIndent: 16),
+                    _buildPillarRow(
+                      icon: Icons.near_me_rounded,
+                      iconColor: VaultColors.ink2,
+                      title: 'LBS Repair Centers',
+                      subtitle: 'Authorized Apple & Samsung in Sleman',
+                      value: 'Radar',
+                      isAction: true,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const WarrantyLbsScreen()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 28),
             ],
@@ -807,75 +788,55 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
     );
   }
 
-  Widget _buildCleanPillarCard({
+  Widget _buildPillarRow({
     required IconData icon,
     required Color iconColor,
     required String title,
     required String subtitle,
     required String value,
-    required String badge,
-    required Color badgeColor,
-    required Color badgeBg,
+    bool isAction = false,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         HapticFeedback.selectionClick();
         onTap();
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: VaultColors.card,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF141413).withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: VaultColors.cardHover,
-                borderRadius: BorderRadius.circular(14),
+                color: VaultColors.background,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: VaultColors.hairline),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        title,
-                        style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w700, color: VaultColors.ink),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: badgeBg,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          badge,
-                          style: VaultTypography.mono(fontSize: 8.5, fontWeight: FontWeight.w700, color: badgeColor),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    title,
+                    style: VaultTypography.sans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.ink,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: VaultTypography.sans(fontSize: 11.5, color: VaultColors.ink2),
+                    style: VaultTypography.sans(
+                      fontSize: 11,
+                      color: VaultColors.ink2,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -883,15 +844,23 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   value,
-                  style: VaultTypography.mono(fontSize: 12.5, fontWeight: FontWeight.w700, color: VaultColors.ink),
+                  style: VaultTypography.mono(
+                    fontSize: 12,
+                    fontWeight: isAction ? FontWeight.w600 : FontWeight.w700,
+                    color: isAction ? VaultColors.accent : VaultColors.ink,
+                  ),
                 ),
-                const SizedBox(height: 2),
-                const Icon(Icons.arrow_forward_ios_rounded, size: 11, color: VaultColors.ink3),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 16,
+                  color: VaultColors.ink3,
+                ),
               ],
             ),
           ],

@@ -21,6 +21,9 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
   double _steamTotal = 0.0;
   String _steamSort = 'Value ↓';
 
+  List<Map<String, dynamic>> _physicalCollectibles = [];
+  double _physicalTotal = 0.0;
+
   List<Map<String, dynamic>> get _sortedSteamItems {
     final list = List<Map<String, dynamic>>.from(_steamItems);
     switch (_steamSort) {
@@ -55,10 +58,19 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
     for (var i in steam) {
       total += (i['current_valuation'] as num).toDouble();
     }
+
+    final physical = all.where((i) => i['is_collectible'] == 1 && !i['category'].toString().startsWith('Steam')).toList();
+    double pTotal = 0.0;
+    for (var i in physical) {
+      pTotal += (i['current_valuation'] as num).toDouble();
+    }
+
     if (mounted) {
       setState(() {
         _steamItems = steam;
         _steamTotal = total;
+        _physicalCollectibles = physical;
+        _physicalTotal = pTotal;
       });
     }
   }
@@ -138,21 +150,27 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
     );
   }
 
-  // 1. Pokémon TCG Card
+  // 1. Pokémon & Physical TCG Card
   Widget _buildPokemonCard(BuildContext context) {
+    final bool hasCards = _physicalCollectibles.isNotEmpty;
+
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const CollectiblesScreen()),
         );
+        _loadData();
       },
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: VaultColors.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: VaultColors.hairline),
+          border: Border.all(
+            color: hasCards ? VaultColors.accent.withValues(alpha: 0.4) : VaultColors.hairline,
+            width: hasCards ? 1.2 : 1.0,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,60 +180,122 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.style_outlined, size: 16, color: VaultColors.ink2),
+                    const Icon(Icons.style_outlined, size: 16, color: VaultColors.accent),
                     const SizedBox(width: 8),
-                    Text('Pokémon TCG', style: VaultTypography.cardLabel),
+                    Text('Physical TCG & Cards', style: VaultTypography.cardLabel),
                   ],
                 ),
                 const Icon(Icons.north_east_rounded, size: 14, color: VaultColors.ink2),
               ],
             ),
             const SizedBox(height: 2),
-            Text('1 card', style: VaultTypography.cardSub),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  '\$27,500.00',
-                  style: VaultTypography.mono(fontSize: 24, fontWeight: FontWeight.w500, color: VaultColors.ink),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: VaultColors.posBg,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    r'+$27,479.00',
-                    style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, color: VaultColors.pos),
-                  ),
-                ),
-              ],
+            Text(
+              hasCards ? '${_physicalCollectibles.length} cards cataloged' : 'Add your first graded card or booster',
+              style: VaultTypography.cardSub,
             ),
-            const SizedBox(height: 16),
-            Center(
-              child: Container(
-                height: 130,
-                width: 95,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                  image: const DecorationImage(
-                    image: NetworkImage('https://images.pokemontcg.io/ex15/100_hires.png'),
-                    fit: BoxFit.cover,
+            const SizedBox(height: 12),
+            if (hasCards) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '\$${_physicalTotal.toStringAsFixed(2)}',
+                    style: VaultTypography.mono(fontSize: 24, fontWeight: FontWeight.w500, color: VaultColors.ink),
                   ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: VaultColors.posBg,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'VERIFIED',
+                      style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, color: VaultColors.pos),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              // Show actual card thumbnails
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: _physicalCollectibles.map((item) {
+                    final imgUrl = vaultImageUrl(item['image_url'] as String?);
+                    return Container(
+                      margin: const EdgeInsets.only(right: 12),
+                      width: 100,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: VaultColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                imgUrl,
+                                height: 70,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.style_rounded, size: 36, color: VaultColors.ink2),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            item['name'] as String? ?? '',
+                            style: VaultTypography.sans(fontSize: 10.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '\$${((item['current_valuation'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)}',
+                            style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, color: VaultColors.accent),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
-            ),
+            ] else ...[
+              const SizedBox(height: 8),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(3, (idx) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 36,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: VaultColors.cardHover,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      child: const Icon(Icons.style_outlined, color: VaultColors.ink3, size: 18),
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  'No physical cards logged yet. Tap to add card name and acquisition cost.',
+                  style: VaultTypography.cardDescription,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           ],
         ),
       ),

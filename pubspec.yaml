@@ -59,6 +59,7 @@ flutter:
     - .env
     - assets/logos/
     - assets/images/
+    - assets/images/cloud_sea_frames/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

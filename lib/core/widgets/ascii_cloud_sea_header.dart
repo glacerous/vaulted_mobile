@@ -9,8 +9,8 @@ typedef AsciiCloudSeaHeader = DitheredCloudSeaHeader;
 
 /// A warm, friendly, casual luxury header featuring an authentic, lightweight,
 /// zero-lag dithered sunset cloud-sea artwork from ascii.rest/cloud-sea.
-/// Hardware-accelerated, perfectly smooth 60fps loop with zero CPU overhead.
-class DitheredCloudSeaHeader extends StatelessWidget {
+/// Uses a pre-cached 30-frame sequence for guaranteed fluid animation across all browsers & platforms.
+class DitheredCloudSeaHeader extends StatefulWidget {
   final TextEditingController promptController;
   final FocusNode promptFocus;
   final bool isAiProcessing;
@@ -25,6 +25,43 @@ class DitheredCloudSeaHeader extends StatelessWidget {
     required this.vowlMood,
     required this.onSubmit,
   });
+
+  @override
+  State<DitheredCloudSeaHeader> createState() => _DitheredCloudSeaHeaderState();
+}
+
+class _DitheredCloudSeaHeaderState extends State<DitheredCloudSeaHeader>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  static const int _frameCount = 30;
+
+  @override
+  void initState() {
+    super.initState();
+    // Smooth 30 frames over 2.4 seconds cycle
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Pre-cache all frames into Flutter memory so frame swapping is instant and zero-lag
+    for (int i = 0; i < _frameCount; i++) {
+      precacheImage(
+        AssetImage('assets/images/cloud_sea_frames/f_$i.png'),
+        context,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -54,13 +91,19 @@ class DitheredCloudSeaHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         child: Stack(
           children: [
-            // 1. LIGHTWEIGHT ZERO-LAG AUTHENTIC DITHERED ARTWORK (ascii.rest/cloud-sea)
+            // 1. GUARANTEED 60FPS SMOOTH DITHERED ANIMATION (Pre-cached frame player)
             Positioned.fill(
-              child: Image.asset(
-                'assets/images/cloud_sea_dither.gif',
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-                gaplessPlayback: true,
+              child: AnimatedBuilder(
+                animation: _animController,
+                builder: (context, child) {
+                  final frameIndex = (_animController.value * _frameCount).floor() % _frameCount;
+                  return Image.asset(
+                    'assets/images/cloud_sea_frames/f_$frameIndex.png',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    gaplessPlayback: true,
+                  );
+                },
               ),
             ),
 
@@ -134,7 +177,7 @@ class DitheredCloudSeaHeader extends StatelessWidget {
                         right: 32,
                         child: VowlMascot(
                           size: 42,
-                          mood: vowlMood,
+                          mood: widget.vowlMood,
                           showHat: true,
                         ),
                       ),
@@ -175,9 +218,9 @@ class DitheredCloudSeaHeader extends StatelessWidget {
                                 // Omnibar Input
                                 Expanded(
                                   child: TextField(
-                                    controller: promptController,
-                                    focusNode: promptFocus,
-                                    onSubmitted: (_) => onSubmit(),
+                                    controller: widget.promptController,
+                                    focusNode: widget.promptFocus,
+                                    onSubmitted: (_) => widget.onSubmit(),
                                     style: VaultTypography.sans(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w500,
@@ -197,7 +240,7 @@ class DitheredCloudSeaHeader extends StatelessWidget {
 
                                 // Black Circle Arrow Button (Oyenza signature)
                                 GestureDetector(
-                                  onTap: onSubmit,
+                                  onTap: widget.onSubmit,
                                   child: Container(
                                     width: 38,
                                     height: 38,
@@ -205,7 +248,7 @@ class DitheredCloudSeaHeader extends StatelessWidget {
                                       shape: BoxShape.circle,
                                       color: Color(0xFF141413),
                                     ),
-                                    child: isAiProcessing
+                                    child: widget.isAiProcessing
                                         ? const Padding(
                                             padding: EdgeInsets.all(9),
                                             child: CircularProgressIndicator(

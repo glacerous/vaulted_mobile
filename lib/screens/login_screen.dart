@@ -28,8 +28,6 @@ class _LoginScreenState extends State<LoginScreen>
   late Animation<double> _levitateAnim;
   late Animation<double> _shadowAnim;
 
-  ValtoMood _currentMood = ValtoMood.vigilant;
-  String _statusMessage = 'VALTO · VAULT GUARDIAN';
   bool _isLoading = false;
 
   @override
@@ -69,31 +67,6 @@ class _LoginScreenState extends State<LoginScreen>
             FadeTransition(opacity: anim, child: child),
       ),
     );
-  }
-
-  void _handleCatTap() {
-    HapticFeedback.lightImpact();
-    setState(() {
-      switch (_currentMood) {
-        case ValtoMood.vigilant:
-          _currentMood = ValtoMood.playful;
-          _statusMessage = 'VALTO WAVES HELLO!';
-          break;
-        case ValtoMood.playful:
-          _currentMood = ValtoMood.happy;
-          _statusMessage = 'VALTO IS READY TO GUARD';
-          break;
-        case ValtoMood.happy:
-          _currentMood = ValtoMood.detective;
-          _statusMessage = 'VALTO INSPECTS YOUR ASSETS';
-          break;
-        case ValtoMood.detective:
-        default:
-          _currentMood = ValtoMood.vigilant;
-          _statusMessage = 'VALTO · VAULT GUARDIAN';
-          break;
-      }
-    });
   }
 
   Future<void> _handleSignIn(StateSetter setModalState) async {
@@ -650,66 +623,15 @@ class _LoginScreenState extends State<LoginScreen>
                                       ),
                                     ),
 
-                                    // BIG VALTO HERO (size 195 - crisp 16-bit pixel fidelity)
+                                    // BIG VALTO HERO (size 200 - crisp 16-bit pixel fidelity)
                                     Transform.translate(
                                       offset: Offset(0, _levitateAnim.value),
-                                      child: GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onTap: _handleCatTap,
-                                        child: Tooltip(
-                                          message: 'Tap Valto',
-                                          child: ValtoMascot(
-                                            size: 195,
-                                            mood: _currentMood,
-                                          ),
-                                        ),
+                                      child: const ValtoMascot(
+                                        size: 200,
+                                        mood: ValtoMood.vigilant,
                                       ),
                                     ),
                                   ],
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-
-                              // Refined tactile status pill
-                              GestureDetector(
-                                onTap: _handleCatTap,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6.5),
-                                  decoration: BoxDecoration(
-                                    color: VaultColors.card,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: VaultColors.hairline),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF141413).withValues(alpha: 0.03),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 5.5,
-                                        height: 5.5,
-                                        decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Color(0xFF55B374), // Terminal green dot
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        _statusMessage,
-                                        style: VaultTypography.mono(
-                                          fontSize: 10.5,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.7,
-                                          color: VaultColors.ink,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
                               ),
                             ],

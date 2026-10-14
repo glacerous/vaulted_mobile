@@ -4,12 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/security/auth_service.dart';
-import '../core/widgets/valto_mascot.dart';
+import '../core/widgets/anatomy_computer.dart';
 import 'main_navigation_screen.dart';
 
 /// Clean luxury onboarding and login screen for VAULTED.
-/// Formatted in the authentic warm porcelain and luxury gold aesthetic.
-/// Features an anchored, animated Valto cat guardian, genuine Sign Up / Sign In flows, and zero AI slop.
+/// Features the isometric Anatomy Desk Computer workstation paired with Valto the 2D pixel cat.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,34 +16,17 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _signInUsernameController = TextEditingController(text: 'azzaky');
   final TextEditingController _signInPasswordController = TextEditingController(text: 'admin123');
 
   final TextEditingController _signUpUsernameController = TextEditingController();
   final TextEditingController _signUpPasswordController = TextEditingController();
 
-  late AnimationController _floatController;
-  late Animation<double> _floatAnim;
-
   bool _isLoading = false;
 
   @override
-  void initState() {
-    super.initState();
-    _floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2800),
-    )..repeat(reverse: true);
-
-    _floatAnim = Tween<double>(begin: -5.0, end: 5.0).animate(
-      CurvedAnimation(parent: _floatController, curve: Curves.easeInOutSine),
-    );
-  }
-
-  @override
   void dispose() {
-    _floatController.dispose();
     _signInUsernameController.dispose();
     _signInPasswordController.dispose();
     _signUpUsernameController.dispose();
@@ -283,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 children: [
                                   Text('Create Vault', style: VaultTypography.sans(fontSize: 14.5, fontWeight: FontWeight.w600, color: Colors.white)),
                                   const SizedBox(width: 8),
-                                  const Icon(Icons.auto_awesome_rounded, size: 16, color: VaultColors.accent),
+                                  const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
                                 ],
                               ),
                       ),
@@ -484,239 +466,103 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 children: [
                   const SizedBox(height: 10),
 
-                  // TOP BRAND EMBLEM (Luxury porcelain squircle with gold folded corner and vault sparkle)
+                  // TOP BRAND EMBLEM (Precision tactile vault lock emblem)
                   Container(
-                    width: 64,
-                    height: 64,
+                    width: 58,
+                    height: 58,
                     decoration: BoxDecoration(
                       color: VaultColors.card,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(18),
                       border: Border.all(color: VaultColors.hairline),
                       boxShadow: [
                         BoxShadow(
                           color: const Color(0xFF141413).withValues(alpha: 0.04),
-                          blurRadius: 16,
-                          offset: const Offset(0, 5),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
                     child: Stack(
                       children: [
-                        // Folded corner in warm gold
+                        // Subtle warm gold folded corner
                         Positioned(
                           top: 0,
                           right: 0,
                           child: Container(
-                            width: 17,
-                            height: 17,
+                            width: 15,
+                            height: 15,
                             decoration: const BoxDecoration(
                               color: Color(0xFFE6DEC9),
                               borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(9),
-                                topRight: Radius.circular(19),
+                                bottomLeft: Radius.circular(8),
+                                topRight: Radius.circular(17),
                               ),
                             ),
                           ),
                         ),
-                        // Center warm gold luxury star
+                        // Center precision vault lock
                         const Center(
                           child: Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 26,
-                            color: VaultColors.accent, // Warm Signature Gold
+                            Icons.lock_outline_rounded,
+                            size: 22,
+                            color: VaultColors.ink,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
-                  // BRAND NAME & EDITORIAL SPARKLE
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'VAULTED',
-                        style: GoogleFonts.newsreader(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.0,
-                          color: VaultColors.ink,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Padding(
-                        padding: EdgeInsets.only(top: 4),
-                        child: Icon(
-                          Icons.auto_awesome_rounded,
-                          size: 13,
-                          color: VaultColors.accent,
-                        ),
-                      ),
-                    ],
+                  // BRAND NAME (Clean authoritative serif typography, zero sparkles)
+                  Text(
+                    'VAULTED',
+                    style: GoogleFonts.newsreader(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                      color: VaultColors.ink,
+                    ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
 
-                  // TAGLINE WITH DELICATE WARM GOLD UNDERLINE
-                  Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Account for everything you ',
-                            style: VaultTypography.sans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w400,
-                              color: VaultColors.ink2,
-                            ),
-                          ),
-                          Text(
-                            'own.',
-                            style: VaultTypography.sans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: VaultColors.ink,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      // Delicate curved underline in warm gold
-                      CustomPaint(
-                        size: const Size(58, 4),
-                        painter: _SwoopUnderlinePainter(color: VaultColors.accent),
-                      ),
-                    ],
+                  // SUBTITLE MONOSPACE TELEMETRY
+                  Text(
+                    'ENCRYPTED HARDWARE TERMINAL',
+                    style: VaultTypography.mono(
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.w500,
+                      color: VaultColors.ink2,
+                    ),
                   ),
 
-                  // 3. CENTER HERO: FRAMED VALTO COMPANION WITH DIRECTLY ANCHORED SPEECH BUBBLE
+                  // 3. CENTER HERO: ANATOMY ISOMETRIC DESK COMPUTER WITH 2D VALTO CAT
                   Expanded(
                     child: Center(
-                      child: AnimatedBuilder(
-                        animation: _floatAnim,
-                        builder: (context, child) {
-                          return Transform.translate(
-                            offset: Offset(0, _floatAnim.value),
-                            child: child,
-                          );
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Grounded Speech Callout (Sitting directly above Valto with a bottom indicator)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: VaultColors.card,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: VaultColors.hairline),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF141413).withValues(alpha: 0.04),
-                                    blurRadius: 14,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Hi, I'm Valto.",
-                                    style: VaultTypography.sans(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: VaultColors.ink,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    "Your personal vault guardian.",
-                                    style: VaultTypography.sans(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: VaultColors.ink2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Little Pointer Triangle
-                            CustomPaint(
-                              size: const Size(14, 8),
-                              painter: _BubbleTrianglePainter(),
-                            ),
-                            const SizedBox(height: 8),
-
-                            // Valto Cat on Soft Ambient Halo
-                            Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  width: 140,
-                                  height: 140,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: RadialGradient(
-                                      colors: [
-                                        VaultColors.accent.withValues(alpha: 0.16),
-                                        Colors.white.withValues(alpha: 0.0),
-                                      ],
-                                      stops: const [0.0, 1.0],
-                                    ),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    HapticFeedback.lightImpact();
-                                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Valto: "Welcome! Your private vault is ready."',
-                                          style: VaultTypography.sans(fontSize: 12, color: Colors.white),
-                                        ),
-                                        duration: const Duration(seconds: 2),
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                        backgroundColor: const Color(0xFF141413),
-                                      ),
-                                    );
-                                  },
-                                  child: const ValtoMascot(
-                                    size: 92,
-                                    mood: ValtoMood.vigilant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                      child: AnatomyDeskComputer(
+                        onTerminalTap: _showSignInSheet,
+                        onKeyTap: () {},
                       ),
                     ),
                   ),
 
-                  // 4. BOTTOM ACTION ZONE (Jet Obsidian "Sign up ✦" + Clean "Sign in")
+                  // 4. BOTTOM ACTION ZONE (Clean Obsidian "Sign up" + "Sign in")
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // "Get started — Sign up ✦" Primary CTA Button
+                      // "Sign up" Primary CTA Button (Zero AI slop, clean arrow)
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
+                        height: 54,
                         child: ElevatedButton(
                           onPressed: _showSignUpSheet,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF141413), // Signature Oyenza Obsidian
+                            backgroundColor: const Color(0xFF141413), // Obsidian Jet
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            shadowColor: const Color(0xFF141413).withValues(alpha: 0.25),
+                            shadowColor: const Color(0xFF141413).withValues(alpha: 0.20),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
+                              borderRadius: BorderRadius.circular(27),
                             ),
                           ),
                           child: Row(
@@ -732,15 +578,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ),
                               const SizedBox(width: 8),
                               const Icon(
-                                Icons.auto_awesome_rounded,
+                                Icons.arrow_forward_rounded,
                                 size: 16,
-                                color: VaultColors.accent, // Signature Luxury Gold Sparkle
+                                color: Colors.white,
                               ),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
 
                       // "Sign in" Underlined Link
                       GestureDetector(
@@ -761,6 +607,31 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                       ),
                       const SizedBox(height: 10),
+
+                      // Subtle hardware security badge
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 5,
+                            height: 5,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF55B374), // Terminal green dot
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'LOCAL ENCRYPTED STORAGE · 256-BIT AES',
+                            style: VaultTypography.mono(
+                              fontSize: 9.5,
+                              letterSpacing: 0.6,
+                              color: VaultColors.ink3,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
                     ],
                   ),
                 ],
@@ -807,58 +678,6 @@ class _WarmDunesPainter extends CustomPainter {
       ..close();
 
     canvas.drawPath(frontPath, frontPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-/// Paints the delicate curved underline accent in warm gold
-class _SwoopUnderlinePainter extends CustomPainter {
-  final Color color;
-  _SwoopUnderlinePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path()
-      ..moveTo(2, size.height * 0.2)
-      ..quadraticBezierTo(size.width * 0.5, size.height * 0.9, size.width - 2, size.height * 0.3);
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-/// Paints the little speech bubble pointer triangle
-class _BubbleTrianglePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = VaultColors.card
-      ..style = PaintingStyle.fill;
-
-    final borderPaint = Paint()
-      ..color = VaultColors.hairline
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width / 2, size.height)
-      ..lineTo(size.width, 0)
-      ..close();
-
-    canvas.drawPath(path, paint);
-    canvas.drawLine(Offset(0, 0), Offset(size.width / 2, size.height), borderPaint);
-    canvas.drawLine(Offset(size.width / 2, size.height), Offset(size.width, 0), borderPaint);
   }
 
   @override

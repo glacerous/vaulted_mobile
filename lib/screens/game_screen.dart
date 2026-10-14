@@ -136,34 +136,40 @@ class _GameScreenState extends State<GameScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Valto the Appraiser Cat
+              // Vowl the Guardian Owl Appraiser
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ValtoMascot(
+                  VowlMascot(
                     size: 46,
                     mood: _feedback == null
-                        ? ValtoMood.detective
-                        : (_isCorrect! ? ValtoMood.happy : ValtoMood.peeking),
+                        ? VowlMood.detective
+                        : (_isCorrect! ? VowlMood.happy : VowlMood.vigilant),
                     showHat: true,
                   ),
                   const SizedBox(width: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: VaultColors.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: VaultColors.hairline),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF141413).withValues(alpha: 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Text(
                       _feedback == null
-                          ? "Valto: 'Hmm... do you know this one?'"
+                          ? "Vowl: 'Hoo... do you know this value?'"
                           : (_isCorrect!
-                              ? "Valto: 'Spot on! Purr-fect guess!'"
-                              : "Valto: 'Oops! Market can be tricky.'"),
+                              ? "Vowl: 'Wise appraisal! Spot on!'"
+                              : "Vowl: 'Hoo! The market can be tricky.'"),
                       style: VaultTypography.sans(
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         color: _feedback == null
                             ? VaultColors.ink2
                             : (_isCorrect! ? VaultColors.pos : VaultColors.accent),

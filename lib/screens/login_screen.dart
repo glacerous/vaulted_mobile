@@ -201,17 +201,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Login Button
                       SizedBox(
                         width: double.infinity,
-                        height: 48,
+                        height: 50,
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: VaultColors.ink,
-                            foregroundColor: VaultColors.background,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            backgroundColor: VaultColors.primaryButton,
+                            foregroundColor: VaultColors.primaryButtonInk,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                           ),
                           child: _isLoading
-                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: VaultColors.background))
-                              : Text('Unlock Vault', style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600, color: VaultColors.background)),
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : Text('Unlock Vault', style: VaultTypography.sans(fontSize: 14.5, fontWeight: FontWeight.w600)),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -219,17 +220,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Biometric Login Button (Slide 1 Requirement)
                       SizedBox(
                         width: double.infinity,
-                        height: 48,
+                        height: 50,
                         child: OutlinedButton.icon(
                           onPressed: _handleBiometricLogin,
                           icon: const Icon(Icons.fingerprint_rounded, size: 20, color: VaultColors.accent),
                           label: Text(
                             'Biometric Unlock',
-                            style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w500, color: VaultColors.ink),
+                            style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w500, color: VaultColors.ink),
                           ),
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: VaultColors.hairline),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                           ),
                         ),
                       ),

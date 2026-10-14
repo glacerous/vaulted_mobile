@@ -27,6 +27,9 @@ class ValtoParsedAction {
   });
 }
 
+typedef VowlParsedAction = ValtoParsedAction;
+typedef VowlAiService = ValtoAiService;
+
 class ValtoAiService {
   ValtoAiService._();
   static final ValtoAiService instance = ValtoAiService._();

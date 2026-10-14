@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
+import '../data/real_steam_assets.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -23,7 +24,8 @@ class DatabaseHelper {
       'image_url': 'https://images.pokemontcg.io/ex15/100_hires.png',
       'is_collectible': 1,
       'blockchain_hash': '0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069',
-    }
+    },
+    ...xelSteamAssets,
   ];
 
   DatabaseHelper._init();
@@ -130,7 +132,14 @@ class DatabaseHelper {
     }
     final db = await database;
     if (db == null) return [];
-    return await db.query('items', orderBy: 'id DESC');
+    var items = await db.query('items', orderBy: 'id DESC');
+    if (!items.any((i) => i['category'].toString().startsWith('Steam'))) {
+      for (var asset in xelSteamAssets) {
+        await db.insert('items', Map<String, dynamic>.from(asset));
+      }
+      items = await db.query('items', orderBy: 'id DESC');
+    }
+    return items;
   }
 
   Future<int> insertItem(Map<String, dynamic> item) async {
@@ -141,6 +150,23 @@ class DatabaseHelper {
     final db = await database;
     if (db == null) return 0;
     return await db.insert('items', item);
+  }
+
+  Future<void> removeMockItems() async {
+    if (kIsWeb) {
+      _webItems.removeWhere((i) =>
+          i['name'] == 'AK-47 | Case Hardened (Tier 2 Blue Gem)' ||
+          i['name'] == 'Butterfly Knife | Doppler (Phase 2)');
+      return;
+    }
+    final db = await database;
+    if (db == null) return;
+    await db.delete('items',
+        where: 'name IN (?, ?)',
+        whereArgs: [
+          'AK-47 | Case Hardened (Tier 2 Blue Gem)',
+          'Butterfly Knife | Doppler (Phase 2)',
+        ]);
   }
 
   final List<Map<String, dynamic>> _webSubscriptions = [

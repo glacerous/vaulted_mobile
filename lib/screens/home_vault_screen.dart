@@ -19,6 +19,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
   bool _isBalanceVisible = true;
   double _inventoryTotal = 0.0;
   double _collectiblesTotal = 27500.00;
+  int _collectiblesCount = 1;
   String _selectedCurrency = 'USD';
 
   // Live exchange rates (Base USD)
@@ -39,11 +40,13 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
     final items = await DatabaseHelper.instance.getItems();
     double inv = 0.0;
     double col = 0.0;
+    int colCount = 0;
 
     for (var item in items) {
       final val = (item['current_valuation'] as num).toDouble();
       if (item['is_collectible'] == 1) {
         col += val;
+        colCount++;
       } else {
         inv += val;
       }
@@ -52,6 +55,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
     setState(() {
       _inventoryTotal = inv;
       _collectiblesTotal = col > 0 ? col : 27500.00;
+      _collectiblesCount = colCount > 0 ? colCount : 1;
     });
   }
 
@@ -296,7 +300,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                     _buildPillarCard(
                       icon: Icons.layers_outlined,
                       title: 'Collectibles',
-                      sub: '1 card tracked',
+                      sub: '$_collectiblesCount items tracked',
                       value: _formatAmount(_collectiblesTotal),
                       gainBadge: r'+$27,479.00 · +130852.4%',
                       onTap: () {

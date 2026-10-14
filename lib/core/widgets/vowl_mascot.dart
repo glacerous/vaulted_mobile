@@ -12,10 +12,10 @@ enum ValtoMood {
 typedef VowlMood = ValtoMood;
 typedef VowlMascot = ValtoMascot;
 
-/// Valto — The Simple Blocky Cat Mascot of VAULTED.
-/// Inspired directly by Claude's Claw'd: warm terracotta block silhouette,
-/// two cute ear blocks, big friendly square eyes, and two stubby paws.
-/// Ultra-minimal 7x5 retro grid that is friendly, charming, and never creepy.
+/// Valto — The Minimal Black Cat Mascot of VAULTED.
+/// Built with compact, square 6x6 pixel geometry:
+/// Two perky ear blocks, symmetrical square eyes, two stubby paws,
+/// and a cute curled tail on the side. Pure matte black cat silhouette.
 class ValtoMascot extends StatelessWidget {
   final double size;
   final ValtoMood mood;
@@ -38,41 +38,42 @@ class ValtoMascot extends StatelessWidget {
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _SimpleBlockyCatPainter(
+        painter: _CompactBlackCatPainter(
           mood: mood,
-          bodyColor: color ?? const Color(0xFFCC6B49), // Warm Claude terracotta
-          eyeColor: eyeColor ?? const Color(0xFF141413), // Clean black square eyes
+          bodyColor: color ?? const Color(0xFF161615), // Pure matte black cat
+          eyeColor: eyeColor ?? const Color(0xFFFBBF24), // Warm amber eyes
         ),
       ),
     );
   }
 }
 
-class _SimpleBlockyCatPainter extends CustomPainter {
+class _CompactBlackCatPainter extends CustomPainter {
   final ValtoMood mood;
   final Color bodyColor;
   final Color eyeColor;
 
-  _SimpleBlockyCatPainter({
+  _CompactBlackCatPainter({
     required this.mood,
     required this.bodyColor,
     required this.eyeColor,
   });
 
-  // Simple 7x5 Block Grid:
-  // '#' = body block, 'E' = eye block, '.' = transparent
+  // Compact 6x6 Pixel Grid (Not wide! Perfectly square, balanced proportions)
+  // '#' = black body block, 'E' = eye block, '.' = transparent
   static const List<String> _catGrid = [
-    '#.....#', // Row 0: Two cute ear blocks on top corners
-    '#######', // Row 1: Crown between ears
-    '#E###E#', // Row 2: Friendly square eyes
-    '#######', // Row 3: Cheeks / chin
-    '..#.#..', // Row 4: Two cute little front paws in the middle
+    '#...#.', // Row 0: Two cute ear blocks
+    '#####.', // Row 1: Crown between ears
+    '#E#E#.', // Row 2: Expressive eyes (symmetrical, compact)
+    '#####.', // Row 3: Cheeks / snout
+    '.###.#', // Row 4: Sitting body + tail tip
+    '.#.#.#', // Row 5: Two paws + tail base
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    const cols = 7;
-    const rows = 5;
+    const cols = 6;
+    const rows = 6;
 
     final blockSize = (size.width / cols).clamp(1.0, size.height / rows);
     final totalW = blockSize * cols;
@@ -83,6 +84,12 @@ class _SimpleBlockyCatPainter extends CustomPainter {
     final bodyPaint = Paint()
       ..color = bodyColor
       ..style = PaintingStyle.fill;
+
+    // Subtle outline for crisp visibility against dark backgrounds
+    final borderPaint = Paint()
+      ..color = const Color(0xFF32322F)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
 
     final eyePaint = Paint()
       ..color = eyeColor
@@ -103,13 +110,15 @@ class _SimpleBlockyCatPainter extends CustomPainter {
 
         if (ch == '#') {
           canvas.drawRect(rect, bodyPaint);
+          canvas.drawRect(rect, borderPaint);
         } else if (ch == 'E') {
-          // Body base under eye
+          // Body under eye
           canvas.drawRect(rect, bodyPaint);
+          canvas.drawRect(rect, borderPaint);
 
-          // Render eye according to mood
+          // Mood eye variations
           if (mood == ValtoMood.happy) {
-            // Happy squint slit (^ ^)
+            // Cheerful happy squint slit (- -)
             final slitRect = Rect.fromLTWH(
               rect.left,
               rect.top + rect.height * 0.35,
@@ -118,7 +127,7 @@ class _SimpleBlockyCatPainter extends CustomPainter {
             );
             canvas.drawRect(slitRect, eyePaint);
           } else if (mood == ValtoMood.sleeping) {
-            // Sleeping closed eye (- -)
+            // Calm sleeping closed eyes
             final slitRect = Rect.fromLTWH(
               rect.left,
               rect.top + rect.height * 0.55,
@@ -126,16 +135,16 @@ class _SimpleBlockyCatPainter extends CustomPainter {
               rect.height * 0.25,
             );
             canvas.drawRect(slitRect, eyePaint);
-          } else if (mood == ValtoMood.detective && c == 5) {
+          } else if (mood == ValtoMood.detective && c == 3) {
             // Right eye has curious monocle frame
             canvas.drawRect(rect, eyePaint);
             final monoclePaint = Paint()
-              ..color = const Color(0xFFFBBF24)
+              ..color = const Color(0xFFC0A85C)
               ..style = PaintingStyle.stroke
-              ..strokeWidth = 1.2;
-            canvas.drawRect(rect.inflate(blockSize * 0.2), monoclePaint);
+              ..strokeWidth = 1.0;
+            canvas.drawRect(rect.inflate(blockSize * 0.15), monoclePaint);
           } else {
-            // Standard friendly square eye (like Claw'd)
+            // Standard warm amber square eye
             canvas.drawRect(rect, eyePaint);
           }
         }
@@ -144,7 +153,7 @@ class _SimpleBlockyCatPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SimpleBlockyCatPainter oldDelegate) {
+  bool shouldRepaint(covariant _CompactBlackCatPainter oldDelegate) {
     return oldDelegate.mood != mood ||
         oldDelegate.bodyColor != bodyColor ||
         oldDelegate.eyeColor != eyeColor;

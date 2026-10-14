@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../constants/typography.dart';
-import 'vowl_mascot.dart';
+import 'valto_mascot.dart';
 
 /// Permanent, signature Alpine Dawn header
 typedef AsciiCloudSeaHeader = AlpineDawnHeader;
@@ -15,7 +15,7 @@ class AlpineDawnHeader extends StatefulWidget {
   final TextEditingController promptController;
   final FocusNode promptFocus;
   final bool isAiProcessing;
-  final VowlMood vowlMood;
+  final ValtoMood valtoMood;
   final VoidCallback onSubmit;
 
   const AlpineDawnHeader({
@@ -23,9 +23,10 @@ class AlpineDawnHeader extends StatefulWidget {
     required this.promptController,
     required this.promptFocus,
     required this.isAiProcessing,
-    required this.vowlMood,
+    ValtoMood? valtoMood,
+    ValtoMood? vowlMood,
     required this.onSubmit,
-  });
+  }) : valtoMood = valtoMood ?? vowlMood ?? ValtoMood.peeking;
 
   @override
   State<AlpineDawnHeader> createState() => _AlpineDawnHeaderState();
@@ -168,18 +169,19 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                   ),
                   const SizedBox(height: 38),
 
-                  // 4. VOWL MASCOT PEEKING + FROSTED GLASS OMNIBAR
+                  // 4. VALTO MASCOT PEEKING + FROSTED GLASS OMNIBAR
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      // Vowl peeking gracefully right over the frosted capsule
+                      // Valto peeking gracefully right over the frosted capsule
                       Positioned(
                         top: -34,
                         right: 32,
-                        child: VowlMascot(
+                        child: ValtoMascot(
                           size: 42,
-                          mood: widget.vowlMood,
-                          showHat: true,
+                          mood: widget.valtoMood == ValtoMood.vigilant
+                              ? ValtoMood.peeking
+                              : widget.valtoMood,
                         ),
                       ),
 
@@ -228,7 +230,7 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                                       color: Colors.white,
                                     ),
                                     decoration: InputDecoration(
-                                      hintText: 'Ask Vowl anything...',
+                                      hintText: 'Ask Valto anything...',
                                       hintStyle: VaultTypography.sans(
                                         fontSize: 13,
                                         color: Colors.white.withValues(alpha: 0.78),

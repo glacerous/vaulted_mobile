@@ -6,7 +6,7 @@ import '../core/constants/typography.dart';
 import '../core/database/database_helper.dart';
 import '../core/services/valto_ai_service.dart';
 import '../core/services/gemini_service.dart';
-import '../core/widgets/vowl_mascot.dart';
+import '../core/widgets/valto_mascot.dart';
 import '../core/widgets/ascii_cloud_sea_header.dart';
 import 'pillars/inventory_screen.dart';
 import 'pillars/collectibles_hub_screen.dart';
@@ -35,7 +35,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
   int _todayCount = 0;
 
   bool _isAiProcessing = false;
-  VowlMood _vowlMood = VowlMood.vigilant;
+  ValtoMood _valtoMood = ValtoMood.vigilant;
 
   // Live exchange rates (Base USD)
   final Map<String, double> _exchangeRates = {
@@ -118,11 +118,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
     HapticFeedback.mediumImpact();
     setState(() {
       _isAiProcessing = true;
-      _vowlMood = VowlMood.detective;
+      _valtoMood = ValtoMood.detective;
     });
 
     try {
-      final action = await VowlAiService.instance.parseNaturalInput(text);
+      final action = await ValtoAiService.instance.parseNaturalInput(text);
 
       if (!mounted) return;
 
@@ -130,7 +130,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
         setState(() {
           _todaySpent += action.amount;
           _todayCount++;
-          _vowlMood = VowlMood.happy;
+          _valtoMood = ValtoMood.happy;
         });
         _showSuccessSheet(action);
       } else if (action.type == 'hardware') {
@@ -147,26 +147,26 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
           'serial_number': action.serialNumber ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
           'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
           'is_collectible': 0,
-          'blockchain_hash': '0xvowl${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+          'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
         });
         await _loadVaultData();
-        setState(() => _vowlMood = VowlMood.happy);
+        setState(() => _valtoMood = ValtoMood.happy);
         _showSuccessSheet(action);
       } else {
-        setState(() => _vowlMood = VowlMood.vigilant);
+        setState(() => _valtoMood = ValtoMood.vigilant);
         _showSuccessSheet(action);
       }
 
       _promptController.clear();
       _promptFocus.unfocus();
     } catch (_) {
-      if (mounted) setState(() => _vowlMood = VowlMood.vigilant);
+      if (mounted) setState(() => _valtoMood = ValtoMood.vigilant);
     } finally {
       if (mounted) setState(() => _isAiProcessing = false);
     }
   }
 
-  void _showSuccessSheet(VowlParsedAction action) {
+  void _showSuccessSheet(ValtoParsedAction action) {
     showModalBottomSheet(
       context: context,
       backgroundColor: VaultColors.card,
@@ -192,14 +192,14 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
             const SizedBox(height: 20),
             Row(
               children: [
-                const VowlMascot(size: 40, mood: VowlMood.happy),
+                const ValtoMascot(size: 40, mood: ValtoMood.happy),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'VOWL NOTED YOUR ACTION',
+                        'VALTO NOTED YOUR ACTION',
                         style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent),
                       ),
                       Text(
@@ -292,12 +292,12 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                     children: [
                       Row(
                         children: [
-                          const VowlMascot(size: 36, mood: VowlMood.detective, showHat: true),
+                          const ValtoMascot(size: 36, mood: ValtoMood.detective, showHat: true),
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('VOWL OCR (GEMINI AI)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent)),
+                              Text('VALTO OCR (GEMINI AI)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent)),
                               Text('Scan Receipt or Warranty', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w700)),
                             ],
                           ),
@@ -343,7 +343,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                                   'serial_number': result.serialNumber,
                                   'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
                                   'is_collectible': 0,
-                                  'blockchain_hash': '0xvowl${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+                                  'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
                                 });
                                 _loadVaultData();
                               }
@@ -383,9 +383,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
           children: [
             Container(width: 38, height: 4, decoration: BoxDecoration(color: VaultColors.hairline, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
-            const VowlMascot(size: 64, mood: VowlMood.vigilant),
+            const ValtoMascot(size: 64, mood: ValtoMood.vigilant),
             const SizedBox(height: 14),
-            Text('Vowl is listening...', style: VaultTypography.sans(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text('Valto is listening...', style: VaultTypography.sans(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
             Text(
               'Say "kopi 25k bca" or "beli steam deck 500 usd garansi 24 bln"',
@@ -423,13 +423,13 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. MINIMAL APP HEADER (Iconic Vowl + Brand + Actions)
+              // 1. MINIMAL APP HEADER (Iconic Valto + Brand + Actions)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      const VowlMascot(size: 32, mood: VowlMood.vigilant),
+                      const ValtoMascot(size: 32, mood: ValtoMood.vigilant),
                       const SizedBox(width: 10),
                       Text(
                         'VAULTED',
@@ -492,7 +492,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 promptController: _promptController,
                 promptFocus: _promptFocus,
                 isAiProcessing: _isAiProcessing,
-                vowlMood: _vowlMood,
+                valtoMood: _valtoMood,
                 onSubmit: _handlePromptSubmit,
               ),
               const SizedBox(height: 20),
@@ -630,7 +630,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 4. VOWL GUARDIAN ASSISTANT & HABIT STREAK CARD
+              // 4. VALTO GUARDIAN ASSISTANT & HABIT STREAK CARD
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
@@ -647,7 +647,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 ),
                 child: Row(
                   children: [
-                    VowlMascot(size: 42, mood: _vowlMood),
+                    ValtoMascot(size: 42, mood: _valtoMood),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -656,7 +656,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                           Row(
                             children: [
                               Text(
-                                'VOWL GUARDIAN',
+                                'VALTO GUARDIAN',
                                 style: VaultTypography.mono(fontSize: 9.5, letterSpacing: 1, color: VaultColors.accent),
                               ),
                               const SizedBox(width: 8),
@@ -681,7 +681,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                           Text(
                             _todayCount > 0
                                 ? 'Rp ${NumberFormat('#,###').format(_todaySpent)} logged today'
-                                : 'Vowl is keeping watch. Vault secure.',
+                                : 'Valto is keeping watch. Vault secure.',
                             style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
                           ),
                           Text(
@@ -698,7 +698,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                           _isDayClosed = !_isDayClosed;
                           if (_isDayClosed) {
                             _streakDays++;
-                            _vowlMood = VowlMood.happy;
+                            _valtoMood = ValtoMood.happy;
                           }
                         });
                       },
@@ -766,11 +766,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Pillar 3: Vowl's Appraisal Minigame
+              // Pillar 3: Valto's Appraisal Minigame
               _buildCleanPillarCard(
                 icon: Icons.monetization_on_outlined,
                 iconColor: VaultColors.accent,
-                title: "Vowl's Appraisal Challenge",
+                title: "Valto's Appraisal Challenge",
                 subtitle: 'Test your knowledge on real market valuation',
                 value: 'Play',
                 badge: 'MINIGAME',

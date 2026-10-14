@@ -136,16 +136,15 @@ class _GameScreenState extends State<GameScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Vowl the Guardian Owl Appraiser
+              // Valto the Vault Guardian
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  VowlMascot(
+                  ValtoMascot(
                     size: 46,
                     mood: _feedback == null
-                        ? VowlMood.detective
-                        : (_isCorrect! ? VowlMood.happy : VowlMood.vigilant),
-                    showHat: true,
+                        ? ValtoMood.detective
+                        : (_isCorrect! ? ValtoMood.happy : ValtoMood.vigilant),
                   ),
                   const SizedBox(width: 10),
                   Container(
@@ -163,10 +162,10 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                     child: Text(
                       _feedback == null
-                          ? "Vowl: 'Hoo... do you know this value?'"
+                          ? "Valto: 'Purr... do you know this value?'"
                           : (_isCorrect!
-                              ? "Vowl: 'Wise appraisal! Spot on!'"
-                              : "Vowl: 'Hoo! The market can be tricky.'"),
+                              ? "Valto: 'Wise appraisal! Spot on!'"
+                              : "Valto: 'Meow... the market can be tricky.'"),
                       style: VaultTypography.sans(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

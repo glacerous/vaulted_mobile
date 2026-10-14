@@ -663,7 +663,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                   Row(
                     children: [
                       Text(
-                        "VOWL'S APPRAISAL",
+                        "VALTO'S APPRAISAL",
                         style: VaultTypography.mono(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w600,

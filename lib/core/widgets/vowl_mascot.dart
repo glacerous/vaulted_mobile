@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-enum VowlMood {
+enum ValtoMood {
   vigilant,
   peeking,
   happy,
@@ -9,20 +9,22 @@ enum VowlMood {
   sleeping,
 }
 
-// Keep ValtoMood as alias for backward compatibility
-typedef ValtoMood = VowlMood;
+// Backward compatibility alias
+typedef VowlMood = ValtoMood;
+typedef VowlMascot = ValtoMascot;
 
-/// Vowl — The Guardian Owl of VAULTED.
-/// An ultra-minimal, iconic, geometric vector mascot with 24/7 vigilant vault eyes.
-class VowlMascot extends StatelessWidget {
+/// Valto — The Minimal Black Cat Mascot of VAULTED.
+/// Inspired by Claude's organic, ultra-minimal character design.
+/// Pure matte obsidian silhouette with expressive minimal eyes and sleek contours.
+class ValtoMascot extends StatelessWidget {
   final double size;
-  final VowlMood mood;
+  final ValtoMood mood;
   final bool showHat;
 
-  const VowlMascot({
+  const ValtoMascot({
     super.key,
     this.size = 56,
-    this.mood = VowlMood.vigilant,
+    this.mood = ValtoMood.vigilant,
     this.showHat = false,
   });
 
@@ -32,189 +34,311 @@ class VowlMascot extends StatelessWidget {
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _VowlPainter(mood: mood, showHat: showHat),
+        painter: _ValtoCatPainter(mood: mood, showHat: showHat),
       ),
     );
   }
 }
 
-// Alias for seamless backward compatibility
-typedef ValtoMascot = VowlMascot;
-
-class _VowlPainter extends CustomPainter {
-  final VowlMood mood;
+class _ValtoCatPainter extends CustomPainter {
+  final ValtoMood mood;
   final bool showHat;
 
-  _VowlPainter({required this.mood, required this.showHat});
+  _ValtoCatPainter({required this.mood, required this.showHat});
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
 
-    // Palette: Sleek Luxury Guardian Owl (Warm Charcoal & Gold Vault Dials)
-    final bodyPaint = Paint()..color = const Color(0xFF2C2A28); // Deep espresso charcoal
-    final innerFacePaint = Paint()..color = const Color(0xFFF7F5EE); // Porcelain warm cream
-    final goldRingPaint = Paint()..color = const Color(0xFFD97706); // Warm golden vault lock ring
-    final pupilPaint = Paint()..color = const Color(0xFF141413); // Deep pupil
-    final catchlightPaint = Paint()..color = Colors.white;
-    final beakPaint = Paint()..color = const Color(0xFFE58A2B); // Amber beak
-    final monoclePaint = Paint()
-      ..color = const Color(0xFFD97706)
+    // Palette: Sleek Matte Obsidian Black Cat
+    final catBlack = Paint()
+      ..color = const Color(0xFF141413)
+      ..style = PaintingStyle.fill;
+
+    final innerEarPaint = Paint()
+      ..color = const Color(0xFF2C2A29)
+      ..style = PaintingStyle.fill;
+
+    final eyeGold = const Color(0xFFFBBF24); // Warm radiant amber eyes
+    final eyeWhite = Colors.white;
+    final pupilBlack = const Color(0xFF141413);
+
+    final whiskerPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.35)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = w * 0.045;
+      ..strokeWidth = max(1.0, w * 0.022)
+      ..strokeCap = StrokeCap.round;
 
     final cx = w * 0.5;
-    final cy = h * 0.52;
 
-    if (mood == VowlMood.peeking) {
-      // Peeking over border: ears + big eyes + top of head
-      final peekPath = Path();
-      // Left ear tuft
-      peekPath.moveTo(w * 0.18, h * 0.95);
-      peekPath.lineTo(w * 0.14, h * 0.36);
-      peekPath.lineTo(w * 0.32, h * 0.50);
-      // Head crown
-      peekPath.quadraticBezierTo(cx, h * 0.44, w * 0.68, h * 0.50);
-      // Right ear tuft
-      peekPath.lineTo(w * 0.86, h * 0.36);
-      peekPath.lineTo(w * 0.82, h * 0.95);
-      peekPath.close();
-      canvas.drawPath(peekPath, bodyPaint);
+    // -------------------------------------------------------------
+    // PEEKING POSE: Head, Pointed Ears, and Paws resting on the rim
+    // -------------------------------------------------------------
+    if (mood == ValtoMood.peeking) {
+      // Head base path
+      final headPath = Path();
+      // Left ear
+      headPath.moveTo(w * 0.16, h * 0.95);
+      headPath.lineTo(w * 0.14, h * 0.28); // Left ear tip
+      headPath.lineTo(w * 0.36, h * 0.44);
+      // Crown between ears
+      headPath.quadraticBezierTo(cx, h * 0.40, w * 0.64, h * 0.44);
+      // Right ear
+      headPath.lineTo(w * 0.86, h * 0.28); // Right ear tip
+      headPath.lineTo(w * 0.84, h * 0.95);
+      headPath.close();
+      canvas.drawPath(headPath, catBlack);
 
-      // Cream face disc
-      final faceRect = Rect.fromCenter(center: Offset(cx, h * 0.76), width: w * 0.64, height: h * 0.52);
-      canvas.drawOval(faceRect, innerFacePaint);
+      // Inner ear shadows
+      final leftEarInner = Path()
+        ..moveTo(w * 0.18, h * 0.80)
+        ..lineTo(w * 0.17, h * 0.35)
+        ..lineTo(w * 0.34, h * 0.48)
+        ..close();
+      canvas.drawPath(leftEarInner, innerEarPaint);
 
-      // Vault dial eyes
-      _drawEyes(canvas, cx, h * 0.70, w, h, goldRingPaint, pupilPaint, catchlightPaint, mood);
+      final rightEarInner = Path()
+        ..moveTo(w * 0.82, h * 0.80)
+        ..lineTo(w * 0.83, h * 0.35)
+        ..lineTo(w * 0.66, h * 0.48)
+        ..close();
+      canvas.drawPath(rightEarInner, innerEarPaint);
 
-      // Beak
-      final beakPath = Path();
-      beakPath.moveTo(cx - w * 0.05, h * 0.75);
-      beakPath.lineTo(cx + w * 0.05, h * 0.75);
-      beakPath.lineTo(cx, h * 0.86);
-      beakPath.close();
-      canvas.drawPath(beakPath, beakPaint);
+      // Two minimal paws resting on the ledge
+      final pawPaint = Paint()..color = const Color(0xFF141413);
+      final pawRim = Paint()
+        ..color = const Color(0xFF2C2A29)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0;
+
+      // Left paw
+      final leftPaw = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(w * 0.30, h * 0.92), width: w * 0.22, height: h * 0.16),
+        Radius.circular(w * 0.08),
+      );
+      canvas.drawRRect(leftPaw, pawPaint);
+      canvas.drawRRect(leftPaw, pawRim);
+
+      // Right paw
+      final rightPaw = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(w * 0.70, h * 0.92), width: w * 0.22, height: h * 0.16),
+        Radius.circular(w * 0.08),
+      );
+      canvas.drawRRect(rightPaw, pawPaint);
+      canvas.drawRRect(rightPaw, pawRim);
+
+      // Expressive minimalist eyes
+      _drawCatEyes(canvas, cx, h * 0.64, w, h, eyeGold, pupilBlack, eyeWhite, mood);
+
+      // Fine whiskers
+      _drawWhiskers(canvas, cx, h * 0.74, w, whiskerPaint);
       return;
     }
 
-    // Full Silhouette: Round minimal owl with signature ear tufts
-    final bodyPath = Path();
-    // Left ear tuft
-    bodyPath.moveTo(w * 0.22, h * 0.36);
-    bodyPath.lineTo(w * 0.12, h * 0.10); // Left tuft sharp tip
-    bodyPath.lineTo(w * 0.34, h * 0.22);
+    // -------------------------------------------------------------
+    // FULL SILHOUETTE: Clean loaf / seated cat silhouette
+    // -------------------------------------------------------------
+    final catBody = Path();
+    // Left ear
+    catBody.moveTo(w * 0.22, h * 0.40);
+    catBody.lineTo(w * 0.15, h * 0.12); // Left ear sharp tip
+    catBody.lineTo(w * 0.38, h * 0.25);
     // Crown
-    bodyPath.quadraticBezierTo(cx, h * 0.18, w * 0.66, h * 0.22);
-    // Right ear tuft
-    bodyPath.lineTo(w * 0.88, h * 0.10); // Right tuft sharp tip
-    bodyPath.lineTo(w * 0.78, h * 0.36);
-    // Body bottom curve
-    bodyPath.cubicTo(w * 0.96, h * 0.60, w * 0.90, h * 0.92, cx, h * 0.92);
-    bodyPath.cubicTo(w * 0.10, h * 0.92, w * 0.04, h * 0.60, w * 0.22, h * 0.36);
-    bodyPath.close();
-    canvas.drawPath(bodyPath, bodyPaint);
+    catBody.quadraticBezierTo(cx, h * 0.22, w * 0.62, h * 0.25);
+    // Right ear
+    catBody.lineTo(w * 0.85, h * 0.12); // Right ear sharp tip
+    catBody.lineTo(w * 0.78, h * 0.40);
+    // Sleek body / loaf curves down
+    catBody.cubicTo(w * 0.94, h * 0.58, w * 0.90, h * 0.88, cx, h * 0.88);
+    catBody.cubicTo(w * 0.10, h * 0.88, w * 0.06, h * 0.58, w * 0.22, h * 0.40);
+    catBody.close();
+    canvas.drawPath(catBody, catBlack);
 
-    // Cream mask / facial disc
-    final maskPath = Path();
-    maskPath.addOval(Rect.fromCenter(center: Offset(cx - w * 0.16, cy - h * 0.04), width: w * 0.34, height: w * 0.34));
-    maskPath.addOval(Rect.fromCenter(center: Offset(cx + w * 0.16, cy - h * 0.04), width: w * 0.34, height: w * 0.34));
-    canvas.drawPath(maskPath, innerFacePaint);
+    // Subtle inner ear facets
+    final leftEarInner = Path()
+      ..moveTo(w * 0.22, h * 0.36)
+      ..lineTo(w * 0.18, h * 0.18)
+      ..lineTo(w * 0.35, h * 0.28)
+      ..close();
+    canvas.drawPath(leftEarInner, innerEarPaint);
 
-    // Eyes
-    _drawEyes(canvas, cx, cy - h * 0.04, w, h, goldRingPaint, pupilPaint, catchlightPaint, mood);
+    final rightEarInner = Path()
+      ..moveTo(w * 0.78, h * 0.36)
+      ..lineTo(w * 0.82, h * 0.18)
+      ..lineTo(w * 0.65, h * 0.28)
+      ..close();
+    canvas.drawPath(rightEarInner, innerEarPaint);
 
-    // Minimal amber geometric beak
-    final beakPath = Path();
-    beakPath.moveTo(cx - w * 0.05, cy + h * 0.02);
-    beakPath.lineTo(cx + w * 0.05, cy + h * 0.02);
-    beakPath.lineTo(cx, cy + h * 0.14);
-    beakPath.close();
-    canvas.drawPath(beakPath, beakPaint);
+    // Curled Tail by the side
+    final tailPath = Path();
+    tailPath.moveTo(w * 0.74, h * 0.84);
+    tailPath.quadraticBezierTo(w * 0.96, h * 0.80, w * 0.94, h * 0.62);
+    tailPath.quadraticBezierTo(w * 0.92, h * 0.52, w * 0.86, h * 0.54);
+    canvas.drawPath(
+      tailPath,
+      Paint()
+        ..color = const Color(0xFF141413)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.09
+        ..strokeCap = StrokeCap.round,
+    );
 
-    // Detective Monocle / Inspector Hat
-    if (showHat || mood == VowlMood.detective) {
-      // Golden Monocle over left eye
-      canvas.drawCircle(Offset(cx - w * 0.16, cy - h * 0.04), w * 0.17, monoclePaint);
-      // Monocle cord
-      final cordPath = Path();
-      cordPath.moveTo(cx - w * 0.16 + w * 0.17, cy - h * 0.04);
-      cordPath.quadraticBezierTo(cx - w * 0.02, cy + h * 0.18, cx - w * 0.10, cy + h * 0.36);
+    // Expressive eyes
+    _drawCatEyes(canvas, cx, h * 0.48, w, h, eyeGold, pupilBlack, eyeWhite, mood);
+
+    // Nose
+    final nosePath = Path();
+    nosePath.moveTo(cx - w * 0.025, h * 0.56);
+    nosePath.lineTo(cx + w * 0.025, h * 0.56);
+    nosePath.lineTo(cx, h * 0.585);
+    nosePath.close();
+    canvas.drawPath(nosePath, Paint()..color = const Color(0xFF4A4442));
+
+    // Whiskers
+    _drawWhiskers(canvas, cx, h * 0.58, w, whiskerPaint);
+
+    // Detective hat/accessory (minimalist subtle gold bell or collar)
+    if (showHat || mood == ValtoMood.detective) {
+      // Sleek luxury gold vault collar
+      final collarPath = Path();
+      collarPath.moveTo(w * 0.32, h * 0.72);
+      collarPath.quadraticBezierTo(cx, h * 0.76, w * 0.68, h * 0.72);
       canvas.drawPath(
-        cordPath,
+        collarPath,
         Paint()
           ..color = const Color(0xFFD97706)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = w * 0.025,
+          ..strokeWidth = w * 0.04
+          ..strokeCap = StrokeCap.round,
+      );
+
+      // Tiny gold lock pendant
+      canvas.drawCircle(
+        Offset(cx, h * 0.76),
+        w * 0.035,
+        Paint()..color = const Color(0xFFFBBF24),
       );
     }
   }
 
-  void _drawEyes(
+  void _drawCatEyes(
     Canvas canvas,
     double cx,
-    double eyeY,
+    double cy,
     double w,
     double h,
-    Paint goldRingPaint,
-    Paint pupilPaint,
-    Paint catchlightPaint,
-    VowlMood mood,
+    Color eyeColor,
+    Color pupilColor,
+    Color catchlight,
+    ValtoMood mood,
   ) {
     final eyeSpacing = w * 0.16;
-    final leftX = cx - eyeSpacing;
-    final rightX = cx + eyeSpacing;
-    final eyeRadius = w * 0.12;
+    final eyeW = w * 0.16;
+    final eyeH = w * 0.16;
 
-    if (mood == VowlMood.sleeping) {
-      // Peaceful closed arcs
-      final arcPaint = Paint()
-        ..color = const Color(0xFF141413)
+    if (mood == ValtoMood.sleeping) {
+      // Peaceful sleeping curved eyes: ◡  ◡
+      final sleepPaint = Paint()
+        ..color = const Color(0xFFFBBF24)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = w * 0.045
+        ..strokeWidth = w * 0.032
         ..strokeCap = StrokeCap.round;
 
-      final leftRect = Rect.fromCircle(center: Offset(leftX, eyeY), radius: eyeRadius * 0.8);
-      final rightRect = Rect.fromCircle(center: Offset(rightX, eyeY), radius: eyeRadius * 0.8);
-      canvas.drawArc(leftRect, 0.2, pi - 0.4, false, arcPaint);
-      canvas.drawArc(rightRect, 0.2, pi - 0.4, false, arcPaint);
+      final leftEye = Path();
+      leftEye.moveTo(cx - eyeSpacing - eyeW * 0.45, cy);
+      leftEye.quadraticBezierTo(cx - eyeSpacing, cy + eyeH * 0.45, cx - eyeSpacing + eyeW * 0.45, cy);
+      canvas.drawPath(leftEye, sleepPaint);
+
+      final rightEye = Path();
+      rightEye.moveTo(cx + eyeSpacing - eyeW * 0.45, cy);
+      rightEye.quadraticBezierTo(cx + eyeSpacing, cy + eyeH * 0.45, cx + eyeSpacing + eyeW * 0.45, cy);
+      canvas.drawPath(rightEye, sleepPaint);
       return;
     }
 
-    if (mood == VowlMood.happy) {
-      // Happy upward joyful arcs: ^ ^
-      final arcPaint = Paint()
-        ..color = const Color(0xFF141413)
+    if (mood == ValtoMood.happy) {
+      // Cheerful happy eyes: ^  ^
+      final happyPaint = Paint()
+        ..color = const Color(0xFFFBBF24)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = w * 0.045
+        ..strokeWidth = w * 0.032
         ..strokeCap = StrokeCap.round;
 
-      final leftRect = Rect.fromCircle(center: Offset(leftX, eyeY + h * 0.02), radius: eyeRadius * 0.85);
-      final rightRect = Rect.fromCircle(center: Offset(rightX, eyeY + h * 0.02), radius: eyeRadius * 0.85);
-      canvas.drawArc(leftRect, pi + 0.3, pi - 0.6, false, arcPaint);
-      canvas.drawArc(rightRect, pi + 0.3, pi - 0.6, false, arcPaint);
+      final leftEye = Path();
+      leftEye.moveTo(cx - eyeSpacing - eyeW * 0.45, cy + eyeH * 0.15);
+      leftEye.quadraticBezierTo(cx - eyeSpacing, cy - eyeH * 0.40, cx - eyeSpacing + eyeW * 0.45, cy + eyeH * 0.15);
+      canvas.drawPath(leftEye, happyPaint);
+
+      final rightEye = Path();
+      rightEye.moveTo(cx + eyeSpacing - eyeW * 0.45, cy + eyeH * 0.15);
+      rightEye.quadraticBezierTo(cx + eyeSpacing, cy - eyeH * 0.40, cx + eyeSpacing + eyeW * 0.45, cy + eyeH * 0.15);
+      canvas.drawPath(rightEye, happyPaint);
       return;
     }
 
-    // Default: Vigilant Vault Dial Eyes
-    // Golden dial rings
-    canvas.drawCircle(Offset(leftX, eyeY), eyeRadius, goldRingPaint);
-    canvas.drawCircle(Offset(rightX, eyeY), eyeRadius, goldRingPaint);
+    // Default / Vigilant / Detective: Glowing almond-shaped amber eyes
+    final eyePaint = Paint()..color = eyeColor;
+    final pupilPaint = Paint()..color = pupilColor;
+    final catchPaint = Paint()..color = catchlight;
 
-    // Pupils
-    final pupilRadius = eyeRadius * 0.65;
-    canvas.drawCircle(Offset(leftX, eyeY), pupilRadius, pupilPaint);
-    canvas.drawCircle(Offset(rightX, eyeY), pupilRadius, pupilPaint);
+    for (final sign in [-1.0, 1.0]) {
+      final eyeCenter = Offset(cx + sign * eyeSpacing, cy);
 
-    // Crisp catchlights
-    final clRadius = pupilRadius * 0.35;
-    canvas.drawCircle(Offset(leftX - clRadius * 0.6, eyeY - clRadius * 0.6), clRadius, catchlightPaint);
-    canvas.drawCircle(Offset(rightX - clRadius * 0.6, eyeY - clRadius * 0.6), clRadius, catchlightPaint);
+      // Elegant almond eye contour
+      final almondPath = Path();
+      almondPath.moveTo(eyeCenter.dx - eyeW * 0.45, eyeCenter.dy);
+      almondPath.quadraticBezierTo(eyeCenter.dx, eyeCenter.dy - eyeH * 0.48, eyeCenter.dx + eyeW * 0.45, eyeCenter.dy);
+      almondPath.quadraticBezierTo(eyeCenter.dx, eyeCenter.dy + eyeH * 0.48, eyeCenter.dx - eyeW * 0.45, eyeCenter.dy);
+      almondPath.close();
+
+      canvas.drawPath(almondPath, eyePaint);
+
+      // Slit pupil
+      final pupilRect = Rect.fromCenter(
+        center: eyeCenter,
+        width: mood == ValtoMood.detective ? eyeW * 0.45 : eyeW * 0.22,
+        height: eyeH * 0.65,
+      );
+      canvas.drawOval(pupilRect, pupilPaint);
+
+      // Micro catchlight twinkle
+      canvas.drawCircle(
+        Offset(eyeCenter.dx + eyeW * 0.12, eyeCenter.dy - eyeH * 0.15),
+        eyeW * 0.09,
+        catchPaint,
+      );
+    }
+  }
+
+  void _drawWhiskers(Canvas canvas, double cx, double cy, double w, Paint whiskerPaint) {
+    // Left whiskers
+    canvas.drawLine(
+      Offset(cx - w * 0.12, cy - w * 0.02),
+      Offset(cx - w * 0.38, cy - w * 0.06),
+      whiskerPaint,
+    );
+    canvas.drawLine(
+      Offset(cx - w * 0.12, cy + w * 0.03),
+      Offset(cx - w * 0.36, cy + w * 0.08),
+      whiskerPaint,
+    );
+
+    // Right whiskers
+    canvas.drawLine(
+      Offset(cx + w * 0.12, cy - w * 0.02),
+      Offset(cx + w * 0.38, cy - w * 0.06),
+      whiskerPaint,
+    );
+    canvas.drawLine(
+      Offset(cx + w * 0.12, cy + w * 0.03),
+      Offset(cx + w * 0.36, cy + w * 0.08),
+      whiskerPaint,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _VowlPainter oldDelegate) {
+  bool shouldRepaint(covariant _ValtoCatPainter oldDelegate) {
     return oldDelegate.mood != mood || oldDelegate.showHat != showHat;
   }
 }

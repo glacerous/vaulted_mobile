@@ -109,15 +109,15 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
               ),
             ),
 
-            // 2. PROTECTIVE ATMOSPHERIC SCRIM (Ensures text & omnibar are effortlessly readable)
+            // 2. DELICATE ATMOSPHERIC SCRIM (Keeps dither art vibrant & visible, lets typography pop)
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withValues(alpha: 0.72),
-                      Colors.black.withValues(alpha: 0.40),
-                      Colors.black.withValues(alpha: 0.75),
+                      Colors.black.withValues(alpha: 0.28),
+                      Colors.black.withValues(alpha: 0.12),
+                      Colors.black.withValues(alpha: 0.32),
                     ],
                     stops: const [0.0, 0.45, 1.0],
                     begin: Alignment.topCenter,
@@ -134,18 +134,18 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Clean Date line in Signature Gold
+                  // Clean Date line in warm white / subtle gold glow
                   Text(
                     dateStr.toUpperCase(),
                     style: VaultTypography.mono(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.2,
-                      color: const Color(0xFFC0A85C),
+                      color: Colors.white.withValues(alpha: 0.95),
                       shadows: [
                         Shadow(
-                          color: Colors.black.withValues(alpha: 0.9),
-                          blurRadius: 4,
+                          color: Colors.black.withValues(alpha: 0.8),
+                          blurRadius: 6,
                           offset: const Offset(0, 1),
                         ),
                       ],
@@ -163,9 +163,14 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                       color: Colors.white,
                       shadows: [
                         Shadow(
-                          color: Colors.black.withValues(alpha: 0.9),
-                          blurRadius: 8,
+                          color: Colors.black.withValues(alpha: 0.85),
+                          blurRadius: 10,
                           offset: const Offset(0, 2),
+                        ),
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
                         ),
                       ],
                     ),
@@ -178,11 +183,11 @@ class _AlpineDawnHeaderState extends State<AlpineDawnHeader>
                     style: VaultTypography.sans(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: Colors.white.withValues(alpha: 0.92),
+                      color: Colors.white.withValues(alpha: 0.95),
                       shadows: [
                         Shadow(
-                          color: Colors.black.withValues(alpha: 0.9),
-                          blurRadius: 4,
+                          color: Colors.black.withValues(alpha: 0.8),
+                          blurRadius: 6,
                           offset: const Offset(0, 1),
                         ),
                       ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
+import '../core/widgets/valto_mascot.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -28,14 +29,14 @@ class _GameScreenState extends State<GameScreen> {
       'image': 'https://images.unsplash.com/photo-1507457379470-08b800bebc67?w=300',
     },
     {
-      'name': 'Charizard 1st Edition Shadowless (PSA 10)',
-      'category': 'Collectibles / TCG',
-      'retail_year': 'Released 1999 for \$3.99 Booster Pack',
-      'benchmark': '\$250,000',
-      'actual_val': 300000.0,
-      'benchmark_val': 250000.0,
-      'explanation': 'Actual market value is ~\$300,000! One of the holy grails of modern collectibles.',
-      'image': 'https://images.pokemontcg.io/base1/4_hires.png',
+      'name': 'Valve Steam Deck OLED 512GB',
+      'category': 'Handheld Gaming PC',
+      'retail_year': 'Released Nov 2023 for \$549',
+      'benchmark': '\$480',
+      'actual_val': 515.0,
+      'benchmark_val': 480.0,
+      'explanation': 'Actual market value is ~\$515! OLED Steam Decks hold 94% of retail due to exceptional Linux optimization.',
+      'image': 'https://images.unsplash.com/photo-1612287232213-9111c1070e17?w=300',
     },
     {
       'name': 'Apple iPhone 11 64GB',
@@ -56,6 +57,16 @@ class _GameScreenState extends State<GameScreen> {
       'benchmark_val': 290.0,
       'explanation': 'Actual market value is ~\$310! Limited Pokémon editions depreciate much slower than standard SKUs.',
       'image': 'https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=300',
+    },
+    {
+      'name': 'Sony WH-1000XM5 Noise Cancelling',
+      'category': 'Audio / Hardware',
+      'retail_year': 'Released 2022 for \$399',
+      'benchmark': '\$250',
+      'actual_val': 275.0,
+      'benchmark_val': 250.0,
+      'explanation': 'Actual market value is ~\$275! Flagship ANC headphones maintain high resale value in pristine condition.',
+      'image': 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=300',
     },
   ];
 
@@ -121,15 +132,58 @@ class _GameScreenState extends State<GameScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Valto the Vault Guardian
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ValtoMascot(
+                    size: 46,
+                    mood: _feedback == null
+                        ? ValtoMood.detective
+                        : (_isCorrect! ? ValtoMood.happy : ValtoMood.vigilant),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: VaultColors.card,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF141413).withValues(alpha: 0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      _feedback == null
+                          ? "Valto: 'Purr... do you know this value?'"
+                          : (_isCorrect!
+                              ? "Valto: 'Wise appraisal! Spot on!'"
+                              : "Valto: 'Meow... the market can be tricky.'"),
+                      style: VaultTypography.sans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _feedback == null
+                            ? VaultColors.ink2
+                            : (_isCorrect! ? VaultColors.pos : VaultColors.accent),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
               Text(
                 'QUESTION ${_currentIndex + 1} OF ${_questions.length}',
-                style: VaultTypography.mono(fontSize: 11, color: VaultColors.ink3, letterSpacing: 1),
+                style: VaultTypography.mono(fontSize: 10.5, color: VaultColors.ink3, letterSpacing: 1),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
               // Item Card Presentation
               Expanded(
@@ -150,9 +204,14 @@ class _GameScreenState extends State<GameScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
                           color: VaultColors.cardHover,
-                          image: DecorationImage(
-                            image: NetworkImage(q['image'] as String),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: Image.network(
+                            q['image'] as String,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.inventory_2_outlined, size: 48, color: VaultColors.ink3),
                           ),
                         ),
                       ),

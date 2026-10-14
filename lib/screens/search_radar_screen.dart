@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/services/notification_service.dart';
+import '../core/widgets/valto_mascot.dart';
 import 'game_screen.dart';
 
 class SearchRadarScreen extends StatefulWidget {
@@ -621,7 +622,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  // 3. Full-Width Appraiser Banner
+  // 3. Full-Width Appraiser Banner featuring Valto
   Widget _buildAppraiserBanner() {
     return GestureDetector(
       onTap: () {
@@ -634,22 +635,25 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: VaultColors.card,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: VaultColors.hairline),
         ),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: VaultColors.background,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: VaultColors.hairline),
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.sports_esports_outlined,
-                  size: 22, color: VaultColors.accent),
+              child: const ValtoMascot(
+                size: 38,
+                mood: ValtoMood.detective,
+                showHat: true,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -659,7 +663,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                   Row(
                     children: [
                       Text(
-                        'THE APPRAISER',
+                        "VALTO'S APPRAISAL",
                         style: VaultTypography.mono(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w600,
@@ -688,7 +692,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Test your valuation accuracy.',
+                    'Higher or Lower Challenge',
                     style: VaultTypography.sans(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -697,7 +701,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    'Guess prices on live collectible items.',
+                    'Can you guess real market values with Valto?',
                     style: VaultTypography.sans(
                       fontSize: 11.5,
                       color: VaultColors.ink2,

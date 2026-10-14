@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/typography.dart';
@@ -6,6 +7,7 @@ import '../../core/database/database_helper.dart';
 import '../../core/services/gemini_service.dart';
 import '../../core/services/blockchain_service.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/utils/image_utils.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -15,7 +17,9 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  List<Map<String, dynamic>> _items = [];
+  List<Map<String, dynamic>> _allItems = [];
+  String _selectedFilter = 'All';
+  String _selectedSort = 'Value ↓';
   bool _isLoading = true;
 
   final currencyFormatter = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
@@ -29,9 +33,38 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Future<void> _loadItems() async {
     final all = await DatabaseHelper.instance.getItems();
     setState(() {
-      _items = all.where((i) => i['is_collectible'] == 0).toList();
+      _allItems = all;
       _isLoading = false;
     });
+  }
+
+  List<Map<String, dynamic>> get _items {
+    List<Map<String, dynamic>> list;
+    if (_selectedFilter == 'Hardware') {
+      list = _allItems.where((i) => i['is_collectible'] == 0).toList();
+    } else if (_selectedFilter == 'Steam' || _selectedFilter.contains('Steam')) {
+      list = _allItems.where((i) => i['category'].toString().startsWith('Steam')).toList();
+    } else {
+      list = List.from(_allItems);
+    }
+
+    switch (_selectedSort) {
+      case 'Value ↓':
+        list.sort((a, b) => ((b['current_valuation'] as num?)?.toDouble() ?? 0.0)
+            .compareTo((a['current_valuation'] as num?)?.toDouble() ?? 0.0));
+        break;
+      case 'Value ↑':
+        list.sort((a, b) => ((a['current_valuation'] as num?)?.toDouble() ?? 0.0)
+            .compareTo((b['current_valuation'] as num?)?.toDouble() ?? 0.0));
+        break;
+      case 'Name A-Z':
+        list.sort((a, b) => (a['name'] as String? ?? '').toLowerCase().compareTo((b['name'] as String? ?? '').toLowerCase()));
+        break;
+      case 'Category':
+        list.sort((a, b) => (a['category'] as String? ?? '').toLowerCase().compareTo((b['category'] as String? ?? '').toLowerCase()));
+        break;
+    }
+    return list;
   }
 
   void _showAiScannerModal() {
@@ -350,7 +383,64 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 'Catalog physical gear, gadgets, watches, and cameras with warranty tracking.',
                 style: VaultTypography.cardDescription,
               ),
-              const SizedBox(height: 20),
+              // Category filter pills
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [
+                    _buildFilterChip('All', _allItems.length),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Hardware', _allItems.where((i) => i['is_collectible'] == 0).length),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Steam Items', _allItems.where((i) => i['category'].toString().startsWith('Steam')).length),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Interactive Sort Bar
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'SORT BY',
+                    style: VaultTypography.mono(fontSize: 9.5, letterSpacing: 1.1, color: VaultColors.ink2),
+                  ),
+                  Row(
+                    children: ['Value ↓', 'Value ↑', 'Name A-Z', 'Category'].map((sortKey) {
+                      final isSelected = _selectedSort == sortKey;
+                      return GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _selectedSort = sortKey);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(left: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                          decoration: BoxDecoration(
+                            color: isSelected ? VaultColors.accent : VaultColors.card,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: isSelected ? VaultColors.accent : VaultColors.hairline,
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            sortKey,
+                            style: VaultTypography.mono(
+                              fontSize: 9,
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              color: isSelected ? VaultColors.background : VaultColors.ink2,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
 
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
@@ -471,7 +561,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       borderRadius: BorderRadius.circular(8),
                                       color: VaultColors.cardHover,
                                       image: DecorationImage(
-                                        image: NetworkImage(item['image_url'] ?? 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=100'),
+                                        image: NetworkImage(vaultImageUrl(item['image_url'] as String?)),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -576,6 +666,50 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, int count) {
+    final bool isSelected = _selectedFilter == label;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilter = label),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? VaultColors.accent : VaultColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isSelected ? VaultColors.accent : VaultColors.hairline),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: VaultTypography.sans(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? VaultColors.background : VaultColors.ink,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              decoration: BoxDecoration(
+                color: isSelected ? VaultColors.background.withValues(alpha: 0.25) : VaultColors.cardHover,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: VaultTypography.mono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? VaultColors.background : VaultColors.ink2,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

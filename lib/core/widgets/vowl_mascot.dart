@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 enum ValtoMood {
-  vigilant,  // Classic seated vault guardian
-  happy,     // Victorious celebrating pose (paw raised high & smiling eyes)
-  detective, // Investigative pose (cocked ear & golden monocle)
-  sleeping,  // Cozy cat loaf (paws tucked, relaxed ears, sleeping eyes)
-  playful,   // Friendly greeting wave (Maneki-neko lucky cat pose)
-  peeking,   // Peeking pose (ears & paws over rim)
+  vigilant,  // Classic seated vault guardian (alert vertical eyes & curled tail)
+  playful,   // Waving paw greeting (prominent raised waving paw on left!)
+  sleeping,  // Cozy cat loaf (distinct horizontal low loaf, paws tucked, sleeping eyes)
+  happy,     // Victorious celebration (high-five paw & smiling crescent eyes)
+  detective, // Inquisitive pose (cocked ear & gleaming golden monocle)
+  peeking,   // Peeking pose (ears & paws resting over rim)
 }
 
 // Backward compatibility alias
@@ -14,10 +14,14 @@ typedef VowlMood = ValtoMood;
 typedef VowlMascot = ValtoMascot;
 
 /// Valto — The Signature Black Cat Mascot of VAULTED.
-/// Built with consistent 15x16 pixel geometry across multiple expressive poses:
-/// Vigilant (seated), Happy (victory paw raised), Detective (monocle),
-/// Sleeping (loaf), Playful (waving), and Peeking.
-/// Rendered with horizontal span merging for a 100% solid, seamless silhouette.
+/// Built with 100% consistent 15x16 pixel geometry and palette across
+/// dramatically distinct, human-readable poses:
+/// - Vigilant (Upright sitting guardian)
+/// - Playful (Prominent waving paw)
+/// - Sleeping (Cozy horizontal low loaf)
+/// - Happy (Victorious high paw & smiling eyes)
+/// - Detective (Cocked ear & golden monocle)
+/// - Peeking (Paws over ledge)
 class ValtoMascot extends StatelessWidget {
   final double size;
   final ValtoMood mood;
@@ -61,7 +65,7 @@ class _ValtoPosePainter extends CustomPainter {
     required this.eyeColor,
   });
 
-  // 1. VIGILANT: Classic Seated Vault Guardian
+  // 1. VIGILANT: Classic Upright Sitting Cat (Alert Eyes, Tail Curled)
   static const List<String> _vigilantGrid = [
     '..##.....##....', // Row 0: Ear tips
     '.####...####...', // Row 1: Ear facets
@@ -69,9 +73,9 @@ class _ValtoPosePainter extends CustomPainter {
     '.###########...', // Row 3: Forehead
     '#############..', // Row 4: Cheeks
     '###Y#####Y###..', // Row 5: Upper eye
-    '###Y#####Y###..', // Row 6: Lower eye (vertical slit)
+    '###Y#####Y###..', // Row 6: Lower eye
     '#############..', // Row 7: Snout
-    '.###########...', // Row 8: Chin / jaw
+    '.###########...', // Row 8: Chin
     '...#######.....', // Row 9: Neck
     '...#######...#.', // Row 10: Chest & tail tip
     '...#######..###', // Row 11: Body & tail curve
@@ -81,54 +85,74 @@ class _ValtoPosePainter extends CustomPainter {
     '...##########..', // Row 15: Bottom edge
   ];
 
-  // 2. HAPPY: Victorious Celebration (Paw Raised High, Tail Perked, Smiling Eyes)
+  // 2. PLAYFUL / WAVING: Prominent Raised Waving Paw (Clear Asymmetric Silhouette!)
+  static const List<String> _playfulGrid = [
+    '..##.....##....', // Row 0: Ear tips
+    '.####...####...', // Row 1: Ear facets
+    '.###########...', // Row 2: Crown
+    '.###########...', // Row 3: Forehead
+    '#############..', // Row 4: Cheeks
+    '###Y#####Y###..', // Row 5: Alert eyes
+    '###Y#####Y###..', // Row 6: Alert eyes
+    '#############..', // Row 7: Snout
+    '.###########...', // Row 8: Chin
+    '..########.....', // Row 9: Neck
+    '##..######...#.', // Row 10: PROMINENT WAVING PAW EXTENDED ON LEFT!
+    '###.######..###', // Row 11: Waving arm & tail
+    '.##.######..###', // Row 12: Waving arm & tail
+    '..########.###.', // Row 13: Body
+    '..########.##..', // Row 14: Base
+    '...##########..', // Row 15: Bottom edge
+  ];
+
+  // 3. SLEEPING: Cozy Low Loaf (Dramatically Shorter Height, Paws Tucked In!)
+  static const List<String> _sleepingGrid = [
+    '...............', // Row 0: Resting low
+    '...............', // Row 1: Resting low
+    '...............', // Row 2: Resting low
+    '...............', // Row 3: Resting low
+    '..##.....##....', // Row 4: Relaxed low ears
+    '.####...####...', // Row 5: Ear facets
+    '.###########...', // Row 6: Head crown
+    '#############..', // Row 7: Cheeks
+    '###Y#####Y###..', // Row 8: Peaceful sleeping closed eyes (- -)
+    '#############..', // Row 9: Snout resting
+    '.#############.', // Row 10: Wide loaf shoulder
+    '###############', // Row 11: Full low horizontal loaf!
+    '###############', // Row 12: Full loaf
+    '###############', // Row 13: Paws tucked underneath
+    '.#############.', // Row 14: Tail wrapped along front
+    '..###########..', // Row 15: Base
+  ];
+
+  // 4. HAPPY: Victorious Celebration (Left Paw High Five & Upward Smiling Eyes)
   static const List<String> _happyGrid = [
     '..##.....##....', // Row 0: Ear tips
     '.####...####...', // Row 1: Ear facets
-    '.###########...', // Row 2: Crown between ears
+    '.###########...', // Row 2: Crown
     '.###########...', // Row 3: Forehead
     '#############..', // Row 4: Cheeks
-    '###Y#####Y###..', // Row 5: Cheerful smiling crescent eyes (^ ^)
-    '#############..', // Row 6: Snout
+    '###Y#####Y###..', // Row 5: Smiling crescent eyes (^ ^)
+    '#############..', // Row 6: Cheeks
     '#############..', // Row 7: Snout
     '.###########...', // Row 8: Chin
     '...#######.....', // Row 9: Neck
-    '.#.#######....#', // Row 10: High victorious paw & high tail tip!
-    '###.######...##', // Row 11: Raised paw arm & tail
-    '.##.######..###', // Row 12: Paw leg & tail
-    '..########.####', // Row 13: Sitting body & tail
+    '.#.#######....#', // Row 10: Celebratory high paw & tail held high!
+    '###.######...##', // Row 11: Raised high paw
+    '.##.######..###', // Row 12: Body & tail
+    '..########.####', // Row 13: Body & tail
     '..########.###.', // Row 14: Base
     '...##########..', // Row 15: Bottom edge
   ];
 
-  // 3. SLEEPING: Cozy Cat Loaf (Tucked Paws, Relaxed Body, Closed Eyes)
-  static const List<String> _sleepingGrid = [
-    '...............', // Row 0: Resting low
-    '...............', // Row 1: Resting low
-    '..##.....##....', // Row 2: Relaxed ears
-    '.####...####...', // Row 3: Ear facets
-    '.###########...', // Row 4: Head crown
-    '.###########...', // Row 5: Forehead
-    '#############..', // Row 6: Cheeks
-    '###Y#####Y###..', // Row 7: Peaceful sleeping slit eyes (- -)
-    '#############..', // Row 8: Resting snout
-    '.###########...', // Row 9: Chin
-    '.#############.', // Row 10: Loaf shoulder
-    '###############', // Row 11: Full loaf body
-    '###############', // Row 12: Full loaf body
-    '###############', // Row 13: Paws tucked underneath
-    '.#############.', // Row 14: Tail wrapped snugly along the front
-    '..###########..', // Row 15: Base
-  ];
-
-  // 4. DETECTIVE: Investigative Pose (Cocked Ear, Golden Monocle, Inquisitive Paw)
+  // 5. DETECTIVE: Cocked Ear & Gleaming Golden Monocle
   static const List<String> _detectiveGrid = [
     '..##...........', // Row 0: Left ear alert straight up
     '.####....##....', // Row 1: Right ear cocked curious
     '.####...####...', // Row 2: Crown
     '.###########...', // Row 3: Head slightly tilted
     '#############..', // Row 4: Cheeks
-    '###Y#####M###..', // Row 5: Left eye sharp, Right eye with monocle 'M'
+    '###Y#####M###..', // Row 5: Left eye sharp, Right eye with golden monocle 'M'
     '###Y#####M###..', // Row 6: Monocle lens
     '#############..', // Row 7: Snout
     '.###########...', // Row 8: Chin
@@ -141,27 +165,7 @@ class _ValtoPosePainter extends CustomPainter {
     '...##########..', // Row 15: Bottom edge
   ];
 
-  // 5. PLAYFUL / WAVING: Lucky Cat Greeting Wave (Maneki-neko)
-  static const List<String> _playfulGrid = [
-    '..##.....##....', // Row 0: Ear tips
-    '.####...####...', // Row 1: Ear facets
-    '.###########...', // Row 2: Crown
-    '.###########.#.', // Row 3: Paw raising on right
-    '#############.#', // Row 4: Waving paw!
-    '###Y#####Y###.#', // Row 5: Eyes & waving paw tip
-    '###Y#####Y###..', // Row 6: Eyes
-    '#############..', // Row 7: Snout
-    '.###########...', // Row 8: Chin
-    '...#######.....', // Row 9: Neck
-    '...#######...#.', // Row 10: Tail
-    '...#######..###', // Row 11: Body
-    '..#########.###', // Row 12: Sitting body
-    '..#########.###', // Row 13: Front paws
-    '..#########.##.', // Row 14: Paws
-    '...##########..', // Row 15: Bottom edge
-  ];
-
-  // 6. PEEKING: Head, Ears, Eyes & Two Paws resting on the rim
+  // 6. PEEKING: Head & Paws Over Ledge
   static const List<String> _peekingGrid = [
     '...............',
     '...............',
@@ -183,14 +187,14 @@ class _ValtoPosePainter extends CustomPainter {
 
   List<String> get _activeGrid {
     switch (mood) {
-      case ValtoMood.happy:
-        return _happyGrid;
-      case ValtoMood.sleeping:
-        return _sleepingGrid;
-      case ValtoMood.detective:
-        return _detectiveGrid;
       case ValtoMood.playful:
         return _playfulGrid;
+      case ValtoMood.sleeping:
+        return _sleepingGrid;
+      case ValtoMood.happy:
+        return _happyGrid;
+      case ValtoMood.detective:
+        return _detectiveGrid;
       case ValtoMood.peeking:
         return _peekingGrid;
       case ValtoMood.vigilant:
@@ -214,7 +218,7 @@ class _ValtoPosePainter extends CustomPainter {
       ..color = bodyColor
       ..style = PaintingStyle.fill;
 
-    // Outer contour outline to define edges on dark cards
+    // Outer contour edge definition
     final borderPaint = Paint()
       ..color = const Color(0xFF2C2C29)
       ..style = PaintingStyle.stroke
@@ -254,10 +258,10 @@ class _ValtoPosePainter extends CustomPainter {
       }
     }
 
-    // Outer edge contour only
+    // Outer contour only
     canvas.drawPath(silhouettePath, borderPaint);
 
-    // 2. Draw expressive eyes / features according to pose
+    // 2. Draw expressive eyes / monocle according to pose
     for (int r = 0; r < rows; r++) {
       final rowStr = grid[r];
       for (int c = 0; c < cols; c++) {

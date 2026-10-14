@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/security/auth_service.dart';
-import '../core/widgets/hairline_vault.dart';
+import '../core/widgets/valto_mascot.dart';
 import 'main_navigation_screen.dart';
 
 /// Clean luxury onboarding and login screen for VAULTED.
@@ -16,18 +16,42 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _signInUsernameController = TextEditingController(text: 'azzaky');
   final TextEditingController _signInPasswordController = TextEditingController(text: 'admin123');
 
   final TextEditingController _signUpUsernameController = TextEditingController();
   final TextEditingController _signUpPasswordController = TextEditingController();
 
+  late AnimationController _levitateController;
+  late Animation<double> _levitateAnim;
+  late Animation<double> _shadowAnim;
+
+  ValtoMood _currentMood = ValtoMood.vigilant;
+  String _statusMessage = 'VALTO · VAULT GUARDIAN';
   bool _isLoading = false;
-  bool _isUnlocking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _levitateController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat(reverse: true);
+
+    _levitateAnim = Tween<double>(begin: -8.0, end: 8.0).animate(
+      CurvedAnimation(parent: _levitateController, curve: Curves.easeInOutSine),
+    );
+
+    _shadowAnim = Tween<double>(begin: 0.88, end: 1.12).animate(
+      CurvedAnimation(parent: _levitateController, curve: Curves.easeInOutSine),
+    );
+  }
 
   @override
   void dispose() {
+    _levitateController.dispose();
     _signInUsernameController.dispose();
     _signInPasswordController.dispose();
     _signUpUsernameController.dispose();
@@ -39,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 400),
         pageBuilder: (context, anim1, anim2) => const MainNavigationScreen(),
         transitionsBuilder: (context, anim, anim2, child) =>
             FadeTransition(opacity: anim, child: child),
@@ -47,10 +71,29 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _handleQuickUnlock() {
-    if (_isUnlocking) return;
-    HapticFeedback.heavyImpact();
-    setState(() => _isUnlocking = true);
+  void _handleCatTap() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      switch (_currentMood) {
+        case ValtoMood.vigilant:
+          _currentMood = ValtoMood.playful;
+          _statusMessage = 'VALTO WAVES HELLO!';
+          break;
+        case ValtoMood.playful:
+          _currentMood = ValtoMood.happy;
+          _statusMessage = 'VALTO IS READY TO GUARD';
+          break;
+        case ValtoMood.happy:
+          _currentMood = ValtoMood.detective;
+          _statusMessage = 'VALTO INSPECTS YOUR ASSETS';
+          break;
+        case ValtoMood.detective:
+        default:
+          _currentMood = ValtoMood.vigilant;
+          _statusMessage = 'VALTO · VAULT GUARDIAN';
+          break;
+      }
+    });
   }
 
   Future<void> _handleSignIn(StateSetter setModalState) async {
@@ -67,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       Navigator.pop(context); // Close sheet
-      setState(() => _isUnlocking = true);
+      _navigateToApp();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -110,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       Navigator.pop(context); // Close sheet
-      setState(() => _isUnlocking = true);
+      _navigateToApp();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -131,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final authenticated = await AuthService.instance.authenticateWithBiometrics();
     if (authenticated) {
       if (!mounted) return;
-      setState(() => _isUnlocking = true);
+      _navigateToApp();
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -551,20 +594,127 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  // 3. CENTER HERO: AUTHENTIC 3D ISOMETRIC BANK VAULT WITH SLEEPING / WAKING VALTO
+                  // 3. CENTER HERO: PROMINENT BIG VALTO HERO WITH LEVITATION & TACTILE STATUS
                   Expanded(
                     child: Center(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          if (!_isUnlocking) _handleQuickUnlock();
+                      child: AnimatedBuilder(
+                        animation: _levitateController,
+                        builder: (context, _) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Floating Big Valto + Ambient Aura + Dynamic Floor Shadow
+                              SizedBox(
+                                width: 250,
+                                height: 240,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    // Ambient soft warm gold aura
+                                    Container(
+                                      width: 220,
+                                      height: 220,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: RadialGradient(
+                                          colors: [
+                                            VaultColors.accent.withValues(alpha: 0.16),
+                                            VaultColors.accent.withValues(alpha: 0.04),
+                                            Colors.transparent,
+                                          ],
+                                          stops: const [0.0, 0.55, 1.0],
+                                        ),
+                                      ),
+                                    ),
+
+                                    // Dynamic diffused floor shadow that expands/contracts with hover
+                                    Positioned(
+                                      bottom: 12,
+                                      child: Transform.scale(
+                                        scaleX: _shadowAnim.value,
+                                        scaleY: 0.9 * _shadowAnim.value,
+                                        child: Container(
+                                          width: 120,
+                                          height: 16,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(50),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(0xFF141413).withValues(alpha: 0.10),
+                                                blurRadius: 18,
+                                                spreadRadius: 2,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    // BIG VALTO HERO (size 195 - crisp 16-bit pixel fidelity)
+                                    Transform.translate(
+                                      offset: Offset(0, _levitateAnim.value),
+                                      child: GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: _handleCatTap,
+                                        child: Tooltip(
+                                          message: 'Tap Valto',
+                                          child: ValtoMascot(
+                                            size: 195,
+                                            mood: _currentMood,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+
+                              // Refined tactile status pill
+                              GestureDetector(
+                                onTap: _handleCatTap,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6.5),
+                                  decoration: BoxDecoration(
+                                    color: VaultColors.card,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: VaultColors.hairline),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF141413).withValues(alpha: 0.03),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 5.5,
+                                        height: 5.5,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0xFF55B374), // Terminal green dot
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _statusMessage,
+                                        style: VaultTypography.mono(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.7,
+                                          color: VaultColors.ink,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
                         },
-                        child: HairlineVault(
-                          size: 200,
-                          isUnlocking: _isUnlocking,
-                          onUnlocked: _navigateToApp,
-                          showGuardian: true,
-                        ),
                       ),
                     ),
                   ),
@@ -573,12 +723,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // "Unlock Vault" Primary CTA Button
+                      // "Sign up" Primary CTA Button
                       SizedBox(
                         width: double.infinity,
                         height: 54,
                         child: ElevatedButton(
-                          onPressed: _isUnlocking ? null : _handleQuickUnlock,
+                          onPressed: _showSignUpSheet,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF141413), // Obsidian Jet
                             foregroundColor: Colors.white,
@@ -592,7 +742,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                _isUnlocking ? 'Opening Vault...' : 'Unlock Vault',
+                                'Sign up',
                                 style: VaultTypography.sans(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -600,8 +750,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Icon(
-                                _isUnlocking ? Icons.lock_open_rounded : Icons.arrow_forward_rounded,
+                              const Icon(
+                                Icons.arrow_forward_rounded,
                                 size: 16,
                                 color: Colors.white,
                               ),
@@ -611,53 +761,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // Secondary Links: Sign in & Sign up
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          GestureDetector(
-                            onTap: _showSignInSheet,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: Text(
-                                'Sign in',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: VaultColors.ink,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: VaultColors.ink,
-                                  decorationThickness: 1.5,
-                                ),
-                              ),
+                      // Secondary "Sign in" Link
+                      GestureDetector(
+                        onTap: _showSignInSheet,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            'Sign in',
+                            style: GoogleFonts.inter(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: VaultColors.ink,
+                              decoration: TextDecoration.underline,
+                              decorationColor: VaultColors.ink,
+                              decorationThickness: 1.5,
                             ),
                           ),
-                          Text(
-                            '·',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: VaultColors.ink3,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: _showSignUpSheet,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              child: Text(
-                                'Create Vault',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: VaultColors.ink,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: VaultColors.ink,
-                                  decorationThickness: 1.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                       const SizedBox(height: 10),
 

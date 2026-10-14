@@ -427,20 +427,14 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const ValtoMascot(size: 32, mood: ValtoMood.peeking),
-                      const SizedBox(width: 10),
-                      Text(
-                        'VAULTED',
-                        style: VaultTypography.sans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.5,
-                          color: VaultColors.ink,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'VAULTED',
+                    style: VaultTypography.sans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.5,
+                      color: VaultColors.ink,
+                    ),
                   ),
 
                   // Header Action Buttons
@@ -647,9 +641,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 ),
                 child: Row(
                   children: [
-                    ValtoMascot(
-                      size: 42,
-                      mood: _isDayClosed ? ValtoMood.sleeping : ValtoMood.vigilant,
+                    const ValtoMascot(
+                      size: 44,
+                      mood: ValtoMood.sleeping,
                     ),
                     const SizedBox(width: 14),
                     Expanded(

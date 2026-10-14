@@ -23,4 +23,18 @@ class VaultColors {
   static const Color posBg = Color(0xFF1D2A22);    // Positive badge green
   static const Color neg = Color(0xFFC98A76);      // Negative loss red
   static const Color negBg = Color(0xFF2E211C);    // Negative badge red
+
+  // Oyenza Warm Sunset & Atmosphere Tokens
+  static const Color sunsetTop = Color(0xFF8E7AB5);     // Soft twilight lavender
+  static const Color sunsetMid = Color(0xFFE28E74);     // Apricot glow
+  static const Color sunsetBottom = Color(0xFFEEA864);  // Warm golden horizon
+  static const Color sunsetHaze = Color(0xFFF7DCB9);    // Morning haze
+  
+  static const Color valtoOrange = Color(0xFFF09A38);   // Valto the Cat fur
+  static const Color valtoLight = Color(0xFFFFE3B8);    // Soft cream muzzle
+  static const Color valtoGold = Color(0xFFE5A93C);     // Coin gold
+
+  // Frosted Glass
+  static Color glassBg = Colors.white.withValues(alpha: 0.16);
+  static Color glassBorder = Colors.white.withValues(alpha: 0.28);
 }

@@ -33,14 +33,13 @@ class ValtoMascot extends StatelessWidget {
 
   String get _assetPath {
     switch (mood) {
-      case ValtoMood.playful:
-        return 'assets/images/valto_waving.png';
       case ValtoMood.sleeping:
         return 'assets/images/valto_sleeping.png';
       case ValtoMood.happy:
         return 'assets/images/valto_happy.png';
       case ValtoMood.detective:
         return 'assets/images/valto_detective.png';
+      case ValtoMood.playful:
       case ValtoMood.peeking:
       case ValtoMood.vigilant:
         return 'assets/images/valto_vigilant.png';

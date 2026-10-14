@@ -409,24 +409,6 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
     );
   }
 
-  String _getPoseDescription() {
-    if (_isDayClosed) return 'Valto is taking a cozy nap. Ledger closed.';
-    switch (_valtoMood) {
-      case ValtoMood.playful:
-        return 'Valto waves hello! Tap cat to cycle.';
-      case ValtoMood.happy:
-        return 'Valto celebrates with a high-five!';
-      case ValtoMood.sleeping:
-        return 'Valto is in a cozy loaf nap.';
-      case ValtoMood.detective:
-        return 'Valto is inspecting the vault with his monocle.';
-      case ValtoMood.peeking:
-        return 'Valto is peeking over the ledge.';
-      case ValtoMood.vigilant:
-        return 'Valto is on watch. Tap cat to cycle.';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
@@ -447,7 +429,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 children: [
                   Row(
                     children: [
-                      const ValtoMascot(size: 32, mood: ValtoMood.playful),
+                      const ValtoMascot(size: 32, mood: ValtoMood.vigilant),
                       const SizedBox(width: 10),
                       Text(
                         'VAULTED',
@@ -665,33 +647,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 ),
                 child: Row(
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() {
-                          final moods = [
-                            ValtoMood.vigilant,
-                            ValtoMood.playful,
-                            ValtoMood.happy,
-                            ValtoMood.sleeping,
-                            ValtoMood.detective,
-                          ];
-                          final nextIndex = (moods.indexOf(_valtoMood) + 1) % moods.length;
-                          _valtoMood = moods[nextIndex];
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: VaultColors.background,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: VaultColors.hairline),
-                        ),
-                        child: ValtoMascot(
-                          size: 42,
-                          mood: _isDayClosed ? ValtoMood.sleeping : _valtoMood,
-                        ),
-                      ),
+                    ValtoMascot(
+                      size: 42,
+                      mood: _isDayClosed ? ValtoMood.sleeping : ValtoMood.vigilant,
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -726,7 +684,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                           Text(
                             _todayCount > 0
                                 ? 'Rp ${NumberFormat('#,###').format(_todaySpent)} logged today'
-                                : _getPoseDescription(),
+                                : 'Valto is keeping watch. Vault secure.',
                             style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
                           ),
                           Text(

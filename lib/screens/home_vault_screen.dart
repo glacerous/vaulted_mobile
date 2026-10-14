@@ -29,10 +29,6 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
   double _collectiblesTotal = 0.0;
   int _steamItemsCount = 0;
   String _selectedCurrency = 'IDR';
-  bool _isDayClosed = false;
-  int _streakDays = 3;
-  double _todaySpent = 0.0;
-  int _todayCount = 0;
 
   bool _isAiProcessing = false;
   ValtoMood _valtoMood = ValtoMood.vigilant;
@@ -127,11 +123,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
       if (!mounted) return;
 
       if (action.type == 'expense') {
-        setState(() {
-          _todaySpent += action.amount;
-          _todayCount++;
-          _valtoMood = ValtoMood.happy;
-        });
+        setState(() => _valtoMood = ValtoMood.happy);
         _showSuccessSheet(action);
       } else if (action.type == 'hardware') {
         final usdAmount = action.currency == 'IDR' ? action.amount / 15850.0 : action.amount;
@@ -497,8 +489,14 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
                 decoration: BoxDecoration(
                   color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: VaultColors.hairline),
+                  borderRadius: BorderRadius.circular(26),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF141413).withValues(alpha: 0.03),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,10 +544,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                           onTap: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
                           child: Container(
                             padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: VaultColors.background,
+                            decoration: const BoxDecoration(
+                              color: VaultColors.cardHover,
                               shape: BoxShape.circle,
-                              border: Border.all(color: VaultColors.hairline),
                             ),
                             child: Icon(
                               _isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -573,9 +570,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                         Container(
                           padding: const EdgeInsets.all(3),
                           decoration: BoxDecoration(
-                            color: VaultColors.background,
+                            color: VaultColors.cardHover,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: VaultColors.hairline),
                           ),
                           child: Row(
                             children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
@@ -588,15 +584,24 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                                   decoration: BoxDecoration(
-                                    color: isSel ? VaultColors.cardHover : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(7),
+                                    color: isSel ? VaultColors.card : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: isSel
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.05),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 1),
+                                            )
+                                          ]
+                                        : null,
                                   ),
                                   child: Text(
                                     curr,
                                     style: VaultTypography.mono(
                                       fontSize: 10,
                                       fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSel ? VaultColors.accent : VaultColors.ink2,
+                                      color: isSel ? VaultColors.ink : VaultColors.ink2,
                                     ),
                                   ),
                                 ),
@@ -609,101 +614,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // 4. VALTO GUARDIAN ASSISTANT & HABIT STREAK CARD
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: VaultColors.hairline),
-                ),
-                child: Row(
-                  children: [
-                    const ValtoMascot(
-                      size: 42,
-                      mood: ValtoMood.sleeping,
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'VALTO GUARDIAN',
-                                style: VaultTypography.mono(fontSize: 9.5, letterSpacing: 1, color: VaultColors.accent),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: VaultColors.badgeBg,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: VaultColors.accent.withValues(alpha: 0.2)),
-                                ),
-                                child: Text(
-                                  '$_streakDays-DAY STREAK 🔥',
-                                  style: VaultTypography.mono(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w700,
-                                    color: VaultColors.accent,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            _todayCount > 0
-                                ? 'Rp ${NumberFormat('#,###').format(_todaySpent)} logged today'
-                                : 'Valto is resting. Vault is secured.',
-                            style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
-                          ),
-                          Text(
-                            _isDayClosed ? 'Day closed · Streak preserved' : 'Tap to close today\'s ledger',
-                            style: VaultTypography.sans(fontSize: 11.5, color: VaultColors.ink2),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        setState(() {
-                          _isDayClosed = !_isDayClosed;
-                          if (_isDayClosed) {
-                            _streakDays++;
-                            _valtoMood = ValtoMood.happy;
-                          }
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isDayClosed ? VaultColors.posBg : VaultColors.cardHover,
-                        foregroundColor: _isDayClosed ? VaultColors.pos : VaultColors.ink,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(
-                            color: _isDayClosed ? VaultColors.pos.withValues(alpha: 0.3) : VaultColors.hairline,
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      ),
-                      child: Text(
-                        _isDayClosed ? 'Closed ✓' : 'Close day',
-                        style: VaultTypography.sans(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 24),
 
-              // 5. VAULT PILLARS SECTION (Single Unified Luxury Titanium Card)
+              // 4. VAULT PILLARS SECTION (Clean, Unified Luxury Grouped Card)
               Text(
                 'YOUR VAULT SPACES',
                 style: VaultTypography.mono(fontSize: 10.5, letterSpacing: 1.2, color: VaultColors.ink2),
@@ -713,8 +626,14 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
               Container(
                 decoration: BoxDecoration(
                   color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: VaultColors.hairline),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF141413).withValues(alpha: 0.025),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -732,7 +651,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                         _loadVaultData();
                       },
                     ),
-                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 58, endIndent: 16),
+                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
                     _buildPillarRow(
                       icon: Icons.laptop_mac_rounded,
                       iconColor: VaultColors.ink,
@@ -747,7 +666,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                         _loadVaultData();
                       },
                     ),
-                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 58, endIndent: 16),
+                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
                     _buildPillarRow(
                       icon: Icons.monetization_on_outlined,
                       iconColor: VaultColors.accent,
@@ -762,7 +681,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                         );
                       },
                     ),
-                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 58, endIndent: 16),
+                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
                     _buildPillarRow(
                       icon: Icons.near_me_rounded,
                       iconColor: VaultColors.ink2,
@@ -802,20 +721,19 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
         HapticFeedback.selectionClick();
         onTap();
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(24),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         child: Row(
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: VaultColors.background,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: VaultColors.hairline),
+                color: VaultColors.cardHover,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: iconColor, size: 18),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -825,16 +743,16 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                   Text(
                     title,
                     style: VaultTypography.sans(
-                      fontSize: 13.5,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: VaultColors.ink,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 2.5),
                   Text(
                     subtitle,
                     style: VaultTypography.sans(
-                      fontSize: 11,
+                      fontSize: 11.5,
                       color: VaultColors.ink2,
                     ),
                     maxLines: 1,
@@ -850,7 +768,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 Text(
                   value,
                   style: VaultTypography.mono(
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: isAction ? FontWeight.w600 : FontWeight.w700,
                     color: isAction ? VaultColors.accent : VaultColors.ink,
                   ),

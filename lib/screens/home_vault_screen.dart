@@ -501,24 +501,52 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Subtitle & Status indicator
+                    // Subtitle & Status indicator + Cozy Sleeping Valto Mascot
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: VaultColors.pos,
-                          ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 7,
+                              height: 7,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: VaultColors.pos,
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Text(
+                              '$_steamItemsCount Steam items & vault assets active',
+                              style: VaultTypography.sans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: VaultColors.ink2,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 7),
-                        Text(
-                          '$_steamItemsCount Steam items & vault assets active',
-                          style: VaultTypography.sans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: VaultColors.ink2,
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Valto is resting. Your vault assets are guarded.',
+                                  style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+                                ),
+                                duration: const Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                backgroundColor: const Color(0xFF141413),
+                              ),
+                            );
+                          },
+                          child: const ValtoMascot(
+                            size: 30,
+                            mood: ValtoMood.sleeping,
                           ),
                         ),
                       ],

@@ -7,6 +7,7 @@ import '../core/database/database_helper.dart';
 import '../core/services/valto_ai_service.dart';
 import '../core/services/gemini_service.dart';
 import '../core/widgets/vowl_mascot.dart';
+import '../core/widgets/scenic_cloud_sea_header.dart';
 import 'pillars/inventory_screen.dart';
 import 'pillars/collectibles_hub_screen.dart';
 import 'warranty_lbs_screen.dart';
@@ -484,12 +485,22 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 18),
 
-              // 2. FOCAL GLANCE HERO (Giant Net Worth & Status Pill)
+              // 2. ANIMATED SUNSET CLOUD-SEA SCENIC HEADER (Oyenza & ascii.rest/cloud-sea style)
+              ScenicCloudSeaHeader(
+                promptController: _promptController,
+                promptFocus: _promptFocus,
+                isAiProcessing: _isAiProcessing,
+                vowlMood: _vowlMood,
+                onSubmit: _handlePromptSubmit,
+              ),
+              const SizedBox(height: 20),
+
+              // 3. FOCAL GLANCE HERO (Giant Net Worth & Status Pill)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
                 decoration: BoxDecoration(
                   color: VaultColors.card,
                   borderRadius: BorderRadius.circular(28),
@@ -547,7 +558,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                           onTap: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
                           child: Container(
                             padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: VaultColors.cardHover,
                               shape: BoxShape.circle,
                             ),
@@ -617,9 +628,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
 
-              // 3. VOWL GUARDIAN ASSISTANT & HABIT STREAK CARD
+              // 4. VOWL GUARDIAN ASSISTANT & HABIT STREAK CARD
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
@@ -636,7 +647,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 ),
                 child: Row(
                   children: [
-                    VowlMascot(size: 46, mood: _vowlMood),
+                    VowlMascot(size: 42, mood: _vowlMood),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -701,61 +712,6 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                       child: Text(
                         _isDayClosed ? 'Closed ✓' : 'Close day',
                         style: VaultTypography.sans(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // 4. NATURAL LANGUAGE OMNIBAR (In Thumb Zone)
-              Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(26),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF141413).withValues(alpha: 0.04),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Row(
-                  children: [
-                    const Icon(Icons.chat_bubble_outline_rounded, size: 18, color: VaultColors.accent),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _promptController,
-                        focusNode: _promptFocus,
-                        onSubmitted: (_) => _handlePromptSubmit(),
-                        style: VaultTypography.sans(fontSize: 13.5, color: VaultColors.ink),
-                        decoration: InputDecoration(
-                          hintText: 'Ask Vowl e.g. "kopi 25k bca" or "macbook"...',
-                          hintStyle: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink3),
-                          border: InputBorder.none,
-                          isDense: true,
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: _handlePromptSubmit,
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: VaultColors.primaryButton,
-                        ),
-                        child: _isAiProcessing
-                            ? const Padding(
-                                padding: EdgeInsets.all(9),
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Icons.arrow_upward_rounded, size: 18, color: Colors.white),
                       ),
                     ),
                   ],

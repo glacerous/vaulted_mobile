@@ -474,19 +474,10 @@ class _LoginScreenState extends State<LoginScreen>
       backgroundColor: VaultColors.background, // Warm porcelain
       body: Stack(
         children: [
-          // 1. SUBTLE AMBIENT SURFACE GLOW (Anchoring the safe to the luxury floor)
+          // 1. ORGANIC WARM HORIZON DUNES (Grounding the vault in a tactile luxury landscape)
           Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(0.0, 0.05),
-                  radius: 0.75,
-                  colors: [
-                    Color(0x0C000000),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
+            child: CustomPaint(
+              painter: _OrganicDunesPainter(),
             ),
           ),
 
@@ -496,145 +487,127 @@ class _LoginScreenState extends State<LoginScreen>
               padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 12),
               child: Column(
                 children: [
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
 
-                  // TOP BRAND EMBLEM (Precision tactile vault lock emblem)
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: VaultColors.card,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: VaultColors.hairline),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF141413).withValues(alpha: 0.04),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        // Subtle warm gold folded corner
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            width: 15,
-                            height: 15,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE6DEC9),
-                              borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(8),
-                                topRight: Radius.circular(17),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Center precision vault lock
-                        const Center(
-                          child: Icon(
-                            Icons.lock_outline_rounded,
-                            size: 22,
-                            color: VaultColors.ink,
-                          ),
-                        ),
-                      ],
+                  // TOP MONOSPACE REPOSITORY EYEBROW (Clean luxury editorial, zero clip art)
+                  Text(
+                    'PERSONAL ASSET REPOSITORY',
+                    style: VaultTypography.mono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2.4,
+                      color: VaultColors.ink3,
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 8),
 
                   // BRAND NAME (Clean authoritative serif typography, zero sparkles)
                   Text(
                     'VAULTED',
                     style: GoogleFonts.newsreader(
-                      fontSize: 34,
+                      fontSize: 38,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 1.2,
+                      letterSpacing: 1.4,
                       color: VaultColors.ink,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
 
                   // ELEGANT SUBTITLE
                   Text(
                     'Account for everything you own.',
                     style: VaultTypography.sans(
-                      fontSize: 13,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w400,
                       color: VaultColors.ink2,
                     ),
                   ),
 
-                  // 3. CENTER HERO: PROMINENT BIG VALTO HERO WITH LEVITATION & TACTILE STATUS
+                  // 3. CENTER HERO: PROMINENT VALTO HERO WITH LEVITATION & FLOATING ASSET TELEMETRY
                   Expanded(
                     child: Center(
                       child: AnimatedBuilder(
                         animation: _levitateController,
                         builder: (context, _) {
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Floating Big Valto + Ambient Aura + Dynamic Floor Shadow
-                              SizedBox(
-                                width: 250,
-                                height: 240,
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    // Ambient soft warm gold aura
-                                    Container(
-                                      width: 220,
-                                      height: 220,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        gradient: RadialGradient(
-                                          colors: [
-                                            VaultColors.accent.withValues(alpha: 0.16),
-                                            VaultColors.accent.withValues(alpha: 0.04),
-                                            Colors.transparent,
-                                          ],
-                                          stops: const [0.0, 0.55, 1.0],
-                                        ),
-                                      ),
+                          return SizedBox(
+                            width: 320,
+                            height: 280,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              clipBehavior: Clip.none,
+                              children: [
+                                // Ambient soft warm gold aura
+                                Container(
+                                  width: 220,
+                                  height: 220,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        VaultColors.accent.withValues(alpha: 0.18),
+                                        VaultColors.accent.withValues(alpha: 0.04),
+                                        Colors.transparent,
+                                      ],
+                                      stops: const [0.0, 0.55, 1.0],
                                     ),
-
-                                    // Dynamic diffused floor shadow that expands/contracts with hover
-                                    Positioned(
-                                      bottom: 12,
-                                      child: Transform.scale(
-                                        scaleX: _shadowAnim.value,
-                                        scaleY: 0.9 * _shadowAnim.value,
-                                        child: Container(
-                                          width: 120,
-                                          height: 16,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(50),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: const Color(0xFF141413).withValues(alpha: 0.10),
-                                                blurRadius: 18,
-                                                spreadRadius: 2,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-
-                                    // BIG VALTO HERO (size 200 - crisp 16-bit pixel fidelity)
-                                    Transform.translate(
-                                      offset: Offset(0, _levitateAnim.value),
-                                      child: const ValtoMascot(
-                                        size: 200,
-                                        mood: ValtoMood.vigilant,
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ],
+
+                                // Dynamic diffused floor shadow that expands/contracts with hover
+                                Positioned(
+                                  bottom: 22,
+                                  child: Transform.scale(
+                                    scaleX: _shadowAnim.value,
+                                    scaleY: 0.85 * _shadowAnim.value,
+                                    child: Container(
+                                      width: 125,
+                                      height: 16,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(50),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF141413).withValues(alpha: 0.12),
+                                            blurRadius: 20,
+                                            spreadRadius: 2,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                // BIG VALTO HERO (size 190 - crisp 16-bit pixel fidelity)
+                                Transform.translate(
+                                  offset: Offset(0, _levitateAnim.value),
+                                  child: const ValtoMascot(
+                                    size: 190,
+                                    mood: ValtoMood.vigilant,
+                                  ),
+                                ),
+
+                                // FLOATING ASSET PILL 1 (Upper Left: Patek Philippe)
+                                Positioned(
+                                  left: 2,
+                                  top: 36 + (-_levitateAnim.value * 0.7),
+                                  child: const _FloatingAssetChip(
+                                    icon: Icons.watch_outlined,
+                                    title: 'PATEK 5711',
+                                    value: '\$118,500',
+                                  ),
+                                ),
+
+                                // FLOATING ASSET PILL 2 (Lower Right: Porsche 911 GT3)
+                                Positioned(
+                                  right: 2,
+                                  bottom: 50 + (_levitateAnim.value * 0.7),
+                                  child: const _FloatingAssetChip(
+                                    icon: Icons.directions_car_outlined,
+                                    title: '911 GT3 RS',
+                                    value: '\$325,000',
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         },
                       ),
@@ -737,4 +710,173 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
   }
+}
+
+/// Floating tactile luxury asset badge orbiting Valto
+class _FloatingAssetChip extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+
+  const _FloatingAssetChip({
+    required this.icon,
+    required this.title,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFE8E2D8),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF141413).withValues(alpha: 0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF7F2),
+              borderRadius: BorderRadius.circular(13),
+              border: Border.all(color: const Color(0xFFEDE7DC)),
+            ),
+            child: Icon(
+              icon,
+              size: 14,
+              color: VaultColors.accent,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: VaultTypography.mono(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                  color: VaultColors.ink,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                value,
+                style: VaultTypography.mono(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF2E7D32),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Organic warm horizon dunes painted on the lower canvas, grounding the scene
+class _OrganicDunesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 1. Distant soft dune (#F3EFE8 -> #EBE3D6)
+    final path1 = Path();
+    path1.moveTo(0, size.height * 0.68);
+    path1.quadraticBezierTo(
+      size.width * 0.32,
+      size.height * 0.62,
+      size.width * 0.68,
+      size.height * 0.70,
+    );
+    path1.quadraticBezierTo(
+      size.width * 0.88,
+      size.height * 0.73,
+      size.width,
+      size.height * 0.71,
+    );
+    path1.lineTo(size.width, size.height);
+    path1.lineTo(0, size.height);
+    path1.close();
+
+    final paint1 = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFFF3EFE8).withValues(alpha: 0.75),
+          const Color(0xFFEBE3D6).withValues(alpha: 0.85),
+        ],
+      ).createShader(Rect.fromLTWH(0, size.height * 0.62, size.width, size.height * 0.38));
+    canvas.drawPath(path1, paint1);
+
+    // 2. Midground warm dune (#EBE2D4 -> #E2D8C7)
+    final path2 = Path();
+    path2.moveTo(0, size.height * 0.77);
+    path2.quadraticBezierTo(
+      size.width * 0.28,
+      size.height * 0.80,
+      size.width * 0.58,
+      size.height * 0.74,
+    );
+    path2.quadraticBezierTo(
+      size.width * 0.85,
+      size.height * 0.69,
+      size.width,
+      size.height * 0.72,
+    );
+    path2.lineTo(size.width, size.height);
+    path2.lineTo(0, size.height);
+    path2.close();
+
+    final paint2 = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFFEBE2D4).withValues(alpha: 0.85),
+          const Color(0xFFE2D8C7).withValues(alpha: 0.95),
+        ],
+      ).createShader(Rect.fromLTWH(0, size.height * 0.69, size.width, size.height * 0.31));
+    canvas.drawPath(path2, paint2);
+
+    // 3. Foreground crest highlight stroke
+    final crestPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.50)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    final crestPath = Path();
+    crestPath.moveTo(0, size.height * 0.77);
+    crestPath.quadraticBezierTo(
+      size.width * 0.28,
+      size.height * 0.80,
+      size.width * 0.58,
+      size.height * 0.74,
+    );
+    crestPath.quadraticBezierTo(
+      size.width * 0.85,
+      size.height * 0.69,
+      size.width,
+      size.height * 0.72,
+    );
+    canvas.drawPath(crestPath, crestPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

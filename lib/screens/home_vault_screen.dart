@@ -481,31 +481,30 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                 valtoMood: _valtoMood,
                 onSubmit: _handlePromptSubmit,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 26),
 
-              // 3. FOCAL GLANCE HERO (Giant Net Worth & Status Pill)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(26),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF141413).withValues(alpha: 0.03),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
+              // 3. FOCAL GLANCE HERO (Giant Net Worth & Valto Perched on Rim)
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
+                    decoration: BoxDecoration(
+                      color: VaultColors.card,
+                      borderRadius: BorderRadius.circular(26),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF141413).withValues(alpha: 0.03),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Subtitle & Status indicator + Cozy Sleeping Valto Mascot
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Subtitle & Status indicator
                         Row(
                           children: [
                             Container(
@@ -527,120 +526,126 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
                             ),
                           ],
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Valto is resting. Your vault assets are guarded.',
-                                  style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+                        const SizedBox(height: 10),
+
+                        // Huge Bold Primary Counter
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _isBalanceVisible ? _formatAmount(_netWorth) : '••••••••',
+                                style: VaultTypography.mono(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.8,
+                                  color: VaultColors.ink,
                                 ),
-                                duration: const Duration(seconds: 2),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                backgroundColor: const Color(0xFF141413),
                               ),
-                            );
-                          },
-                          child: const ValtoMascot(
-                            size: 30,
-                            mood: ValtoMood.sleeping,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Huge Bold Primary Counter
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _isBalanceVisible ? _formatAmount(_netWorth) : '••••••••',
-                            style: VaultTypography.mono(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.8,
-                              color: VaultColors.ink,
                             ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: VaultColors.cardHover,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                              size: 16,
-                              color: VaultColors.ink2,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Currency Segment Switcher
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${_getGreeting()}, azzaky',
-                          style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink3),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: VaultColors.cardHover,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
-                              final isSel = _selectedCurrency == curr;
-                              return GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  setState(() => _selectedCurrency = curr);
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                                  decoration: BoxDecoration(
-                                    color: isSel ? VaultColors.card : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: isSel
-                                        ? [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.05),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 1),
-                                            )
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Text(
-                                    curr,
-                                    style: VaultTypography.mono(
-                                      fontSize: 10,
-                                      fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSel ? VaultColors.ink : VaultColors.ink2,
-                                    ),
-                                  ),
+                            GestureDetector(
+                              onTap: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: VaultColors.cardHover,
+                                  shape: BoxShape.circle,
                                 ),
-                              );
-                            }).toList(),
-                          ),
+                                child: Icon(
+                                  _isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  size: 16,
+                                  color: VaultColors.ink2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Currency Segment Switcher
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${_getGreeting()}, azzaky',
+                              style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink3),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: VaultColors.cardHover,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
+                                  final isSel = _selectedCurrency == curr;
+                                  return GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() => _selectedCurrency = curr);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                                      decoration: BoxDecoration(
+                                        color: isSel ? VaultColors.card : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: isSel
+                                            ? [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.05),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 1),
+                                                )
+                                              ]
+                                            : null,
+                                      ),
+                                      child: Text(
+                                        curr,
+                                        style: VaultTypography.mono(
+                                          fontSize: 10,
+                                          fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                                          color: isSel ? VaultColors.ink : VaultColors.ink2,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Valto Mascot Loafing on the Card Rim (56px, clearly visible, physical resting pose)
+                  Positioned(
+                    top: -24,
+                    right: 22,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Valto is resting on your vault. All assets secure.',
+                              style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+                            ),
+                            duration: const Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            backgroundColor: const Color(0xFF141413),
+                          ),
+                        );
+                      },
+                      child: const ValtoMascot(
+                        size: 56,
+                        mood: ValtoMood.sleeping,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
 

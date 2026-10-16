@@ -510,170 +510,82 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // EXACT REFERENCE APP BAR
+                          // AUTHENTIC VAULTED TOP APP BAR
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Left: White circle button with soft green sprout icon
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.10),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.eco_rounded, // Leaf/sprout icon from reference
-                                    size: 18,
-                                    color: Color(0xFF48BB78), // Fresh soft green
-                                  ),
+                              Text(
+                                'VAULTED',
+                                style: VaultTypography.mono(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.5,
+                                  color: const Color(0xFF1D1D1B),
                                 ),
                               ),
-
-                              // Right: The 3 tactile controls from reference
                               Row(
                                 children: [
-                                  // 1. Mini Calendar Badge (Orange tab + white body with day)
                                   Container(
-                                    width: 36,
-                                    height: 38,
+                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(9),
+                                      color: Colors.white.withValues(alpha: 0.90),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.white),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.10),
+                                          color: Colors.black.withValues(alpha: 0.06),
                                           blurRadius: 6,
                                           offset: const Offset(0, 2),
                                         ),
                                       ],
                                     ),
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          width: double.infinity,
-                                          padding: const EdgeInsets.symmetric(vertical: 2),
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFFEA580C), // Orange tab
-                                            borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              DateFormat('MMM').format(now).toUpperCase(),
-                                              style: const TextStyle(
-                                                fontSize: 7.5,
-                                                fontWeight: FontWeight.w800,
-                                                color: Colors.white,
-                                                letterSpacing: 0.4,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Center(
-                                            child: Text(
-                                              DateFormat('d').format(now),
-                                              style: VaultTypography.mono(
-                                                fontSize: 12.5,
-                                                fontWeight: FontWeight.w800,
-                                                color: const Color(0xFF1D1D1B),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                    child: Text(
+                                      DateFormat('MMM d').format(now).toUpperCase(),
+                                      style: VaultTypography.mono(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF1D1D1B),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-
-                                  // 2. Dual-Icon Capsule Pill (Chat + Audio/Profile side-by-side)
                                   GestureDetector(
-                                    onTap: () => _promptFocus.requestFocus(),
+                                    onTap: _showAiScannerModal,
                                     child: Container(
-                                      height: 38,
-                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.92),
-                                        borderRadius: BorderRadius.circular(19),
+                                        color: Colors.white.withValues(alpha: 0.90),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: Colors.white),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.08),
+                                            color: Colors.black.withValues(alpha: 0.06),
                                             blurRadius: 6,
                                             offset: const Offset(0, 2),
                                           ),
                                         ],
                                       ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.chat_bubble_outline_rounded,
-                                            size: 16,
-                                            color: Color(0xFF1D1D1B),
-                                          ),
-                                          SizedBox(width: 7),
-                                          Icon(
-                                            Icons.headset_mic_outlined,
-                                            size: 16,
-                                            color: Color(0xFF1D1D1B),
-                                          ),
-                                        ],
-                                      ),
+                                      child: const Icon(Icons.receipt_long_rounded, size: 16, color: Color(0xFF1D1D1B)),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-
-                                  // 3. Circular Refresh Sync Button with Red Indicator Dot
                                   GestureDetector(
-                                    onTap: () async {
-                                      HapticFeedback.mediumImpact();
-                                      await _loadVaultData();
-                                    },
+                                    onTap: _showVoiceModal,
                                     child: Container(
-                                      width: 38,
-                                      height: 38,
+                                      padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.92),
-                                        shape: BoxShape.circle,
+                                        color: Colors.white.withValues(alpha: 0.90),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: Colors.white),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.08),
+                                            color: Colors.black.withValues(alpha: 0.06),
                                             blurRadius: 6,
                                             offset: const Offset(0, 2),
                                           ),
                                         ],
                                       ),
-                                      child: Stack(
-                                        children: [
-                                          const Center(
-                                            child: Icon(
-                                              Icons.refresh_rounded,
-                                              size: 18,
-                                              color: Color(0xFF1D1D1B),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 8,
-                                            right: 8,
-                                            child: Container(
-                                              width: 6,
-                                              height: 6,
-                                              decoration: const BoxDecoration(
-                                                color: Color(0xFFEF4444), // Red notification dot
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                      child: const Icon(Icons.mic_none_rounded, size: 16, color: Color(0xFF1D1D1B)),
                                     ),
                                   ),
                                 ],
@@ -853,335 +765,262 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ],
                             ),
                           ),
-                          const SizedBox(height: 10),
-
-                          // HORIZONTAL QUICK ACTION PILLS
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            child: Row(
-                              children: [
-                                _buildQuickPill('1 bill this week', '📅', () {
-                                  _promptController.text = 'Show pending bills this week';
-                                  _handlePromptSubmit();
-                                }),
-                                const SizedBox(width: 8),
-                                _buildQuickPill('Where did it go?', '🔍', () {
-                                  _promptController.text = 'Where did my expenses go this month?';
-                                  _handlePromptSubmit();
-                                }),
-                                const SizedBox(width: 8),
-                                _buildQuickPill('Review my week', '📊', () {
-                                  _promptController.text = 'Review vault changes for this week';
-                                  _handlePromptSubmit();
-                                }),
-                              ],
-                            ),
-                          ),
+                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
                   ),
-
-                  // CLEAR CRISP SEPARATOR HAIRLINE AT BASE OF SCENIC HEADER
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      height: 1,
-                      color: const Color(0xFF2A2A28).withValues(alpha: 0.12),
-                    ),
-                  ),
                 ],
               ),
             ),
 
-            // 2. MAIN COMPONENT (Clean, Crisp Separated White Card Surface)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: const Color(0xFFE8E5DD)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF141413).withValues(alpha: 0.04),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+            // 2. MAIN COMPONENT SHEET (Smooth Circled Edge Separator Overlapping Header)
+            Transform.translate(
+              offset: const Offset(0, -18),
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x10000000),
+                      blurRadius: 20,
+                      offset: Offset(0, -6),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 36),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Currency Switcher Header Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Currency Switcher Header Row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'RECENT ACTIVITY',
-                              style: VaultTypography.mono(
-                                fontSize: 10.5,
-                                letterSpacing: 1.2,
-                                color: VaultColors.ink2,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: VaultColors.cardHover,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
-                                  final isSel = _selectedCurrency == curr;
-                                  return GestureDetector(
-                                    onTap: () {
-                                      HapticFeedback.selectionClick();
-                                      setState(() => _selectedCurrency = curr);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: isSel ? VaultColors.card : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(7),
-                                      ),
-                                      child: Text(
-                                        curr,
-                                        style: VaultTypography.mono(
-                                          fontSize: 9.5,
-                                          fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                          color: isSel ? VaultColors.ink : VaultColors.ink2,
-                                        ),
-                                      ),
+                        Text(
+                          'RECENT ACTIVITY',
+                          style: VaultTypography.mono(
+                            fontSize: 10.5,
+                            letterSpacing: 1.2,
+                            color: VaultColors.ink2,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: VaultColors.cardHover,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
+                              final isSel = _selectedCurrency == curr;
+                              return GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _selectedCurrency = curr);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: isSel ? Colors.white : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(7),
+                                    boxShadow: isSel
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.08),
+                                              blurRadius: 4,
+                                            )
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Text(
+                                    curr,
+                                    style: VaultTypography.mono(
+                                      fontSize: 9.5,
+                                      fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                                      color: isSel ? VaultColors.ink : VaultColors.ink2,
                                     ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-
-                        // Transaction Items like in reference
-                        _buildActivityItem(
-                          icon: Icons.laptop_mac_rounded,
-                          title: 'Apple MacBook Pro 14"',
-                          subtitle: 'Hardware · Bank Mandiri',
-                          amount: '- Rp 1,999,000',
-                          isExpense: true,
-                        ),
-                        const Divider(height: 18, thickness: 1, color: VaultColors.hairline),
-                        _buildActivityItem(
-                          icon: Icons.sports_esports_rounded,
-                          title: 'CS:GO AWP Dragon Lore',
-                          subtitle: 'Steam Market · Valve OVO',
-                          amount: '+ Rp 4,250,000',
-                          isExpense: false,
-                        ),
-                        const Divider(height: 18, thickness: 1, color: VaultColors.hairline),
-                        _buildActivityItem(
-                          icon: Icons.watch_outlined,
-                          title: 'Rolex Submariner 126610',
-                          subtitle: 'Horology · Vaulted Local',
-                          amount: '+ Rp 14,200,000',
-                          isExpense: false,
-                        ),
-                        const SizedBox(height: 18),
-
-                        // Black Primary Pill Button ("Check & close today" from reference)
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Vault audited & confirmed for today.', style: VaultTypography.sans(fontSize: 12)),
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: const Duration(seconds: 2),
+                                  ),
                                 ),
                               );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF141413),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                            ),
-                            child: Text(
-                              'Check & close today',
-                              style: VaultTypography.sans(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
+                            }).toList(),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
-                  // Quick Action Buttons (Receipt & Voice)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildActionTile(
-                          icon: Icons.receipt_long_rounded,
-                          label: 'Receipt OCR',
-                          onTap: _showAiScannerModal,
+                    // Transaction Items like in reference
+                    _buildActivityItem(
+                      icon: Icons.laptop_mac_rounded,
+                      title: 'Apple MacBook Pro 14"',
+                      subtitle: 'Hardware · Bank Mandiri',
+                      amount: '- Rp 1,999,000',
+                      isExpense: true,
+                    ),
+                    const Divider(height: 18, thickness: 1, color: VaultColors.hairline),
+                    _buildActivityItem(
+                      icon: Icons.sports_esports_rounded,
+                      title: 'CS:GO AWP Dragon Lore',
+                      subtitle: 'Steam Market · Valve OVO',
+                      amount: '+ Rp 4,250,000',
+                      isExpense: false,
+                    ),
+                    const Divider(height: 18, thickness: 1, color: VaultColors.hairline),
+                    _buildActivityItem(
+                      icon: Icons.watch_outlined,
+                      title: 'Rolex Submariner 126610',
+                      subtitle: 'Horology · Vaulted Local',
+                      amount: '+ Rp 14,200,000',
+                      isExpense: false,
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Black Primary Pill Button ("Check & close today" from reference)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          HapticFeedback.mediumImpact();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Vault audited & confirmed for today.', style: VaultTypography.sans(fontSize: 12)),
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF141413),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: Text(
+                          'Check & close today',
+                          style: VaultTypography.sans(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildActionTile(
-                          icon: Icons.mic_none_rounded,
-                          label: 'Voice Logger',
-                          onTap: _showVoiceModal,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+                    ),
+                    const SizedBox(height: 18),
 
-                  // Vault Pillars Section
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
+                    // Quick Action Buttons (Receipt & Voice)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildActionTile(
+                            icon: Icons.receipt_long_rounded,
+                            label: 'Receipt OCR',
+                            onTap: _showAiScannerModal,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildActionTile(
+                            icon: Icons.mic_none_rounded,
+                            label: 'Voice Logger',
+                            onTap: _showVoiceModal,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Vault Pillars Section
+                    Text(
                       'YOUR VAULT SPACES',
                       style: VaultTypography.mono(fontSize: 10.5, letterSpacing: 1.2, color: VaultColors.ink2),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  Container(
-                    decoration: BoxDecoration(
-                      color: VaultColors.card,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: VaultColors.hairline),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF141413).withValues(alpha: 0.025),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                    Container(
+                      decoration: BoxDecoration(
+                        color: VaultColors.cardHover,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: VaultColors.hairline),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF141413).withValues(alpha: 0.025),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _buildPillarRow(
+                            icon: Icons.sports_esports_rounded,
+                            iconColor: VaultColors.accent,
+                            title: 'Steam & Gaming Vault',
+                            subtitle: '$_steamItemsCount verified items · Live Valve sync',
+                            value: _formatAmount(_collectiblesTotal),
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const CollectiblesHubScreen()),
+                              );
+                              _loadVaultData();
+                            },
+                          ),
+                          const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
+                          _buildPillarRow(
+                            icon: Icons.laptop_mac_rounded,
+                            iconColor: VaultColors.ink,
+                            title: 'Hardware & Devices',
+                            subtitle: 'Equipment, serials & on-chain proof',
+                            value: _formatAmount(_inventoryTotal),
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const InventoryScreen()),
+                              );
+                              _loadVaultData();
+                            },
+                          ),
+                          const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
+                          _buildPillarRow(
+                            icon: Icons.monetization_on_outlined,
+                            iconColor: VaultColors.accent,
+                            title: "Valto's Appraisal Challenge",
+                            subtitle: 'Market valuation mini-trial',
+                            value: 'Play',
+                            isAction: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const GameScreen()),
+                              );
+                            },
+                          ),
+                          const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
+                          _buildPillarRow(
+                            icon: Icons.near_me_rounded,
+                            iconColor: VaultColors.ink2,
+                            title: 'LBS Repair Centers',
+                            subtitle: 'Authorized Apple & Samsung in Sleman',
+                            value: 'Radar',
+                            isAction: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const WarrantyLbsScreen()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      children: [
-                        _buildPillarRow(
-                          icon: Icons.sports_esports_rounded,
-                          iconColor: VaultColors.accent,
-                          title: 'Steam & Gaming Vault',
-                          subtitle: '$_steamItemsCount verified items · Live Valve sync',
-                          value: _formatAmount(_collectiblesTotal),
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const CollectiblesHubScreen()),
-                            );
-                            _loadVaultData();
-                          },
-                        ),
-                        const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
-                        _buildPillarRow(
-                          icon: Icons.laptop_mac_rounded,
-                          iconColor: VaultColors.ink,
-                          title: 'Hardware & Devices',
-                          subtitle: 'Equipment, serials & on-chain proof',
-                          value: _formatAmount(_inventoryTotal),
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const InventoryScreen()),
-                            );
-                            _loadVaultData();
-                          },
-                        ),
-                        const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
-                        _buildPillarRow(
-                          icon: Icons.monetization_on_outlined,
-                          iconColor: VaultColors.accent,
-                          title: "Valto's Appraisal Challenge",
-                          subtitle: 'Market valuation mini-trial',
-                          value: 'Play',
-                          isAction: true,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const GameScreen()),
-                            );
-                          },
-                        ),
-                        const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
-                        _buildPillarRow(
-                          icon: Icons.near_me_rounded,
-                          iconColor: VaultColors.ink2,
-                          title: 'LBS Repair Centers',
-                          subtitle: 'Authorized Apple & Samsung in Sleman',
-                          value: 'Radar',
-                          isAction: true,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const WarrantyLbsScreen()),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 36),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickPill(String title, String emoji, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.65),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 6,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 12)),
-            const SizedBox(width: 6),
-            Text(
-              title,
-              style: VaultTypography.sans(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF1D1D1B),
+                    const SizedBox(height: 36),
+                  ],
+                ),
               ),
             ),
           ],

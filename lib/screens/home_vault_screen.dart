@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -448,7 +449,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     final now = DateTime.now();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F2ED), // Refined neutral canvas providing clear separator contrast
+      backgroundColor: Colors.white, // Pure white matching the sheet so no contrast sliver can ever appear
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -479,8 +480,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                 gradient: LinearGradient(
                                   colors: [
                                     Colors.black.withValues(alpha: 0.40),
-                                    Colors.black.withValues(alpha: 0.18),
-                                    Colors.black.withValues(alpha: 0.45),
+                                    Colors.black.withValues(alpha: 0.16),
+                                    Colors.black.withValues(alpha: 0.48),
                                   ],
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
@@ -489,7 +490,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             ),
                             // Glowing celestial moon in upper right as in reference photo
                             Positioned(
-                              top: 40,
+                              top: 48,
                               right: 28,
                               child: Container(
                                 width: 44,
@@ -512,11 +513,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     ),
                   ),
 
-                  // Header Content
+                  // Header Content (Generous vertical spacing to make the scenic header wide & expansive)
                   SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                      padding: const EdgeInsets.fromLTRB(22, 14, 22, 54),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -609,13 +610,13 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 28),
 
                           // GREETING LINE
                           Text(
                             '${_getGreeting()}, azzaky.',
                             style: VaultTypography.sans(
-                              fontSize: 16,
+                              fontSize: 17,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                               shadows: [
@@ -627,7 +628,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ],
                             ),
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 4),
 
                           // DATE SUBTITLE + PRIVACY EYE TOGGLE
                           Row(
@@ -658,7 +659,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 16),
 
                           // HERO BALANCE (Full Width Clean Typography)
                           Row(
@@ -668,7 +669,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               Text(
                                 _currencyPrefix,
                                 style: VaultTypography.mono(
-                                  fontSize: 18,
+                                  fontSize: 19,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white.withValues(alpha: 0.85),
                                   shadows: [
@@ -688,7 +689,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   child: Text(
                                     _isBalanceVisible ? _formatRawNumber(_netWorth) : '••••••••',
                                     style: VaultTypography.mono(
-                                      fontSize: 36,
+                                      fontSize: 38,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: -0.8,
                                       color: Colors.white,
@@ -710,7 +711,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
                             '$_steamItemsCount vault items active',
                             style: VaultTypography.sans(
@@ -726,68 +727,113 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ],
                             ),
                           ),
-                          const SizedBox(height: 26),
+                          const SizedBox(height: 42),
 
-                          // ASK VALTO OMNIBAR WITH VALTO MASCOT PERCHED ON TOP
+                          // ASK VALTO FROSTED GLASS OMNIBAR WITH VALTO MASCOT PERCHED ON TOP
                           Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              Container(
-                                height: 46,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(color: Colors.white),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.12),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(width: 14),
-                                    const Text('🐾', style: TextStyle(fontSize: 14)),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: TextField(
-                                        controller: _promptController,
-                                        focusNode: _promptFocus,
-                                        onSubmitted: (_) => _handlePromptSubmit(),
-                                        style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink),
-                                        decoration: InputDecoration(
-                                          hintText: 'Ask Valto anything',
-                                          hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
-                                          border: InputBorder.none,
-                                          isDense: true,
-                                        ),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(26),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.22),
+                                      borderRadius: BorderRadius.circular(26),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.42),
+                                        width: 1.2,
                                       ),
-                                    ),
-                                    if (_isAiProcessing)
-                                      const Padding(
-                                        padding: EdgeInsets.only(right: 14),
-                                        child: SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(strokeWidth: 2, color: VaultColors.accent),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.15),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 4),
                                         ),
-                                      )
-                                    else
-                                      IconButton(
-                                        icon: const Icon(Icons.arrow_forward_rounded, size: 16, color: VaultColors.ink),
-                                        onPressed: _handlePromptSubmit,
-                                        splashRadius: 18,
-                                      ),
-                                  ],
+                                      ],
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.22),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.auto_awesome_rounded,
+                                            size: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: TextField(
+                                            controller: _promptController,
+                                            focusNode: _promptFocus,
+                                            onSubmitted: (_) => _handlePromptSubmit(),
+                                            style: VaultTypography.sans(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white,
+                                            ),
+                                            decoration: InputDecoration(
+                                              hintText: 'Ask Valto anything',
+                                              hintStyle: VaultTypography.sans(
+                                                fontSize: 13,
+                                                color: Colors.white.withValues(alpha: 0.80),
+                                              ),
+                                              border: InputBorder.none,
+                                              isDense: true,
+                                            ),
+                                          ),
+                                        ),
+                                        if (_isAiProcessing)
+                                          const Padding(
+                                            padding: EdgeInsets.only(right: 6),
+                                            child: SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          )
+                                        else
+                                          GestureDetector(
+                                            onTap: _handlePromptSubmit,
+                                            child: Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(alpha: 0.25),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: Colors.white.withValues(alpha: 0.50),
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: const Icon(
+                                                Icons.arrow_forward_rounded,
+                                                size: 16,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
 
-                              // Valto Mascot Sitting Directly on Top of the Search Bar
+                              // Valto Mascot Sitting Directly on Top of the Frosted Glass Search Bar
                               Positioned(
                                 top: -38,
-                                right: 22,
+                                right: 24,
                                 child: GestureDetector(
                                   onTap: () {
                                     HapticFeedback.selectionClick();
@@ -803,7 +849,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 18),
                         ],
                       ),
                     ),
@@ -812,9 +858,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
               ),
             ),
 
-            // 2. MAIN COMPONENT SHEET (Smooth Circled Edge Separator Overlapping Header)
+            // 2. MAIN COMPONENT SHEET (Smooth Circled Edge Seamlessly Overlapping Scenic Header)
             Transform.translate(
-              offset: const Offset(0, -18),
+              offset: const Offset(0, -32),
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(

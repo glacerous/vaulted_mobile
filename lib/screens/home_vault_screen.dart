@@ -33,6 +33,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   double _collectiblesTotal = 0.0;
   int _steamItemsCount = 0;
   String _selectedCurrency = 'IDR';
+  List<Map<String, dynamic>> _recentItems = [];
 
   bool _isAiProcessing = false;
   ValtoMood _valtoMood = ValtoMood.vigilant;
@@ -97,6 +98,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
         _inventoryTotal = inv;
         _collectiblesTotal = col;
         _steamItemsCount = steamCount;
+        _recentItems = items.take(4).toList();
       });
     }
   }
@@ -935,30 +937,27 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     ),
                     const SizedBox(height: 14),
 
-                    // Transaction Items like in reference
-                    _buildActivityItem(
-                      icon: Icons.laptop_mac_rounded,
-                      title: 'Apple MacBook Pro 14"',
-                      subtitle: 'Hardware · Bank Mandiri',
-                      amount: '- Rp 1,999,000',
-                      isExpense: true,
-                    ),
-                    const Divider(height: 18, thickness: 1, color: VaultColors.hairline),
-                    _buildActivityItem(
-                      icon: Icons.sports_esports_rounded,
-                      title: 'CS:GO AWP Dragon Lore',
-                      subtitle: 'Steam Market · Valve OVO',
-                      amount: '+ Rp 4,250,000',
-                      isExpense: false,
-                    ),
-                    const Divider(height: 18, thickness: 1, color: VaultColors.hairline),
-                    _buildActivityItem(
-                      icon: Icons.watch_outlined,
-                      title: 'Rolex Submariner 126610',
-                      subtitle: 'Horology · Vaulted Local',
-                      amount: '+ Rp 14,200,000',
-                      isExpense: false,
-                    ),
+                    // Dynamic Activity Items from Real SQLite Data
+                    if (_recentItems.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: Text(
+                            'No assets tracked yet. Scan a receipt to start.',
+                            style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink3),
+                          ),
+                        ),
+                      )
+                    else
+                      Column(
+                        children: [
+                          for (int i = 0; i < _recentItems.length; i++) ...[
+                            if (i > 0)
+                              const Divider(height: 18, thickness: 1, color: VaultColors.hairline),
+                            _buildDynamicActivityItem(_recentItems[i]),
+                          ],
+                        ],
+                      ),
                     const SizedBox(height: 18),
 
                     // Black Primary Pill Button ("Check & close today" from reference)
@@ -1109,6 +1108,43 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDynamicActivityItem(Map<String, dynamic> item) {
+    final cat = item['category']?.toString() ?? '';
+    final name = item['name']?.toString() ?? 'Asset';
+    final serial = item['serial_number']?.toString();
+    final valuation = (item['current_valuation'] as num?)?.toDouble() ?? 0.0;
+
+    IconData icon = Icons.inventory_2_outlined;
+    if (cat.contains('Steam') || cat.contains('Gaming')) {
+      icon = Icons.sports_esports_rounded;
+    } else if (cat.contains('Hardware') || cat.contains('Device') || cat.contains('Laptop') || cat.contains('MacBook')) {
+      icon = Icons.laptop_mac_rounded;
+    } else if (cat.contains('Watch') || cat.contains('Horology') || cat.contains('Collectible')) {
+      icon = Icons.watch_outlined;
+    }
+
+    final subtitle = serial != null && serial.isNotEmpty
+        ? '$cat · SN: $serial'
+        : (item['purchase_date'] != null ? '$cat · ${item['purchase_date']}' : cat);
+
+    return InkWell(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const InventoryScreen()),
+        ).then((_) => _loadVaultData());
+      },
+      child: _buildActivityItem(
+        icon: icon,
+        title: name,
+        subtitle: subtitle,
+        amount: '+ ${_formatAmount(valuation)}',
+        isExpense: false,
       ),
     );
   }

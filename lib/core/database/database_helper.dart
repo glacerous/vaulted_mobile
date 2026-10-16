@@ -189,6 +189,32 @@ class DatabaseHelper {
         ]);
   }
 
+  Future<void> replaceSteamItems(List<Map<String, dynamic>> newItems) async {
+    if (kIsWeb) {
+      _webItems.removeWhere((i) => i['category'].toString().startsWith('Steam'));
+      _webItems.addAll(newItems);
+      return;
+    }
+    final db = await database;
+    if (db == null) return;
+    await db.delete('items', where: "category LIKE 'Steam%'");
+    for (var item in newItems) {
+      final insertMap = Map<String, dynamic>.from(item);
+      insertMap.remove('id');
+      await db.insert('items', insertMap);
+    }
+  }
+
+  Future<void> clearSteamItems() async {
+    if (kIsWeb) {
+      _webItems.removeWhere((i) => i['category'].toString().startsWith('Steam'));
+      return;
+    }
+    final db = await database;
+    if (db == null) return;
+    await db.delete('items', where: "category LIKE 'Steam%'");
+  }
+
   final List<Map<String, dynamic>> _webSubscriptions = [
     {
       'id': 1,

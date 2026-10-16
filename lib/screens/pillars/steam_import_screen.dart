@@ -27,12 +27,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
 
   // Live profile detected via Steam API
   String _detectedPersona = 'xel';
-  final String _detectedSteamId = '76561199089584380';
+  String _currentSteamId = '76561199089584380';
   String _detectedAvatar =
       'https://avatars.steamstatic.com/e1dde7fe207a397634580d4755f7890ccf24ddd7_full.jpg';
   bool _isConnected = false;
   List<Map<String, dynamic>> _syncedItems = [];
   String _sortOrder = 'Value ↓';
+  DateTime? _lastSyncTime;
 
   List<Map<String, dynamic>> get _sortedSyncedItems {
     final list = List<Map<String, dynamic>>.from(_syncedItems);
@@ -62,7 +63,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
   }
 
   Future<void> _detectSteamAccount() async {
-    // 1. Purge any legacy mock items
+    // 1. Purge legacy mock items
     await DatabaseHelper.instance.removeMockItems();
 
     // 2. Check if user already has synced Steam items in database
@@ -72,15 +73,24 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       setState(() {
         _isConnected = true;
         _syncedItems = existingSteam;
+        _lastSyncTime = DateTime.now();
       });
     }
 
     // 3. Contact Valve Steam API for latest persona & avatar
+    await _fetchPlayerSummary(_currentSteamId);
+
+    if (mounted) {
+      setState(() => _isDetecting = false);
+    }
+  }
+
+  Future<void> _fetchPlayerSummary(String steamId) async {
     final apiKey = dotenv.env['STEAM_API_KEY'];
     if (apiKey != null && apiKey.isNotEmpty && !apiKey.contains('your_steam_api_key')) {
       try {
         final sumUri = Uri.parse(
-          'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=$apiKey&steamids=$_detectedSteamId',
+          'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=$apiKey&steamids=$steamId',
         );
         final sumRes = await http.get(sumUri).timeout(const Duration(seconds: 5));
         if (sumRes.statusCode == 200) {
@@ -88,35 +98,67 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
           final player = sumData['response']?['players']?[0];
           if (player != null && mounted) {
             setState(() {
-              _detectedPersona = player['personaname'] as String? ?? 'xel';
+              _detectedPersona = player['personaname'] as String? ?? _detectedPersona;
               _detectedAvatar = player['avatarfull'] as String? ?? _detectedAvatar;
-              _isDetecting = false;
             });
-            return;
           }
         }
       } catch (e) {
-        debugPrint('Steam account detection notice: $e');
+        debugPrint('Steam player summary notice: $e');
       }
-    }
-    if (mounted) {
-      setState(() => _isDetecting = false);
     }
   }
 
-  Future<void> _oneTapConnect() async {
+  Future<String?> _resolveSteamId(String rawInput) async {
+    final input = rawInput.trim();
+    if (input.isEmpty) return null;
+
+    final idMatch = RegExp(r'\b(7656119[0-9]{10})\b').firstMatch(input);
+    if (idMatch != null) {
+      return idMatch.group(1);
+    }
+
+    final vanityMatch = RegExp(r'steamcommunity\.com\/id\/([a-zA-Z0-9_\-]+)').firstMatch(input);
+    final vanity = vanityMatch != null ? vanityMatch.group(1) : (!input.contains('/') ? input : null);
+
+    if (vanity != null) {
+      final apiKey = dotenv.env['STEAM_API_KEY'];
+      if (apiKey != null && apiKey.isNotEmpty && !apiKey.contains('your_steam_api_key')) {
+        try {
+          final res = await http.get(Uri.parse(
+            'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=$apiKey&vanityurl=$vanity',
+          )).timeout(const Duration(seconds: 5));
+          if (res.statusCode == 200) {
+            final data = jsonDecode(res.body);
+            if (data['response']?['success'] == 1 && data['response']?['steamid'] != null) {
+              return data['response']['steamid'].toString();
+            }
+          }
+        } catch (e) {
+          debugPrint('Resolve vanity notice: $e');
+        }
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> _syncSteam({String? targetSteamId}) async {
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
 
-    // Purge mock demo items from vault
+    final steamId = targetSteamId ?? _currentSteamId;
+    _currentSteamId = steamId;
+
     await DatabaseHelper.instance.removeMockItems();
+    await _fetchPlayerSummary(steamId);
 
     final List<Map<String, dynamic>> imported = [];
 
     // Fetch REAL Public Steam Inventory (Community Cards, Avatars & In-game Items)
     try {
       final invUri = Uri.parse(
-        'https://steamcommunity.com/inventory/$_detectedSteamId/753/6?l=english&count=75',
+        'https://steamcommunity.com/inventory/$steamId/753/6?l=english&count=75',
       );
       final invRes = await http.get(invUri).timeout(const Duration(seconds: 8));
 
@@ -154,7 +196,6 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
               'blockchain_hash': '0xsteam753${classid.hashCode.abs().toRadixString(16)}',
             };
             imported.add(itemMap);
-            await DatabaseHelper.instance.insertItem(itemMap);
           }
         }
       }
@@ -162,25 +203,25 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       debugPrint('Real Steam inventory fetch notice: $e');
     }
 
-    var all = await DatabaseHelper.instance.getItems();
-    var steamOnly = all.where((i) => i['category'].toString().startsWith('Steam')).toList();
-
-    // If web browser CORS blocked direct client-side Steam community fetch, seed the user's verified items
-    if (steamOnly.isEmpty) {
-      for (var asset in xelSteamAssets) {
-        await DatabaseHelper.instance.insertItem(Map<String, dynamic>.from(asset));
-      }
-      all = await DatabaseHelper.instance.getItems();
-      steamOnly = all.where((i) => i['category'].toString().startsWith('Steam')).toList();
+    // Fallback if CORS blocked or inventory is empty for default xel account
+    if (imported.isEmpty && steamId == '76561199089584380') {
+      imported.addAll(xelSteamAssets.map((a) => Map<String, dynamic>.from(a)));
     }
 
+    if (imported.isNotEmpty) {
+      await DatabaseHelper.instance.replaceSteamItems(imported);
+    }
+
+    final all = await DatabaseHelper.instance.getItems();
+    final steamOnly = all.where((i) => i['category'].toString().startsWith('Steam')).toList();
     final double totalVal = steamOnly.fold(0.0, (sum, i) => sum + (i['current_valuation'] as num).toDouble());
 
     if (mounted) {
       setState(() {
         _isLoading = false;
-        _isConnected = true;
+        _isConnected = steamOnly.isNotEmpty;
         _syncedItems = steamOnly;
+        _lastSyncTime = DateTime.now();
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -194,7 +235,9 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Connected to Steam as @$_detectedPersona! ${steamOnly.length} real Steam assets (\$${totalVal.toStringAsFixed(2)}) imported.',
+                  steamOnly.isNotEmpty
+                      ? 'Steam inventory updated! ${steamOnly.length} assets synced (\$${totalVal.toStringAsFixed(2)}).'
+                      : 'No public Steam items found. Ensure Steam inventory privacy is set to Public.',
                   style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink),
                 ),
               ),
@@ -203,6 +246,91 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _importCustomUrl() async {
+    final raw = _urlController.text.trim();
+    if (raw.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: VaultColors.card,
+          behavior: SnackBarBehavior.floating,
+          content: Text('Please enter a Steam profile link or 17-digit SteamID.',
+              style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink)),
+        ),
+      );
+      return;
+    }
+
+    final resolvedId = await _resolveSteamId(raw);
+    if (!mounted) return;
+    if (resolvedId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: VaultColors.card,
+          behavior: SnackBarBehavior.floating,
+          content: Text('Could not parse SteamID. Use format: https://steamcommunity.com/profiles/<17-digits>',
+              style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink)),
+        ),
+      );
+      return;
+    }
+
+    await _syncSteam(targetSteamId: resolvedId);
+  }
+
+  Future<void> _disconnectSteam() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: VaultColors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: VaultColors.hairline)),
+        title: Text('Disconnect Steam Account?', style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w600, color: VaultColors.ink)),
+        content: Text('This will remove all synced Steam items from your vault and recalculate your net worth.',
+            style: VaultTypography.sans(fontSize: 13, color: VaultColors.body)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: VaultTypography.mono(fontSize: 12, color: VaultColors.ink2)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VaultColors.neg.withValues(alpha: 0.15),
+              foregroundColor: VaultColors.neg,
+              elevation: 0,
+            ),
+            child: Text('Disconnect', style: VaultTypography.mono(fontSize: 12, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await DatabaseHelper.instance.clearSteamItems();
+      if (mounted) {
+        setState(() {
+          _isConnected = false;
+          _syncedItems = [];
+          _lastSyncTime = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: VaultColors.card,
+            behavior: SnackBarBehavior.floating,
+            content: Text('Steam account disconnected from vault.', style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink)),
+          ),
+        );
+      }
+    }
+  }
+
+  String _formatLastSync() {
+    if (_lastSyncTime == null) return 'Never';
+    final diff = DateTime.now().difference(_lastSyncTime!);
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    return '${diff.inHours}h ago';
   }
 
   void _showOpenIdSheet() {
@@ -299,7 +427,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(ctx);
-                    _oneTapConnect();
+                    _syncSteam();
                   },
                   icon: const Icon(Icons.sports_esports_rounded, size: 20),
                   label: Text('Authorize Steam Connection',
@@ -655,7 +783,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                     ),
                                     const SizedBox(height: 3),
                                     Text(
-                                      'ID: ${_detectedSteamId.substring(0, 7)}...${_detectedSteamId.substring(_detectedSteamId.length - 4)}',
+                                      'ID: ${_currentSteamId.length > 10 ? '${_currentSteamId.substring(0, 7)}...${_currentSteamId.substring(_currentSteamId.length - 4)}' : _currentSteamId}',
                                       style: VaultTypography.mono(
                                         fontSize: 11,
                                         color: VaultColors.ink2,
@@ -668,19 +796,22 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                           ),
                           const SizedBox(height: 18),
 
-                          // Primary 1-Tap Button
+                          // Primary 1-Tap / Update Button
                           SizedBox(
                             width: double.infinity,
                             height: 48,
                             child: ElevatedButton(
-                              onPressed: (_isLoading || _isConnected) ? null : _oneTapConnect,
+                              onPressed: _isLoading ? null : () => _syncSteam(),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _isConnected
                                     ? VaultColors.cardHover
                                     : VaultColors.accent,
                                 foregroundColor: _isConnected
-                                    ? VaultColors.pos
+                                    ? VaultColors.accent
                                     : VaultColors.background,
+                                side: _isConnected
+                                    ? BorderSide(color: VaultColors.accent.withValues(alpha: 0.6), width: 1.2)
+                                    : null,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14)),
                                 elevation: 0,
@@ -691,7 +822,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                       height: 18,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: VaultColors.background,
+                                        color: VaultColors.accent,
                                       ),
                                     )
                                   : Row(
@@ -699,14 +830,14 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                       children: [
                                         Icon(
                                           _isConnected
-                                              ? Icons.check_rounded
+                                              ? Icons.sync_rounded
                                               : Icons.bolt_rounded,
                                           size: 18,
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
                                           _isConnected
-                                              ? 'Vault Inventory Synced'
+                                              ? 'Update / Re-sync Steam Inventory'
                                               : '1-Tap Connect as @$_detectedPersona',
                                           style: VaultTypography.sans(
                                             fontSize: 14,
@@ -717,6 +848,30 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                     ),
                             ),
                           ),
+                          if (_isConnected) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'LAST SYNCED: ${_formatLastSync().toUpperCase()}',
+                                  style: VaultTypography.mono(fontSize: 10, letterSpacing: 0.8, color: VaultColors.ink2),
+                                ),
+                                GestureDetector(
+                                  onTap: _disconnectSteam,
+                                  child: Text(
+                                    'Disconnect Account',
+                                    style: VaultTypography.mono(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: VaultColors.neg.withValues(alpha: 0.85),
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -889,17 +1044,19 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       const SizedBox(height: 10),
                       SizedBox(
                         height: 38,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _oneTapConnect,
+                        child: ElevatedButton.icon(
+                          onPressed: _isLoading ? null : _importCustomUrl,
+                          icon: const Icon(Icons.sync_rounded, size: 16),
+                          label: Text(
+                            'Sync Custom Profile',
+                            style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w500),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: VaultColors.cardHover,
-                            foregroundColor: VaultColors.ink,
+                            foregroundColor: VaultColors.accent,
+                            side: BorderSide(color: VaultColors.accent.withValues(alpha: 0.5)),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text(
-                            'Import Link',
-                            style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ),

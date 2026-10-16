@@ -9,6 +9,7 @@ class VaultTypography {
     FontWeight fontWeight = FontWeight.w400,
     Color color = VaultColors.ink,
     double? letterSpacing,
+    TextDecoration? decoration,
     List<Shadow>? shadows,
   }) {
     return GoogleFonts.ibmPlexMono(
@@ -16,6 +17,7 @@ class VaultTypography {
       fontWeight: fontWeight,
       color: color,
       letterSpacing: letterSpacing,
+      decoration: decoration,
       shadows: shadows,
     );
   }
@@ -27,6 +29,7 @@ class VaultTypography {
     Color color = VaultColors.ink,
     double? letterSpacing,
     double? height,
+    TextDecoration? decoration,
     List<Shadow>? shadows,
   }) {
     return GoogleFonts.inter(
@@ -35,6 +38,7 @@ class VaultTypography {
       color: color,
       letterSpacing: letterSpacing,
       height: height,
+      decoration: decoration,
       shadows: shadows,
     );
   }

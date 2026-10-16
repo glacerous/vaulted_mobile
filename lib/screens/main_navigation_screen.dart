@@ -81,67 +81,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     super.dispose();
   }
 
-  void _showAddModal(BuildContext context) {
-    HapticFeedback.mediumImpact();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: VaultColors.hairline,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'QUICK VAULT ACTION',
-                style: VaultTypography.mono(fontSize: 11, letterSpacing: 1.2, color: VaultColors.ink2),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: VaultColors.cardHover, borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.receipt_long_rounded, color: VaultColors.ink, size: 20),
-                ),
-                title: Text('Scan Physical Receipt', style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600)),
-                subtitle: Text('OCR auto-extract items & warranty', style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink2)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  setState(() => _currentIndex = 1);
-                },
-              ),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: VaultColors.cardHover, borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.add_shopping_cart_rounded, color: VaultColors.ink, size: 20),
-                ),
-                title: Text('Manual Asset Entry', style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600)),
-                subtitle: Text('Log serial number, brand & purchase value', style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink2)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  setState(() => _currentIndex = 3);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildTabItem({
     required int index,
     required String label,
@@ -161,7 +100,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         children: [
           if (isSelected)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
               decoration: BoxDecoration(
                 color: const Color(0xFFEDEBE4),
                 borderRadius: BorderRadius.circular(18),
@@ -193,43 +132,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
-  Widget _buildAddButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showAddModal(context),
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 26,
-            height: 26,
-            decoration: const BoxDecoration(
-              color: Color(0xFF141413),
-              shape: BoxShape.circle,
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.add_rounded,
-                size: 18,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            'Add',
-            style: VaultTypography.sans(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF141413),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -252,29 +154,28 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               children: [
                 _buildTabItem(
                   index: 0,
-                  label: 'Home',
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home_rounded,
+                  label: 'Vault',
+                  icon: Icons.shield_outlined,
+                  activeIcon: Icons.shield_rounded,
                 ),
                 _buildTabItem(
                   index: 1,
-                  label: 'History',
-                  icon: Icons.receipt_long_outlined,
-                  activeIcon: Icons.receipt_long_rounded,
+                  label: 'Radar',
+                  icon: Icons.radar_outlined,
+                  activeIcon: Icons.radar_rounded,
                 ),
                 _buildTabItem(
                   index: 2,
-                  label: 'Reports',
-                  icon: Icons.bar_chart_rounded,
-                  activeIcon: Icons.bar_chart_rounded,
+                  label: 'LBS Care',
+                  icon: Icons.near_me_outlined,
+                  activeIcon: Icons.near_me_rounded,
                 ),
                 _buildTabItem(
                   index: 3,
-                  label: 'Wealth',
-                  icon: Icons.pie_chart_outline_rounded,
-                  activeIcon: Icons.pie_chart_rounded,
+                  label: 'Profile',
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
                 ),
-                _buildAddButton(context),
               ],
             ),
           ),

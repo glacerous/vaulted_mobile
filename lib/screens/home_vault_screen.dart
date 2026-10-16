@@ -473,9 +473,19 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               alignment: Alignment.center,
                               gaplessPlayback: true,
                             ),
-                            // Soft uniform twilight ambiance
+                            // Contrast Scrim ensuring crystal-clear text readability over mountains
                             Container(
-                              color: const Color(0xFF5A4D7A).withValues(alpha: 0.16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.40),
+                                    Colors.black.withValues(alpha: 0.18),
+                                    Colors.black.withValues(alpha: 0.45),
+                                  ],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                ),
+                              ),
                             ),
                             // Glowing celestial moon in upper right as in reference photo
                             Positioned(
@@ -520,7 +530,14 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 1.5,
-                                  color: const Color(0xFF1D1D1B),
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.7),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
                                 ),
                               ),
                               Row(
@@ -599,8 +616,15 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             '${_getGreeting()}, azzaky.',
                             style: VaultTypography.sans(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1D1D1B),
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.8),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -613,7 +637,14 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                 style: VaultTypography.sans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF1D1D1B).withValues(alpha: 0.60),
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.7),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(width: 6),
@@ -622,148 +653,155 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                 child: Icon(
                                   _isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                                   size: 14,
-                                  color: const Color(0xFF1D1D1B).withValues(alpha: 0.60),
+                                  color: Colors.white.withValues(alpha: 0.85),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 10),
 
-                          // HERO BALANCE & MASCOT ROW
+                          // HERO BALANCE (Full Width Clean Typography)
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                                      textBaseline: TextBaseline.alphabetic,
-                                      children: [
-                                        Text(
-                                          _currencyPrefix,
-                                          style: VaultTypography.mono(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF1D1D1B).withValues(alpha: 0.65),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              _isBalanceVisible ? _formatRawNumber(_netWorth) : '••••••••',
-                                              style: VaultTypography.mono(
-                                                fontSize: 36,
-                                                fontWeight: FontWeight.w800,
-                                                letterSpacing: -0.8,
-                                                color: const Color(0xFF1D1D1B),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '$_steamItemsCount vault items active',
-                                      style: VaultTypography.sans(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: const Color(0xFF1D1D1B).withValues(alpha: 0.60),
-                                      ),
+                              Text(
+                                _currencyPrefix,
+                                style: VaultTypography.mono(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.8),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 1),
                                     ),
                                   ],
                                 ),
                               ),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      HapticFeedback.selectionClick();
-                                      setState(() {
-                                        _valtoMood = _valtoMood == ValtoMood.happy ? ValtoMood.vigilant : ValtoMood.happy;
-                                      });
-                                    },
-                                    child: ValtoMascot(
-                                      size: 58,
-                                      mood: _valtoMood,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    width: 28,
-                                    height: 28,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF141413),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.arrow_upward_rounded,
-                                      size: 15,
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    _isBalanceVisible ? _formatRawNumber(_netWorth) : '••••••••',
+                                    style: VaultTypography.mono(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.8,
                                       color: Colors.white,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withValues(alpha: 0.85),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                        Shadow(
+                                          color: Colors.black.withValues(alpha: 0.5),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$_steamItemsCount vault items active',
+                            style: VaultTypography.sans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.85),
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.7),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 26),
 
-                          // ASK VALTO OMNIBAR
-                          Container(
-                            height: 46,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: Colors.white),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.06),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 14),
-                                const Text('🐾', style: TextStyle(fontSize: 14)),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _promptController,
-                                    focusNode: _promptFocus,
-                                    onSubmitted: (_) => _handlePromptSubmit(),
-                                    style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink),
-                                    decoration: InputDecoration(
-                                      hintText: 'Ask Valto anything',
-                                      hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
-                                      border: InputBorder.none,
-                                      isDense: true,
+                          // ASK VALTO OMNIBAR WITH VALTO MASCOT PERCHED ON TOP
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                height: 46,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(color: Colors.white),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.12),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
                                     ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    const SizedBox(width: 14),
+                                    const Text('🐾', style: TextStyle(fontSize: 14)),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _promptController,
+                                        focusNode: _promptFocus,
+                                        onSubmitted: (_) => _handlePromptSubmit(),
+                                        style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink),
+                                        decoration: InputDecoration(
+                                          hintText: 'Ask Valto anything',
+                                          hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
+                                          border: InputBorder.none,
+                                          isDense: true,
+                                        ),
+                                      ),
+                                    ),
+                                    if (_isAiProcessing)
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 14),
+                                        child: SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(strokeWidth: 2, color: VaultColors.accent),
+                                        ),
+                                      )
+                                    else
+                                      IconButton(
+                                        icon: const Icon(Icons.arrow_forward_rounded, size: 16, color: VaultColors.ink),
+                                        onPressed: _handlePromptSubmit,
+                                        splashRadius: 18,
+                                      ),
+                                  ],
+                                ),
+                              ),
+
+                              // Valto Mascot Sitting Directly on Top of the Search Bar
+                              Positioned(
+                                top: -38,
+                                right: 22,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(() {
+                                      _valtoMood = _valtoMood == ValtoMood.happy ? ValtoMood.vigilant : ValtoMood.happy;
+                                    });
+                                  },
+                                  child: ValtoMascot(
+                                    size: 46,
+                                    mood: _valtoMood,
                                   ),
                                 ),
-                                if (_isAiProcessing)
-                                  const Padding(
-                                    padding: EdgeInsets.only(right: 14),
-                                    child: SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: VaultColors.accent),
-                                    ),
-                                  )
-                                else
-                                  IconButton(
-                                    icon: const Icon(Icons.arrow_forward_rounded, size: 16, color: VaultColors.ink),
-                                    onPressed: _handlePromptSubmit,
-                                    splashRadius: 18,
-                                  ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                         ],

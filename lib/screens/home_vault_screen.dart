@@ -448,17 +448,17 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     final now = DateTime.now();
 
     return Scaffold(
-      backgroundColor: VaultColors.background,
+      backgroundColor: const Color(0xFFF3F2ED), // Refined neutral canvas providing clear separator contrast
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            // 1. EXPANSIVE FULL-BLEED SCENIC SKY HEADER (Edge-to-Edge)
+            // 1. EXPANSIVE FULL-BLEED SCENIC SKY HEADER (Edge-to-Edge with Clear Separator)
             SizedBox(
               width: double.infinity,
               child: Stack(
                 children: [
-                  // Animated Scenic Dithered Background
+                  // Animated Scenic Dithered Background (Full vivid scenery, NO fading gradient)
                   Positioned.fill(
                     child: AnimatedBuilder(
                       animation: _animController,
@@ -473,19 +473,26 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               alignment: Alignment.center,
                               gaplessPlayback: true,
                             ),
-                            // Dreamy twilight overlay gradient matching the reference photo
+                            // Soft uniform twilight ambiance
                             Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    const Color(0xFF5A4D7A).withValues(alpha: 0.35),
-                                    const Color(0xFFC78B96).withValues(alpha: 0.20),
-                                    const Color(0xFFFAF9F6).withValues(alpha: 0.65),
-                                    VaultColors.background,
+                              color: const Color(0xFF5A4D7A).withValues(alpha: 0.16),
+                            ),
+                            // Glowing celestial moon in upper right as in reference photo
+                            Positioned(
+                              top: 40,
+                              right: 28,
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.22),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.white.withValues(alpha: 0.35),
+                                      blurRadius: 18,
+                                    ),
                                   ],
-                                  stops: const [0.0, 0.45, 0.82, 1.0],
                                 ),
                               ),
                             ),
@@ -499,51 +506,52 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                   SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // UPGRADED APP BAR (Tactile Frosted Glass Controls)
+                          // EXACT REFERENCE APP BAR
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Left: Frosted circular button
+                              // Left: White circle button with soft green sprout icon
                               Container(
-                                width: 38,
-                                height: 38,
+                                width: 36,
+                                height: 36,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.50),
+                                  color: Colors.white,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.06),
-                                      blurRadius: 10,
+                                      color: Colors.black.withValues(alpha: 0.10),
+                                      blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
-                                child: const Icon(
-                                  Icons.arrow_back_ios_new_rounded,
-                                  size: 15,
-                                  color: Color(0xFF1D1D1B),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.eco_rounded, // Leaf/sprout icon from reference
+                                    size: 18,
+                                    color: Color(0xFF48BB78), // Fresh soft green
+                                  ),
                                 ),
                               ),
 
-                              // Right: Frosted Capsule Cluster
+                              // Right: The 3 tactile controls from reference
                               Row(
                                 children: [
-                                  // Mini Calendar Badge
+                                  // 1. Mini Calendar Badge (Orange tab + white body with day)
                                   Container(
                                     width: 36,
                                     height: 38,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.95),
-                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(9),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.08),
-                                          blurRadius: 8,
+                                          color: Colors.black.withValues(alpha: 0.10),
+                                          blurRadius: 6,
                                           offset: const Offset(0, 2),
                                         ),
                                       ],
@@ -554,8 +562,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                           width: double.infinity,
                                           padding: const EdgeInsets.symmetric(vertical: 2),
                                           decoration: const BoxDecoration(
-                                            color: Color(0xFFEA580C),
-                                            borderRadius: BorderRadius.vertical(top: Radius.circular(9)),
+                                            color: Color(0xFFEA580C), // Orange tab
+                                            borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
                                           ),
                                           child: Center(
                                             child: Text(
@@ -564,7 +572,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                                 fontSize: 7.5,
                                                 fontWeight: FontWeight.w800,
                                                 color: Colors.white,
-                                                letterSpacing: 0.5,
+                                                letterSpacing: 0.4,
                                               ),
                                             ),
                                           ),
@@ -586,33 +594,44 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   ),
                                   const SizedBox(width: 8),
 
-                                  // AI Chat Quick Bubble
+                                  // 2. Dual-Icon Capsule Pill (Chat + Audio/Profile side-by-side)
                                   GestureDetector(
                                     onTap: () => _promptFocus.requestFocus(),
                                     child: Container(
-                                      width: 38,
                                       height: 38,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.50),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
+                                        color: Colors.white.withValues(alpha: 0.92),
+                                        borderRadius: BorderRadius.circular(19),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.06),
-                                            blurRadius: 8,
+                                            color: Colors.black.withValues(alpha: 0.08),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
                                           ),
                                         ],
                                       ),
-                                      child: const Icon(
-                                        Icons.chat_bubble_outline_rounded,
-                                        size: 17,
-                                        color: Color(0xFF1D1D1B),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.chat_bubble_outline_rounded,
+                                            size: 16,
+                                            color: Color(0xFF1D1D1B),
+                                          ),
+                                          SizedBox(width: 7),
+                                          Icon(
+                                            Icons.headset_mic_outlined,
+                                            size: 16,
+                                            color: Color(0xFF1D1D1B),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
 
-                                  // Refresh Sync Button
+                                  // 3. Circular Refresh Sync Button with Red Indicator Dot
                                   GestureDetector(
                                     onTap: () async {
                                       HapticFeedback.mediumImpact();
@@ -622,20 +641,38 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                       width: 38,
                                       height: 38,
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.50),
+                                        color: Colors.white.withValues(alpha: 0.92),
                                         shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.06),
-                                            blurRadius: 8,
+                                            color: Colors.black.withValues(alpha: 0.08),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
                                           ),
                                         ],
                                       ),
-                                      child: const Icon(
-                                        Icons.refresh_rounded,
-                                        size: 18,
-                                        color: Color(0xFF1D1D1B),
+                                      child: Stack(
+                                        children: [
+                                          const Center(
+                                            child: Icon(
+                                              Icons.refresh_rounded,
+                                              size: 18,
+                                              color: Color(0xFF1D1D1B),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 8,
+                                            right: 8,
+                                            child: Container(
+                                              width: 6,
+                                              height: 6,
+                                              decoration: const BoxDecoration(
+                                                color: Color(0xFFEF4444), // Red notification dot
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -768,12 +805,12 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                           Container(
                             height: 46,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.75),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+                              border: Border.all(color: Colors.white),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
+                                  color: Colors.black.withValues(alpha: 0.06),
                                   blurRadius: 10,
                                   offset: const Offset(0, 3),
                                 ),
@@ -845,26 +882,37 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       ),
                     ),
                   ),
+
+                  // CLEAR CRISP SEPARATOR HAIRLINE AT BASE OF SCENIC HEADER
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      height: 1,
+                      color: const Color(0xFF2A2A28).withValues(alpha: 0.12),
+                    ),
+                  ),
                 ],
               ),
             ),
 
-            // 2. MAIN CARD SURFACE (Activities & Vault Spaces)
+            // 2. MAIN COMPONENT (Clean, Crisp Separated White Card Surface)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
               child: Column(
                 children: [
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: VaultColors.card,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: VaultColors.hairline),
+                      border: Border.all(color: const Color(0xFFE8E5DD)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF141413).withValues(alpha: 0.03),
-                          blurRadius: 18,
+                          color: const Color(0xFF141413).withValues(alpha: 0.04),
+                          blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
                       ],

@@ -656,32 +656,7 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-
-                      // Subtle hardware security badge
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFF55B374), // Terminal green dot
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'LOCAL ENCRYPTED STORAGE · 256-BIT AES',
-                            style: VaultTypography.mono(
-                              fontSize: 9.5,
-                              letterSpacing: 0.6,
-                              color: VaultColors.ink3,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 12),
                     ],
                   ),
                 ],

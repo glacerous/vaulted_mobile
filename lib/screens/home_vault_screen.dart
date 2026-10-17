@@ -40,6 +40,16 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   bool _isAiProcessing = false;
   ValtoMood _valtoMood = ValtoMood.vigilant;
 
+  // Real Chat Thread state: User messages + Valto replies
+  final List<Map<String, dynamic>> _chatHistory = [
+    {
+      'isUser': false,
+      'text': 'Good day. I am Valto, your Agentic Vault Sentinel. Ask me about your portfolio valuation, check active warranties, or command me to register high-value tech and gaming assets.',
+      'time': 'Just now',
+      'suggestions': ['Total vault value?', 'Show active warranties', 'Log RTX 4090 \$1600'],
+    }
+  ];
+
   // Live exchange rates (Base USD)
   final Map<String, double> _exchangeRates = {
     'USD': 1.0,
@@ -154,15 +164,24 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     return 'Good evening';
   }
 
-  Future<void> _handlePromptSubmit() async {
-    final text = _promptController.text.trim();
+  Future<void> _handlePromptSubmit([String? overrideText]) async {
+    final text = (overrideText ?? _promptController.text).trim();
     if (text.isEmpty || _isAiProcessing) return;
 
     HapticFeedback.mediumImpact();
+    final timeStr = DateFormat('HH:mm').format(DateTime.now());
+
     setState(() {
       _isAiProcessing = true;
       _valtoMood = ValtoMood.detective;
+      _chatHistory.add({
+        'isUser': true,
+        'text': text,
+        'time': timeStr,
+      });
     });
+
+    _promptController.clear();
 
     try {
       final result = await ValtoAiService.instance.processInput(text);
@@ -193,10 +212,20 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
         setState(() => _valtoMood = ValtoMood.playful);
       }
 
-      _showAgentResponseSheet(result);
+      setState(() {
+        _chatHistory.add({
+          'isUser': false,
+          'title': result.title,
+          'text': result.speechText,
+          'time': DateFormat('HH:mm').format(DateTime.now()),
+          'isAction': result.isAction,
+          'amount': result.amount,
+          'currency': result.currency,
+          'suggestions': result.suggestions,
+        });
+      });
 
-      _promptController.clear();
-      _promptFocus.unfocus();
+      _openValtoChatModal();
     } catch (_) {
       if (mounted) setState(() => _valtoMood = ValtoMood.vigilant);
     } finally {
@@ -204,143 +233,313 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     }
   }
 
-  void _showAgentResponseSheet(ValtoAgentResult result) {
+  void _openValtoChatModal() {
+    final chatInputCtrl = TextEditingController();
+    final scrollCtrl = ScrollController();
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: VaultColors.card,
+      isScrollControlled: true,
+      backgroundColor: VaultColors.background,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 38,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: VaultColors.hairline,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                ValtoMascot(
-                  size: 42,
-                  mood: result.isAction ? ValtoMood.happy : ValtoMood.playful,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        result.isAction ? 'VALTO EXECUTED ACTION' : 'VALTO SENTINEL RESPONSE',
-                        style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent),
-                      ),
-                      Text(
-                        result.title,
-                        style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w700, color: VaultColors.ink),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: VaultColors.cardHover,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: VaultColors.hairline),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (scrollCtrl.hasClients) {
+                scrollCtrl.animateTo(
+                  scrollCtrl.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOut,
+                );
+              }
+            });
+
+            return Container(
+              height: MediaQuery.of(ctx).size.height * 0.78,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    result.speechText,
-                    style: VaultTypography.sans(fontSize: 13.5, height: 1.45, color: VaultColors.ink),
-                  ),
-                  if (result.isAction && result.amount > 0) ...[
-                    const SizedBox(height: 12),
-                    const Divider(color: VaultColors.hairline, height: 1),
-                    const SizedBox(height: 10),
-                    Row(
+                  // 1. CHAT HEADER
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    decoration: const BoxDecoration(
+                      color: VaultColors.card,
+                      border: Border(bottom: BorderSide(color: VaultColors.hairline)),
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                    ),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Recorded Amount', style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink2)),
-                        Text(
-                          result.currency == 'IDR'
-                              ? 'Rp ${NumberFormat('#,###').format(result.amount)}'
-                              : '\$${result.amount.toStringAsFixed(2)}',
-                          style: VaultTypography.mono(fontSize: 15, fontWeight: FontWeight.w700, color: VaultColors.ink),
+                        Row(
+                          children: [
+                            ValtoMascot(size: 32, mood: _valtoMood),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Valto Sentinel',
+                                  style: VaultTypography.sans(fontSize: 14.5, fontWeight: FontWeight.w700, color: VaultColors.ink),
+                                ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        color: VaultColors.pos,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text('Online · Vault Sentinel', style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, color: VaultColors.ink2, size: 20),
+                          onPressed: () => Navigator.pop(ctx),
                         ),
                       ],
                     ),
-                  ],
-                ],
-              ),
-            ),
-            if (result.suggestions.isNotEmpty) ...[
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: result.suggestions.map((sug) {
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _promptController.text = sug.replaceAll('"', '');
-                      _handlePromptSubmit();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: VaultColors.badgeBg,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: VaultColors.hairline),
-                      ),
-                      child: Text(
-                        sug,
-                        style: VaultTypography.mono(fontSize: 10.5, color: VaultColors.accent),
+                  ),
+
+                  // 2. CHAT BUBBLES LIST
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollCtrl,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      itemCount: _chatHistory.length,
+                      itemBuilder: (context, idx) {
+                        final msg = _chatHistory[idx];
+                        final isUser = msg['isUser'] == true;
+                        final text = msg['text'] as String? ?? '';
+                        final time = msg['time'] as String? ?? '';
+                        final isAction = msg['isAction'] == true;
+                        final amount = (msg['amount'] as num?)?.toDouble() ?? 0.0;
+                        final currency = msg['currency'] as String? ?? 'IDR';
+                        final suggestions = (msg['suggestions'] as List<dynamic>?)?.cast<String>() ?? [];
+
+                        if (isUser) {
+                          // USER BUBBLE (Right aligned)
+                          return Align(
+                            alignment: Alignment.centerRight,
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12, left: 48),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: VaultColors.accent,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(16),
+                                  topRight: Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(4),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    text,
+                                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w500, color: VaultColors.background),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    time,
+                                    style: VaultTypography.mono(fontSize: 9, color: VaultColors.background.withValues(alpha: 0.6)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+
+                        // VALTO BUBBLE (Left aligned)
+                        return Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 14, right: 36),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const ValtoMascot(size: 26, mood: ValtoMood.vigilant),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: VaultColors.card,
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(4),
+                                            topRight: Radius.circular(16),
+                                            bottomLeft: Radius.circular(16),
+                                            bottomRight: Radius.circular(16),
+                                          ),
+                                          border: Border.all(color: VaultColors.hairline),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              text,
+                                              style: VaultTypography.sans(fontSize: 13, height: 1.45, color: VaultColors.ink),
+                                            ),
+                                            if (isAction && amount > 0) ...[
+                                              const SizedBox(height: 10),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                decoration: BoxDecoration(
+                                                  color: VaultColors.badgeBg,
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: VaultColors.hairline),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.check_circle_rounded, size: 14, color: VaultColors.pos),
+                                                    const SizedBox(width: 6),
+                                                    Text(
+                                                      currency == 'IDR'
+                                                          ? 'Rp ${NumberFormat('#,###').format(amount)} Logged'
+                                                          : '\$${amount.toStringAsFixed(2)} Logged',
+                                                      style: VaultTypography.mono(fontSize: 11, fontWeight: FontWeight.w700, color: VaultColors.accent),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 4),
+                                        child: Text(time, style: VaultTypography.mono(fontSize: 9, color: VaultColors.ink3)),
+                                      ),
+                                      // Suggestion pills
+                                      if (suggestions.isNotEmpty && idx == _chatHistory.length - 1) ...[
+                                        const SizedBox(height: 8),
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 6,
+                                          children: suggestions.map((sug) {
+                                            return InkWell(
+                                              onTap: () {
+                                                _handlePromptSubmit(sug.replaceAll('"', ''));
+                                                setModalState(() {});
+                                              },
+                                              borderRadius: BorderRadius.circular(16),
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                                decoration: BoxDecoration(
+                                                  color: VaultColors.cardHover,
+                                                  borderRadius: BorderRadius.circular(16),
+                                                  border: Border.all(color: VaultColors.hairline),
+                                                ),
+                                                child: Text(
+                                                  sug,
+                                                  style: VaultTypography.sans(fontSize: 11, color: VaultColors.accent),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  // 3. IN-CHAT MESSAGE INPUT DOCK
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: const BoxDecoration(
+                      color: VaultColors.card,
+                      border: Border(top: BorderSide(color: VaultColors.hairline)),
+                    ),
+                    child: SafeArea(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: VaultColors.background,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: VaultColors.hairline),
+                              ),
+                              child: TextField(
+                                controller: chatInputCtrl,
+                                style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink),
+                                cursorColor: VaultColors.accent,
+                                decoration: InputDecoration(
+                                  hintText: 'Message Valto or log asset...',
+                                  hintStyle: VaultTypography.sans(fontSize: 12, color: VaultColors.ink3),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                ),
+                                onSubmitted: (val) {
+                                  if (val.trim().isNotEmpty) {
+                                    final q = val.trim();
+                                    chatInputCtrl.clear();
+                                    _handlePromptSubmit(q);
+                                    setModalState(() {});
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              final q = chatInputCtrl.text.trim();
+                              if (q.isNotEmpty) {
+                                chatInputCtrl.clear();
+                                _handlePromptSubmit(q);
+                                setModalState(() {});
+                              }
+                            },
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: const BoxDecoration(
+                                color: VaultColors.accent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_upward_rounded,
+                                size: 18,
+                                color: VaultColors.background,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-            ],
-            const SizedBox(height: 22),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: VaultColors.primaryButton,
-                  foregroundColor: VaultColors.primaryButtonInk,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                ),
-                child: Text(
-                  'Dismiss',
-                  style: VaultTypography.sans(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
                   ),
-                ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 

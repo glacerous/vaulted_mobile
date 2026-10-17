@@ -296,6 +296,220 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     );
   }
 
+  void _showManualAddAssetModal() {
+    final nameCtrl = TextEditingController();
+    final priceCtrl = TextEditingController();
+    final serialCtrl = TextEditingController();
+    final warrantyCtrl = TextEditingController(text: '12');
+    String selectedCategory = 'Hardware';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: VaultColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalCtx, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 22,
+                right: 22,
+                top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 38,
+                      height: 4,
+                      decoration: BoxDecoration(color: VaultColors.hairline, borderRadius: BorderRadius.circular(2)),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: VaultColors.badgeBg,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.add_box_rounded, color: VaultColors.accent, size: 20),
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('NEW ASSET ENTRY', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent)),
+                              Text('Add High-Value Item', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, color: VaultColors.ink2),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text('ITEM NAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: nameCtrl,
+                    style: VaultTypography.sans(fontSize: 13.5, color: VaultColors.ink),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Sony WH-1000XM5, iPhone 15 Pro',
+                      hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
+                      filled: true,
+                      fillColor: VaultColors.cardHover,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('PRICE (USD)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: priceCtrl,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: VaultTypography.mono(fontSize: 13.5, color: VaultColors.ink),
+                              decoration: InputDecoration(
+                                hintText: '399.00',
+                                hintStyle: VaultTypography.mono(fontSize: 13, color: VaultColors.ink3),
+                                filled: true,
+                                fillColor: VaultColors.cardHover,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('WARRANTY (MO)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: warrantyCtrl,
+                              keyboardType: TextInputType.number,
+                              style: VaultTypography.mono(fontSize: 13.5, color: VaultColors.ink),
+                              decoration: InputDecoration(
+                                hintText: '12',
+                                hintStyle: VaultTypography.mono(fontSize: 13, color: VaultColors.ink3),
+                                filled: true,
+                                fillColor: VaultColors.cardHover,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text('SERIAL NUMBER (FOR LBS & WARRANTY)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: serialCtrl,
+                    style: VaultTypography.mono(fontSize: 13, color: VaultColors.ink),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. SN-SNY90841284',
+                      hintStyle: VaultTypography.mono(fontSize: 12.5, color: VaultColors.ink3),
+                      filled: true,
+                      fillColor: VaultColors.cardHover,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final name = nameCtrl.text.trim();
+                        final price = double.tryParse(priceCtrl.text.trim()) ?? 0.0;
+                        final serial = serialCtrl.text.trim();
+                        final warrantyMonths = int.tryParse(warrantyCtrl.text.trim()) ?? 12;
+
+                        if (name.isEmpty || price <= 0) {
+                          VaultToast.show(
+                            context,
+                            icon: Icons.error_outline_rounded,
+                            iconColor: VaultColors.neg,
+                            message: 'Please provide a valid item name and purchase price.',
+                          );
+                          return;
+                        }
+
+                        Navigator.pop(ctx);
+                        final itemMap = {
+                          'name': name,
+                          'category': 'Hardware / $selectedCategory',
+                          'purchase_price': price,
+                          'current_valuation': price * 0.95,
+                          'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                          'warranty_expiry_date': DateFormat('yyyy-MM-dd').format(
+                            DateTime.now().add(Duration(days: warrantyMonths * 30)),
+                          ),
+                          'serial_number': serial.isNotEmpty ? serial : 'SN-${DateTime.now().millisecondsSinceEpoch}',
+                          'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
+                          'is_collectible': 0,
+                          'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+                        };
+
+                        await DatabaseHelper.instance.insertItem(itemMap);
+                        await _loadVaultData();
+
+                        if (!mounted) return;
+                        VaultToast.show(
+                          context,
+                          icon: Icons.check_circle_rounded,
+                          iconColor: VaultColors.pos,
+                          message: 'Saved $name to your Vault!',
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF141413),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                      ),
+                      child: Text(
+                        'Save Asset to Vault',
+                        style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showAiScannerModal() {
     final textController = TextEditingController(
       text: 'Apple Store Receipt #90214\nModel: Apple MacBook Pro 14" M3 Max\nSerial: C02G90PLQ6L4\nDate: 2024-03-12\nTotal: \$1,999.00 USD\nWarranty: 24 Months Coverage Included',
@@ -944,13 +1158,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                           child: _buildActionTile(
                             icon: Icons.add_circle_outline_rounded,
                             label: 'Add Asset',
-                            onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const InventoryScreen()),
-                              );
-                              _loadVaultData();
-                            },
+                            onTap: _showManualAddAssetModal,
                           ),
                         ),
                       ],

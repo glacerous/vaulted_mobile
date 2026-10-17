@@ -193,9 +193,11 @@ Return ONLY valid JSON with no markdown formatting:
               warrantyMonths: (json['warrantyMonths'] as num?)?.toInt(),
             );
           }
+        } else {
+          debugPrint('Valto Gemini API Error [${response.statusCode}]: ${response.body}');
         }
-      } catch (e) {
-        debugPrint('Valto Gemini processor fallback: $e');
+      } catch (e, stack) {
+        debugPrint('Valto Gemini processor fallback: $e\n$stack');
       }
     }
 

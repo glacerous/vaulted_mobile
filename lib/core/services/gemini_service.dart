@@ -27,6 +27,77 @@ class GeminiService {
   GeminiService._();
   static final GeminiService instance = GeminiService._();
 
+  Future<GeminiInvoiceResult> parseInvoiceImage(Uint8List imageBytes, {String mimeType = 'image/jpeg'}) async {
+    final apiKey = dotenv.env['GEMINI_API_KEY'];
+    final bool hasValidKey = apiKey != null && apiKey.isNotEmpty && !apiKey.contains('your_gemini_api_key');
+
+    if (hasValidKey) {
+      try {
+        final uri = Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey',
+        );
+
+        final base64Image = base64Encode(imageBytes);
+        final prompt = '''
+Analyze this image of an invoice, receipt, warranty card, or purchase ticket.
+Extract JSON with exactly these keys:
+{
+  "name": "string (item name and model)",
+  "category": "string (one of: Tech & Gadgets, Luxury & Fashion, Cameras & Lenses, Timepieces, Collectibles)",
+  "price": number (in USD, extract digits only. If in IDR, divide by 16000 to convert to USD),
+  "serial_number": "string (serial number or N/A)",
+  "warranty_months": number (warranty coverage in months, default 12 if unspecified)
+}
+
+Respond ONLY with valid JSON. Do not include markdown codeblocks or extra text.
+''';
+
+        final response = await http.post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'contents': [
+              {
+                'parts': [
+                  {'text': prompt},
+                  {
+                    'inline_data': {
+                      'mime_type': mimeType,
+                      'data': base64Image,
+                    }
+                  }
+                ]
+              }
+            ]
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final candidateText = data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
+          final cleanJson = candidateText.replaceAll(RegExp(r'```json|```'), '').trim();
+          final parsed = jsonDecode(cleanJson);
+
+          return GeminiInvoiceResult(
+            itemName: parsed['name'] ?? 'Vault Item',
+            category: parsed['category'] ?? 'Tech & Gadgets',
+            purchasePrice: (parsed['price'] as num?)?.toDouble() ?? 1200.0,
+            serialNumber: parsed['serial_number'] ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
+            warrantyMonths: (parsed['warranty_months'] as num?)?.toInt() ?? 12,
+            rawResponse: cleanJson,
+            isAiGenerated: true,
+          );
+        } else {
+          debugPrint('Gemini Image OCR returned status ${response.statusCode}: ${response.body}');
+        }
+      } catch (e) {
+        debugPrint('Gemini Image OCR failed: $e');
+      }
+    }
+
+    return _heuristicFallback('image parsed fallback item');
+  }
+
   Future<GeminiInvoiceResult> parseInvoiceText(String text) async {
     final apiKey = dotenv.env['GEMINI_API_KEY'];
     final bool hasValidKey = apiKey != null && apiKey.isNotEmpty && !apiKey.contains('your_gemini_api_key');

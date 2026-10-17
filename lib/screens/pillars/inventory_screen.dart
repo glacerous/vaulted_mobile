@@ -20,6 +20,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
   List<Map<String, dynamic>> _allItems = [];
   String _selectedFilter = 'All';
   String _selectedSort = 'Value ↓';
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
   bool _isLoading = true;
 
   final currencyFormatter = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
@@ -28,6 +30,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void initState() {
     super.initState();
     _loadItems();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadItems() async {
@@ -46,6 +54,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
       list = _allItems.where((i) => i['category'].toString().startsWith('Steam')).toList();
     } else {
       list = List.from(_allItems);
+    }
+
+    if (_searchQuery.trim().isNotEmpty) {
+      final q = _searchQuery.trim().toLowerCase();
+      list = list.where((i) {
+        final name = (i['name'] as String? ?? '').toLowerCase();
+        final cat = (i['category'] as String? ?? '').toLowerCase();
+        final serial = (i['serial_number'] as String? ?? '').toLowerCase();
+        return name.contains(q) || cat.contains(q) || serial.contains(q);
+      }).toList();
     }
 
     switch (_selectedSort) {
@@ -383,6 +401,44 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 'Catalog physical gear, gadgets, watches, and cameras with warranty tracking.',
                 style: VaultTypography.cardDescription,
               ),
+              // Live Search Bar
+              Container(
+                margin: const EdgeInsets.only(top: 10, bottom: 12),
+                height: 42,
+                decoration: BoxDecoration(
+                  color: VaultColors.card,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _searchQuery.isNotEmpty ? VaultColors.accent : VaultColors.hairline,
+                    width: 0.8,
+                  ),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  style: VaultTypography.mono(fontSize: 13, color: VaultColors.ink),
+                  cursorColor: VaultColors.accent,
+                  decoration: InputDecoration(
+                    hintText: 'Search items by name, model, serial...',
+                    hintStyle: VaultTypography.sans(fontSize: 12, color: VaultColors.ink2),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 18, color: VaultColors.ink2),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded, size: 16, color: VaultColors.ink2),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  onChanged: (val) {
+                    setState(() => _searchQuery = val);
+                  },
+                ),
+              ),
+
               // Category filter pills
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,

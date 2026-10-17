@@ -1,6 +1,8 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
@@ -511,10 +513,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   }
 
   void _showAiScannerModal() {
-    final textController = TextEditingController(
-      text: 'Apple Store Receipt #90214\nModel: Apple MacBook Pro 14" M3 Max\nSerial: C02G90PLQ6L4\nDate: 2024-03-12\nTotal: \$1,999.00 USD\nWarranty: 24 Months Coverage Included',
-    );
+    final textController = TextEditingController();
+    Uint8List? selectedImageBytes;
     bool isProcessing = false;
+    final picker = ImagePicker();
 
     showModalBottomSheet(
       context: context,
@@ -525,7 +527,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
       ),
       builder: (ctx) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (modalCtx, setModalState) {
             return Padding(
               padding: EdgeInsets.only(
                 left: 22,
@@ -555,8 +557,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('VALTO OCR (GEMINI AI)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent)),
-                              Text('Scan Receipt or Warranty', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w700)),
+                              Text('VALTO OCR (GEMINI VISION AI)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent)),
+                              Text('Scan Receipt or Warranty Card', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w700)),
                             ],
                           ),
                         ],
@@ -567,19 +569,166 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
+
+                  // Image Preview or Camera / Gallery Upload Trigger Buttons
+                  if (selectedImageBytes != null) ...[
+                    Container(
+                      width: double.infinity,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        color: VaultColors.cardHover,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: VaultColors.accent.withValues(alpha: 0.5), width: 1.5),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(15),
+                            child: Image.memory(
+                              selectedImageBytes!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: 160,
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  selectedImageBytes = null;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black87,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close, color: Colors.white, size: 16),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ] else ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: isProcessing
+                                ? null
+                                : () async {
+                                    try {
+                                      final photo = await picker.pickImage(
+                                        source: ImageSource.camera,
+                                        maxWidth: 1200,
+                                        imageQuality: 85,
+                                      );
+                                      if (photo != null) {
+                                        final bytes = await photo.readAsBytes();
+                                        setModalState(() {
+                                          selectedImageBytes = bytes;
+                                                                                  });
+                                      }
+                                    } catch (e) {
+                                      debugPrint('Camera error: $e');
+                                    }
+                                  },
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: VaultColors.cardHover,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: VaultColors.hairline),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.photo_camera_rounded, color: VaultColors.accent, size: 24),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Take Photo',
+                                    style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            onTap: isProcessing
+                                ? null
+                                : () async {
+                                    try {
+                                      final image = await picker.pickImage(
+                                        source: ImageSource.gallery,
+                                        maxWidth: 1200,
+                                        imageQuality: 85,
+                                      );
+                                      if (image != null) {
+                                        final bytes = await image.readAsBytes();
+                                        setModalState(() {
+                                          selectedImageBytes = bytes;
+                                                                                  });
+                                      }
+                                    } catch (e) {
+                                      debugPrint('Gallery error: $e');
+                                    }
+                                  },
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: VaultColors.cardHover,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: VaultColors.hairline),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.photo_library_rounded, color: VaultColors.ink, size: 24),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Upload Image',
+                                    style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  Text(
+                    'OR PASTE RECEIPT TEXT / SERIAL NUMBER',
+                    style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2),
+                  ),
+                  const SizedBox(height: 6),
                   TextField(
                     controller: textController,
-                    maxLines: 4,
-                    style: VaultTypography.mono(fontSize: 12, color: VaultColors.ink),
+                    maxLines: 3,
+                    style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink),
                     decoration: InputDecoration(
+                      hintText: 'e.g. MacBook Pro 14 M3, Serial C02G90PLQ6L4, Total \$1,999...',
+                      hintStyle: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink3),
                       filled: true,
                       fillColor: VaultColors.cardHover,
-                      contentPadding: const EdgeInsets.all(14),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.all(12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                     ),
                   ),
                   const SizedBox(height: 18),
+
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -587,28 +736,63 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       onPressed: isProcessing
                           ? null
                           : () async {
-                              setModalState(() => isProcessing = true);
-                              final result = await GeminiService.instance.parseInvoiceText(textController.text);
-                              if (ctx.mounted) {
-                                Navigator.pop(ctx);
-                                await DatabaseHelper.instance.insertItem({
-                                  'name': result.itemName,
-                                  'category': 'Hardware / ${result.category}',
-                                  'purchase_price': result.purchasePrice,
-                                  'current_valuation': result.purchasePrice * 0.9,
-                                  'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-                                  'warranty_expiry_date': DateFormat('yyyy-MM-dd').format(DateTime.now().add(Duration(days: result.warrantyMonths * 30))),
-                                  'serial_number': result.serialNumber,
-                                  'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
-                                  'is_collectible': 0,
-                                  'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
-                                });
-                                _loadVaultData();
+                              final text = textController.text.trim();
+                              if (selectedImageBytes == null && text.isEmpty) {
+                                VaultToast.show(
+                                  context,
+                                  icon: Icons.info_outline_rounded,
+                                  iconColor: VaultColors.warn,
+                                  message: 'Please take a photo or enter receipt text first.',
+                                );
+                                return;
                               }
+
+                              setModalState(() => isProcessing = true);
+
+                              GeminiInvoiceResult result;
+                              if (selectedImageBytes != null) {
+                                result = await GeminiService.instance.parseInvoiceImage(selectedImageBytes!);
+                              } else {
+                                result = await GeminiService.instance.parseInvoiceText(text);
+                              }
+
+                              if (!ctx.mounted) return;
+                              Navigator.pop(ctx);
+
+                              await DatabaseHelper.instance.insertItem({
+                                'name': result.itemName,
+                                'category': 'Hardware / ${result.category}',
+                                'purchase_price': result.purchasePrice,
+                                'current_valuation': result.purchasePrice * 0.95,
+                                'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                                'warranty_expiry_date': DateFormat('yyyy-MM-dd').format(
+                                  DateTime.now().add(Duration(days: result.warrantyMonths * 30)),
+                                ),
+                                'serial_number': result.serialNumber,
+                                'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
+                                'is_collectible': 0,
+                                'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+                              });
+
+                              await _loadVaultData();
+
+                              if (!mounted) return;
+                              VaultToast.show(
+                                context,
+                                icon: Icons.auto_awesome_rounded,
+                                iconColor: VaultColors.accent,
+                                message: 'Extracted & Saved "${result.itemName}" (\$${result.purchasePrice.toStringAsFixed(2)}) via Gemini AI!',
+                              );
                             },
-                      icon: const Icon(Icons.auto_awesome_rounded, size: 18),
+                      icon: isProcessing
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.auto_awesome_rounded, size: 18, color: Colors.white),
                       label: Text(
-                        isProcessing ? 'Analyzing with Gemini...' : 'Extract & Save to Vault',
+                        isProcessing ? 'Analyzing with Gemini Vision...' : 'Extract & Save to Vault',
                         style: VaultTypography.sans(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,

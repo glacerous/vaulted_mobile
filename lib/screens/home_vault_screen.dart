@@ -407,44 +407,6 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     );
   }
 
-  void _showVoiceModal() {
-    HapticFeedback.selectionClick();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: VaultColors.card,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(26),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 38, height: 4, decoration: BoxDecoration(color: VaultColors.hairline, borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 20),
-            const ValtoMascot(size: 64, mood: ValtoMood.detective),
-            const SizedBox(height: 14),
-            Text('Valto is listening...', style: VaultTypography.sans(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            Text(
-              'Say "kopi 25k bca" or "beli steam deck 500 usd garansi 24 bln"',
-              style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink2),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 22),
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(shape: BoxShape.circle, color: VaultColors.badgeBg),
-              child: const Icon(Icons.mic_rounded, color: VaultColors.accent, size: 36),
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('Close', style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.ink2)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -572,7 +534,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   GestureDetector(
                                     onTap: _showAiScannerModal,
                                     child: Container(
-                                      padding: const EdgeInsets.all(8),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                       decoration: BoxDecoration(
                                         color: Colors.white.withValues(alpha: 0.90),
                                         borderRadius: BorderRadius.circular(10),
@@ -585,27 +547,22 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                           ),
                                         ],
                                       ),
-                                      child: const Icon(Icons.receipt_long_rounded, size: 16, color: Color(0xFF1D1D1B)),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  GestureDetector(
-                                    onTap: _showVoiceModal,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.90),
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: Colors.white),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.06),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.receipt_long_rounded, size: 15, color: Color(0xFF1D1D1B)),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            'SCAN OCR',
+                                            style: VaultTypography.mono(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.8,
+                                              color: const Color(0xFF1D1D1B),
+                                            ),
                                           ),
                                         ],
                                       ),
-                                      child: const Icon(Icons.mic_none_rounded, size: 16, color: Color(0xFF1D1D1B)),
                                     ),
                                   ),
                                 ],
@@ -1001,7 +958,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     ),
                     const SizedBox(height: 18),
 
-                    // Quick Action Buttons (Receipt & Voice)
+                    // Quick Action Buttons (Receipt OCR & Add Manual Asset)
                     Row(
                       children: [
                         Expanded(
@@ -1014,9 +971,15 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildActionTile(
-                            icon: Icons.mic_none_rounded,
-                            label: 'Voice Logger',
-                            onTap: _showVoiceModal,
+                            icon: Icons.add_circle_outline_rounded,
+                            label: 'Add Asset',
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const InventoryScreen()),
+                              );
+                              _loadVaultData();
+                            },
                           ),
                         ),
                       ],

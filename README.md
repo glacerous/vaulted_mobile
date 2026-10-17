@@ -1,10 +1,10 @@
-# 🛡️ VAULTED (Mobile) — Developer Onboarding & Setup Guide
+# VAULTED (Mobile) — Developer Onboarding & Setup Guide
 
 **VAULTED** is an ultra-luxury mobile asset vault built in Flutter with a dark titanium aesthetic (`#131312`, `#1D1D1B`, `#8E8D8A`, `#C0A85C`). It tracks high-value hardware, luxury tech items, Steam/CS2 inventories, warranty lifecycle (LBS service radar), and features an agentic natural language AI assistant (**Valto Sentinel**).
 
 ---
 
-## ⚡ Quick Start for Developers
+## Quick Start for Developers
 
 Follow these steps to get the app running on your machine:
 
@@ -84,7 +84,7 @@ flutter run -d <device-id>
 
 ---
 
-## 🛠️ Common Developer Commands
+## Common Developer Commands
 
 | Command | Description |
 | :--- | :--- |
@@ -96,7 +96,7 @@ flutter run -d <device-id>
 
 ---
 
-## 📂 Project Architecture
+## Project Architecture
 
 ```
 lib/
@@ -118,7 +118,7 @@ lib/
 
 ---
 
-## 📐 Design & UX Principles (Mandatory)
+## Design & UX Principles (Mandatory)
 
 All contributors must respect the rules outlined in `AGENTS.md`:
 1. **Dark Titanium Luxury Theme**: Strictly use `VaultColors.background`, `VaultColors.card`, `VaultColors.accent` (`#C0A85C`), and `VaultTypography`.

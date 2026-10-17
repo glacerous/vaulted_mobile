@@ -1195,7 +1195,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                               color: Colors.white,
                                             ),
                                             decoration: InputDecoration(
-                                              hintText: 'Ask Valto or log (e.g. kopi 25k)...',
+                                              hintText: 'Ask Valto or log (e.g. RTX 4090 \$1600)...',
                                               hintStyle: VaultTypography.sans(
                                                 fontSize: 13,
                                                 color: Colors.white.withValues(alpha: 0.80),

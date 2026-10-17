@@ -73,12 +73,12 @@ class ValtoAiService {
         isAction: false,
         actionType: 'query',
         title: 'Valto Capabilities',
-        speechText: 'I am your Agentic Vault Sentinel. You can ask me questions about your portfolio, or command me to log items and expenses directly.\n\n'
-            '• Inquiries: "How much is my vault worth?", "Do I have active warranties?", "Show my hardware".\n'
-            '• Auto-Log: "Kopi 25k BCA", "Beli monitor Asus 2.5jt garansi 24 bln", "Steam game 150rb".',
+        speechText: 'I am your Agentic Vault Sentinel. You can query your portfolio, check active warranties, or command me to register high-value tech and collectibles directly.\n\n'
+            '• Portfolio Inquiries: "What is my total vault value?", "Show active warranties", "How many assets?".\n'
+            '• Asset Commands: "Log Sony A7IV \$2500 warranty 24 mo", "Add RTX 4090 \$1600", "Steam AWP Dragon Lore \$4200".',
         amount: 0,
         category: 'Help',
-        suggestions: ['"Total vault value?"', '"Do I have active warranties?"', '"Kopi 25k BCA"'],
+        suggestions: ['"Total vault value?"', '"Show active warranties"', '"Log RTX 4090 \$1600"'],
       );
     }
 
@@ -241,33 +241,27 @@ Return ONLY valid JSON with no markdown formatting:
         isAction: false,
         actionType: 'query',
         title: 'Valto Sentinel',
-        speechText: 'I received: "$text". You can ask about your total assets, check active warranties, or log purchases like "Kopi 25k BCA" or "MacBook 2000 usd".',
+        speechText: 'I received: "$text". You can ask about your total assets, check active warranties, or register hardware/collectibles like "RTX 4090 \$1600" or "MacBook Pro \$2000 garansi 24 bln".',
         amount: 0,
         category: 'General',
         suggestions: ['"What can you do?"', '"Total vault value?"', '"Show active warranties"'],
       );
     }
 
-    // It is an action (Expense or Hardware)
-    String type = 'expense';
-    String category = 'General';
-    String wallet = 'Cash';
+    // It is an asset registration action
+    String type = 'hardware';
+    String category = 'Hardware';
+    String wallet = 'Vault Ledger';
 
-    if (lower.contains('gaji') || lower.contains('income') || lower.contains('bonus')) {
-      type = 'income';
-      category = 'Salary';
-    } else if (lower.contains('kopi') || lower.contains('coffee') || lower.contains('makan') || lower.contains('nasi')) {
-      category = 'Food & Beverage';
-    } else if (lower.contains('steam') || lower.contains('game') || lower.contains('skin')) {
-      category = 'Gaming';
-      wallet = 'Steam';
-    } else if (lower.contains('laptop') || lower.contains('macbook') || lower.contains('phone') || lower.contains('monitor') || lower.contains('beli')) {
-      type = 'hardware';
-      category = 'Hardware';
+    if (lower.contains('steam') || lower.contains('skin') || lower.contains('knife') || lower.contains('cs2') || lower.contains('dota')) {
+      category = 'Steam Item';
+    } else if (lower.contains('camera') || lower.contains('leica') || lower.contains('sony') || lower.contains('lens')) {
+      category = 'Cameras & Tech';
+    } else if (lower.contains('macbook') || lower.contains('laptop') || lower.contains('monitor') || lower.contains('gpu') || lower.contains('rtx')) {
+      category = 'Tech & Gadgets';
+    } else if (lower.contains('watch') || lower.contains('rolex') || lower.contains('collectible')) {
+      category = 'Collectibles';
     }
-
-    if (lower.contains('bca')) wallet = 'BCA';
-    if (lower.contains('gopay')) wallet = 'GoPay';
 
     final cleanTitle = text.split(RegExp(r'\d+')).first.trim().isEmpty ? text : text.split(RegExp(r'\d+')).first.trim();
 
@@ -275,12 +269,12 @@ Return ONLY valid JSON with no markdown formatting:
       isAction: true,
       actionType: type,
       title: cleanTitle,
-      speechText: 'Recorded $cleanTitle for ${amount > 0 ? (lower.contains('usd') || lower.contains('\$') ? '\$$amount' : 'Rp ${amount.toStringAsFixed(0)}') : 'item'} to your vault ledger.',
+      speechText: 'Logged asset "$cleanTitle" valued at ${amount > 0 ? (lower.contains('usd') || lower.contains('\$') ? '\$$amount' : 'Rp ${amount.toStringAsFixed(0)}') : 'N/A'} into your vault.',
       amount: amount,
       currency: lower.contains('usd') || lower.contains('\$') ? 'USD' : 'IDR',
       category: category,
       wallet: wallet,
-      warrantyMonths: lower.contains('garansi') || lower.contains('warranty') ? 12 : null,
+      warrantyMonths: lower.contains('garansi') || lower.contains('warranty') ? 24 : 12,
     );
   }
 

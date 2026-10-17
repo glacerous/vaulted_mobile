@@ -42,6 +42,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
 
   // Real Chat Thread state: User messages + Valto replies
   bool _isChatModalOpen = false;
+  void Function(void Function())? _modalSetState;
   final List<Map<String, dynamic>> _chatHistory = [
     {
       'isUser': false,
@@ -181,6 +182,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
         'time': timeStr,
       });
     });
+    _modalSetState?.call(() {});
 
     _promptController.clear();
 
@@ -225,6 +227,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
           'suggestions': result.suggestions,
         });
       });
+      _modalSetState?.call(() {});
 
       if (!_isChatModalOpen) {
         _openValtoChatModal();
@@ -232,7 +235,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     } catch (_) {
       if (mounted) setState(() => _valtoMood = ValtoMood.vigilant);
     } finally {
-      if (mounted) setState(() => _isAiProcessing = false);
+      if (mounted) {
+        setState(() => _isAiProcessing = false);
+        _modalSetState?.call(() {});
+      }
     }
   }
 
@@ -252,6 +258,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
       builder: (ctx) {
         return StatefulBuilder(
           builder: (modalContext, setModalState) {
+            _modalSetState = setModalState;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (scrollCtrl.hasClients) {
                 scrollCtrl.animateTo(
@@ -472,6 +479,38 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     ),
                   ),
 
+                  // Typing / Thinking Indicator
+                  if (_isAiProcessing)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, bottom: 10),
+                      child: Row(
+                        children: [
+                          const ValtoMascot(size: 20, mood: ValtoMood.detective),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: VaultColors.card,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: VaultColors.hairline),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(
+                                  width: 10,
+                                  height: 10,
+                                  child: CircularProgressIndicator(strokeWidth: 1.5, color: VaultColors.accent),
+                                ),
+                                const SizedBox(width: 8),
+                                Text('Valto is thinking...', style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                   // 3. IN-CHAT MESSAGE INPUT DOCK
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -547,6 +586,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
       },
     ).whenComplete(() {
       _isChatModalOpen = false;
+      _modalSetState = null;
     });
   }
 

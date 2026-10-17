@@ -20,8 +20,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
   String _locationStatus = 'Tap to get current GPS location';
   String? _currentAddress;
 
-
-
   // Hasil pencarian service center asli dari OpenStreetMap (Nominatim Search)
   List<Map<String, dynamic>> _serviceCenters = [];
   bool _loadingCenters = false;
@@ -367,12 +365,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _determinePosition();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: VaultColors.background,
@@ -387,14 +379,54 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'VAULTED',
-                    style: VaultTypography.mono(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.5,
-                      color: VaultColors.ink,
-                    ),
+                  Row(
+                    children: [
+                      // Tombol kembali: hanya muncul saat halaman dibuka dari Home (bisa di-pop),
+                      // tidak muncul saat dipakai sebagai tab di bottom navigation.
+                      if (Navigator.of(context).canPop()) ...[
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          behavior: HitTestBehavior.opaque,
+                          child: const Padding(
+                            padding: EdgeInsets.only(
+                              right: 12,
+                              top: 4,
+                              bottom: 4,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              size: 18,
+                              color: VaultColors.ink,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const Icon(
+                        Icons.brightness_low_rounded,
+                        color: VaultColors.accent,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'VAULT',
+                        style: VaultTypography.sans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                          color: VaultColors.ink,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '·  LBS CARE',
+                        style: VaultTypography.mono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.2,
+                          color: VaultColors.ink2,
+                        ),
+                      ),
+                    ],
                   ),
                   Container(
                     width: 32,
@@ -527,7 +559,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Service Centers List
               Text(

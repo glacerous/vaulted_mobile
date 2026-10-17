@@ -1,6 +1,12 @@
+import 'dart:async';
+import 'dart:math';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+
 import '../../core/constants/colors.dart';
 import '../../core/constants/typography.dart';
 import '../../core/database/database_helper.dart';
@@ -20,21 +26,73 @@ class _InventoryScreenState extends State<InventoryScreen> {
   List<Map<String, dynamic>> _allItems = [];
   String _selectedFilter = 'All';
   String _selectedSort = 'Value ↓';
-  String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
   bool _isLoading = true;
 
-  final currencyFormatter = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+  // Search bar inventory
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _query = '';
+
+  // Sensor 2: Gyroscope (kartu item miring mengikuti rotasi HP)
+  static const double _maxTilt = 0.35; // radian
+  StreamSubscription<GyroscopeEvent>? _gyroSub;
+  final ValueNotifier<Offset> _tilt = ValueNotifier(Offset.zero);
+  DateTime? _lastGyroTime;
+  bool _gyroActive = false;
+
+  final currencyFormatter = NumberFormat.currency(
+    locale: 'en_US',
+    symbol: '\$',
+    decimalDigits: 2,
+  );
 
   @override
   void initState() {
     super.initState();
     _loadItems();
+    _initGyroscope();
+  }
+
+  void _initGyroscope() {
+    if (kIsWeb) return; // sensor hanya tersedia di perangkat asli
+    try {
+      _gyroSub =
+          gyroscopeEventStream(
+            samplingPeriod: SensorInterval.gameInterval,
+          ).listen(
+            (GyroscopeEvent e) {
+              final now = DateTime.now();
+              final dt = _lastGyroTime == null
+                  ? 0.02
+                  : (now.difference(_lastGyroTime!).inMicroseconds / 1000000.0)
+                        .clamp(0.001, 0.1)
+                        .toDouble();
+              _lastGyroTime = now;
+
+              // Integrasi kecepatan sudut (rad/s) jadi sudut miring, lalu perlahan kembali ke 0
+              final decay = exp(-3.0 * dt);
+              final tx = ((_tilt.value.dx + e.y * dt) * decay)
+                  .clamp(-_maxTilt, _maxTilt)
+                  .toDouble();
+              final ty = ((_tilt.value.dy + e.x * dt) * decay)
+                  .clamp(-_maxTilt, _maxTilt)
+                  .toDouble();
+              _tilt.value = Offset(tx, ty);
+
+              if (!_gyroActive && mounted) setState(() => _gyroActive = true);
+            },
+            onError: (_) {},
+            cancelOnError: false,
+          );
+    } catch (_) {
+      // Perangkat tanpa gyroscope: efek tilt dilewati
+    }
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _gyroSub?.cancel();
+    _tilt.dispose();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -50,36 +108,52 @@ class _InventoryScreenState extends State<InventoryScreen> {
     List<Map<String, dynamic>> list;
     if (_selectedFilter == 'Hardware') {
       list = _allItems.where((i) => i['is_collectible'] == 0).toList();
-    } else if (_selectedFilter == 'Steam' || _selectedFilter.contains('Steam')) {
-      list = _allItems.where((i) => i['category'].toString().startsWith('Steam')).toList();
+    } else if (_selectedFilter == 'Steam' ||
+        _selectedFilter.contains('Steam')) {
+      list = _allItems
+          .where((i) => i['category'].toString().startsWith('Steam'))
+          .toList();
     } else {
       list = List.from(_allItems);
     }
 
-    if (_searchQuery.trim().isNotEmpty) {
-      final q = _searchQuery.trim().toLowerCase();
+    // Pencarian: cocokkan nama, kategori, atau serial number
+    final q = _query.trim().toLowerCase();
+    if (q.isNotEmpty) {
       list = list.where((i) {
-        final name = (i['name'] as String? ?? '').toLowerCase();
-        final cat = (i['category'] as String? ?? '').toLowerCase();
-        final serial = (i['serial_number'] as String? ?? '').toLowerCase();
+        final name = (i['name'] ?? '').toString().toLowerCase();
+        final cat = (i['category'] ?? '').toString().toLowerCase();
+        final serial = (i['serial_number'] ?? '').toString().toLowerCase();
         return name.contains(q) || cat.contains(q) || serial.contains(q);
       }).toList();
     }
 
     switch (_selectedSort) {
       case 'Value ↓':
-        list.sort((a, b) => ((b['current_valuation'] as num?)?.toDouble() ?? 0.0)
-            .compareTo((a['current_valuation'] as num?)?.toDouble() ?? 0.0));
+        list.sort(
+          (a, b) => ((b['current_valuation'] as num?)?.toDouble() ?? 0.0)
+              .compareTo((a['current_valuation'] as num?)?.toDouble() ?? 0.0),
+        );
         break;
       case 'Value ↑':
-        list.sort((a, b) => ((a['current_valuation'] as num?)?.toDouble() ?? 0.0)
-            .compareTo((b['current_valuation'] as num?)?.toDouble() ?? 0.0));
+        list.sort(
+          (a, b) => ((a['current_valuation'] as num?)?.toDouble() ?? 0.0)
+              .compareTo((b['current_valuation'] as num?)?.toDouble() ?? 0.0),
+        );
         break;
       case 'Name A-Z':
-        list.sort((a, b) => (a['name'] as String? ?? '').toLowerCase().compareTo((b['name'] as String? ?? '').toLowerCase()));
+        list.sort(
+          (a, b) => (a['name'] as String? ?? '').toLowerCase().compareTo(
+            (b['name'] as String? ?? '').toLowerCase(),
+          ),
+        );
         break;
       case 'Category':
-        list.sort((a, b) => (a['category'] as String? ?? '').toLowerCase().compareTo((b['category'] as String? ?? '').toLowerCase()));
+        list.sort(
+          (a, b) => (a['category'] as String? ?? '').toLowerCase().compareTo(
+            (b['category'] as String? ?? '').toLowerCase(),
+          ),
+        );
         break;
     }
     return list;
@@ -95,7 +169,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: VaultColors.card,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -121,52 +197,111 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               color: VaultColors.accent.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.auto_awesome_rounded, color: VaultColors.accent, size: 20),
+                            child: const Icon(
+                              Icons.auto_awesome_rounded,
+                              color: VaultColors.accent,
+                              size: 20,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('GOOGLE GEMINI 1.5 FLASH', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.2, color: VaultColors.accent)),
-                              Text('AI Receipt & Warranty OCR', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w600)),
+                              Text(
+                                'GOOGLE GEMINI 1.5 FLASH',
+                                style: VaultTypography.mono(
+                                  fontSize: 10,
+                                  letterSpacing: 1.2,
+                                  color: VaultColors.accent,
+                                ),
+                              ),
+                              Text(
+                                'AI Receipt & Warranty OCR',
+                                style: VaultTypography.sans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                         ],
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close_rounded, color: VaultColors.ink2),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: VaultColors.ink2,
+                        ),
                         onPressed: () => Navigator.pop(ctx),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text('PRESET RECEIPT SAMPLE', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                  Text(
+                    'PRESET RECEIPT SAMPLE',
+                    style: VaultTypography.mono(
+                      fontSize: 10,
+                      letterSpacing: 1,
+                      color: VaultColors.ink2,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildPresetChip('MacBook Pro M3', 'Apple Store Receipt #90214\nModel: Apple MacBook Pro 14" M3 Max\nSerial: C02G90PLQ6L4\nTotal: \$1,999.00\nAppleCare: 24 Months', textController),
+                        _buildPresetChip(
+                          'MacBook Pro M3',
+                          'Apple Store Receipt #90214\nModel: Apple MacBook Pro 14" M3 Max\nSerial: C02G90PLQ6L4\nTotal: \$1,999.00\nAppleCare: 24 Months',
+                          textController,
+                        ),
                         const SizedBox(width: 8),
-                        _buildPresetChip('Rolex Submariner', 'Bucherer Geneva Warranty Certificate\nRolex Submariner Date 126610LN\nSerial: RX-9918231\nPrice: \$10,250.00\nWarranty: 60 Months International', textController),
+                        _buildPresetChip(
+                          'Rolex Submariner',
+                          'Bucherer Geneva Warranty Certificate\nRolex Submariner Date 126610LN\nSerial: RX-9918231\nPrice: \$10,250.00\nWarranty: 60 Months International',
+                          textController,
+                        ),
                         const SizedBox(width: 8),
-                        _buildPresetChip('Leica M11', 'Leica Store Wetzlar\nLeica M11 Rangefinder Black Paint\nSerial: LC-5829104\nTotal: \$8,995.00\nWarranty: 36 Months', textController),
+                        _buildPresetChip(
+                          'Leica M11',
+                          'Leica Store Wetzlar\nLeica M11 Rangefinder Black Paint\nSerial: LC-5829104\nTotal: \$8,995.00\nWarranty: 36 Months',
+                          textController,
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Text('INVOICE / RECEIPT TEXT', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                  Text(
+                    'INVOICE / RECEIPT TEXT',
+                    style: VaultTypography.mono(
+                      fontSize: 10,
+                      letterSpacing: 1,
+                      color: VaultColors.ink2,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: textController,
                     maxLines: 4,
-                    style: VaultTypography.mono(fontSize: 12, color: VaultColors.ink),
+                    style: VaultTypography.mono(
+                      fontSize: 12,
+                      color: VaultColors.ink,
+                    ),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: VaultColors.background,
                       contentPadding: const EdgeInsets.all(12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: VaultColors.hairline)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: VaultColors.hairline)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: VaultColors.hairline,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(
+                          color: VaultColors.hairline,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -178,7 +313,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           ? null
                           : () async {
                               setModalState(() => isProcessing = true);
-                              final result = await GeminiService.instance.parseInvoiceText(textController.text);
+                              final result = await GeminiService.instance
+                                  .parseInvoiceText(textController.text);
                               if (ctx.mounted) {
                                 Navigator.pop(ctx);
                                 _showAddItemModal(
@@ -191,17 +327,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               }
                             },
                       icon: isProcessing
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: VaultColors.background))
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: VaultColors.background,
+                              ),
+                            )
                           : const Icon(Icons.auto_awesome_rounded, size: 18),
                       label: Text(
-                        isProcessing ? 'Analyzing with Gemini...' : 'Extract & Auto-Fill',
-                        style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600, color: VaultColors.background),
+                        isProcessing
+                            ? 'Analyzing with Gemini...'
+                            : 'Extract & Auto-Fill',
+                        style: VaultTypography.sans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: VaultColors.background,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: VaultColors.accent,
                         foregroundColor: VaultColors.background,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -214,7 +365,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  Widget _buildPresetChip(String label, String sampleText, TextEditingController ctrl) {
+  Widget _buildPresetChip(
+    String label,
+    String sampleText,
+    TextEditingController ctrl,
+  ) {
     return InkWell(
       onTap: () => ctrl.text = sampleText,
       borderRadius: BorderRadius.circular(8),
@@ -225,7 +380,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: VaultColors.hairline),
         ),
-        child: Text(label, style: VaultTypography.mono(fontSize: 11, color: VaultColors.ink)),
+        child: Text(
+          label,
+          style: VaultTypography.mono(fontSize: 11, color: VaultColors.ink),
+        ),
       ),
     );
   }
@@ -238,16 +396,24 @@ class _InventoryScreenState extends State<InventoryScreen> {
     int? initialWarranty,
   }) {
     final nameCtrl = TextEditingController(text: initialName ?? '');
-    final categoryCtrl = TextEditingController(text: initialCategory ?? 'Tech & Gadgets');
-    final priceCtrl = TextEditingController(text: initialPrice != null ? initialPrice.toStringAsFixed(2) : '');
+    final categoryCtrl = TextEditingController(
+      text: initialCategory ?? 'Tech & Gadgets',
+    );
+    final priceCtrl = TextEditingController(
+      text: initialPrice != null ? initialPrice.toStringAsFixed(2) : '',
+    );
     final serialCtrl = TextEditingController(text: initialSerial ?? '');
-    final warrantyCtrl = TextEditingController(text: (initialWarranty ?? 12).toString());
+    final warrantyCtrl = TextEditingController(
+      text: (initialWarranty ?? 12).toString(),
+    );
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: VaultColors.card,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) {
         return Padding(
           padding: EdgeInsets.only(
@@ -263,9 +429,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Add Inventory Item', style: VaultTypography.sectionTitle),
+                  Text(
+                    'Add Inventory Item',
+                    style: VaultTypography.sectionTitle,
+                  ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: VaultColors.ink2),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: VaultColors.ink2,
+                    ),
                     onPressed: () => Navigator.pop(ctx),
                   ),
                 ],
@@ -273,11 +445,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
               const SizedBox(height: 16),
               _buildInput('ITEM NAME', nameCtrl, 'e.g. MacBook Pro 14" M3 Max'),
               const SizedBox(height: 12),
-              _buildInput('PURCHASE PRICE (USD)', priceCtrl, '1999.00', isNumber: true),
+              _buildInput(
+                'PURCHASE PRICE (USD)',
+                priceCtrl,
+                '1999.00',
+                isNumber: true,
+              ),
               const SizedBox(height: 12),
               _buildInput('SERIAL NUMBER', serialCtrl, 'C02G...'),
               const SizedBox(height: 12),
-              _buildInput('WARRANTY COVERAGE (MONTHS)', warrantyCtrl, '12', isNumber: true),
+              _buildInput(
+                'WARRANTY COVERAGE (MONTHS)',
+                warrantyCtrl,
+                '12',
+                isNumber: true,
+              ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -298,11 +480,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         'category': categoryCtrl.text,
                         'purchase_price': price,
                         'current_valuation': price * 0.9,
-                        'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                        'purchase_date': DateFormat('yyyy-MM-dd')
+                            .format(DateTime.now()),
                         'warranty_expiry_date': DateFormat('yyyy-MM-dd').format(
-                          DateTime.now().add(Duration(days: (int.tryParse(warrantyCtrl.text) ?? 12) * 30)),
+                          DateTime.now().add(
+                            Duration(
+                              days:
+                                  (int.tryParse(warrantyCtrl.text) ?? 12) * 30,
+                            ),
+                          ),
                         ),
-                        'serial_number': serial.isNotEmpty ? serial : 'SN-${DateTime.now().millisecondsSinceEpoch}',
+                        'serial_number': serial.isNotEmpty
+                            ? serial
+                            : 'SN-${DateTime.now().millisecondsSinceEpoch}',
                         'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
                         'is_collectible': 0,
                         'blockchain_hash': hash,
@@ -315,11 +505,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     backgroundColor: VaultColors.ink,
                     foregroundColor: VaultColors.background,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: Text(
                     'Save & Mint On-Chain Proof',
-                    style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600, color: VaultColors.background),
+                    style: VaultTypography.sans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.background,
+                    ),
                   ),
                 ),
               ),
@@ -330,11 +526,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  Widget _buildInput(String label, TextEditingController ctrl, String hint, {bool isNumber = false}) {
+  Widget _buildInput(
+    String label,
+    TextEditingController ctrl,
+    String hint, {
+    bool isNumber = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+        Text(
+          label,
+          style: VaultTypography.mono(
+            fontSize: 10,
+            letterSpacing: 1,
+            color: VaultColors.ink2,
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: ctrl,
@@ -342,12 +550,24 @@ class _InventoryScreenState extends State<InventoryScreen> {
           style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
+            hintStyle: VaultTypography.sans(
+              fontSize: 13,
+              color: VaultColors.ink3,
+            ),
             filled: true,
             fillColor: VaultColors.background,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: VaultColors.hairline)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: VaultColors.hairline)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: VaultColors.hairline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: VaultColors.hairline),
+            ),
           ),
         ),
       ],
@@ -367,19 +587,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
         backgroundColor: VaultColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: VaultColors.ink),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: VaultColors.ink,
+          ),
           onPressed: () => Navigator.pop(context, true),
         ),
         title: Text('Inventory', style: VaultTypography.sectionTitle),
         actions: [
           IconButton(
             tooltip: 'AI Invoice Scanner (Gemini)',
-            icon: const Icon(Icons.auto_awesome_rounded, color: VaultColors.accent, size: 22),
+            icon: const Icon(
+              Icons.auto_awesome_rounded,
+              color: VaultColors.accent,
+              size: 22,
+            ),
             onPressed: _showAiScannerModal,
           ),
           IconButton(
             tooltip: 'Add Item',
-            icon: const Icon(Icons.add_rounded, color: VaultColors.ink, size: 24),
+            icon: const Icon(
+              Icons.add_rounded,
+              color: VaultColors.ink,
+              size: 24,
+            ),
             onPressed: () => _showAddItemModal(),
           ),
         ],
@@ -390,55 +622,33 @@ class _InventoryScreenState extends State<InventoryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('TOTAL INVENTORY VALUE', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.2, color: VaultColors.ink2)),
+              Text(
+                'TOTAL INVENTORY VALUE',
+                style: VaultTypography.mono(
+                  fontSize: 10,
+                  letterSpacing: 1.2,
+                  color: VaultColors.ink2,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
                 currencyFormatter.format(totalValue),
-                style: VaultTypography.mono(fontSize: 32, fontWeight: FontWeight.w500, color: VaultColors.ink),
+                style: VaultTypography.mono(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w500,
+                  color: VaultColors.ink,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Catalog physical gear, gadgets, watches, and cameras with warranty tracking.',
                 style: VaultTypography.cardDescription,
               ),
-              // Live Search Bar
-              Container(
-                margin: const EdgeInsets.only(top: 10, bottom: 12),
-                height: 42,
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: _searchQuery.isNotEmpty ? VaultColors.accent : VaultColors.hairline,
-                    width: 0.8,
-                  ),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  style: VaultTypography.mono(fontSize: 13, color: VaultColors.ink),
-                  cursorColor: VaultColors.accent,
-                  decoration: InputDecoration(
-                    hintText: 'Search items by name, model, serial...',
-                    hintStyle: VaultTypography.sans(fontSize: 12, color: VaultColors.ink2),
-                    prefixIcon: const Icon(Icons.search_rounded, size: 18, color: VaultColors.ink2),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, size: 16, color: VaultColors.ink2),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  onChanged: (val) {
-                    setState(() => _searchQuery = val);
-                  },
-                ),
-              ),
-
+              const SizedBox(height: 14),
+              _buildGyroStatus(),
+              const SizedBox(height: 12),
+              _buildSearchBar(),
+              const SizedBox(height: 12),
               // Category filter pills
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -447,9 +657,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   children: [
                     _buildFilterChip('All', _allItems.length),
                     const SizedBox(width: 8),
-                    _buildFilterChip('Hardware', _allItems.where((i) => i['is_collectible'] == 0).length),
+                    _buildFilterChip(
+                      'Hardware',
+                      _allItems.where((i) => i['is_collectible'] == 0).length,
+                    ),
                     const SizedBox(width: 8),
-                    _buildFilterChip('Steam Items', _allItems.where((i) => i['category'].toString().startsWith('Steam')).length),
+                    _buildFilterChip(
+                      'Steam Items',
+                      _allItems
+                          .where(
+                            (i) => i['category'].toString().startsWith('Steam'),
+                          )
+                          .length,
+                    ),
                   ],
                 ),
               ),
@@ -461,38 +681,55 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 children: [
                   Text(
                     'SORT BY',
-                    style: VaultTypography.mono(fontSize: 9.5, letterSpacing: 1.1, color: VaultColors.ink2),
+                    style: VaultTypography.mono(
+                      fontSize: 9.5,
+                      letterSpacing: 1.1,
+                      color: VaultColors.ink2,
+                    ),
                   ),
                   Row(
-                    children: ['Value ↓', 'Value ↑', 'Name A-Z', 'Category'].map((sortKey) {
-                      final isSelected = _selectedSort == sortKey;
-                      return GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _selectedSort = sortKey);
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(left: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                          decoration: BoxDecoration(
-                            color: isSelected ? VaultColors.accent : VaultColors.card,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: isSelected ? VaultColors.accent : VaultColors.hairline,
-                              width: 0.8,
+                    children: ['Value ↓', 'Value ↑', 'Name A-Z', 'Category']
+                        .map((sortKey) {
+                          final isSelected = _selectedSort == sortKey;
+                          return GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _selectedSort = sortKey);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(left: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 3.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? VaultColors.accent
+                                    : VaultColors.card,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? VaultColors.accent
+                                      : VaultColors.hairline,
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Text(
+                                sortKey,
+                                style: VaultTypography.mono(
+                                  fontSize: 9,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? VaultColors.background
+                                      : VaultColors.ink2,
+                                ),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            sortKey,
-                            style: VaultTypography.mono(
-                              fontSize: 9,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                              color: isSelected ? VaultColors.background : VaultColors.ink2,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        })
+                        .toList(),
                   ),
                 ],
               ),
@@ -500,6 +737,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
               if (_isLoading)
                 const Center(child: CircularProgressIndicator())
+              else if (_items.isEmpty && _query.trim().isNotEmpty)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'No items match "$_query".',
+                      style: VaultTypography.cardDescription,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                )
               else if (_items.isEmpty)
                 Expanded(
                   child: Center(
@@ -513,9 +760,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.work_outline_rounded, size: 36, color: VaultColors.ink3),
+                          const Icon(
+                            Icons.work_outline_rounded,
+                            size: 36,
+                            color: VaultColors.ink3,
+                          ),
                           const SizedBox(height: 14),
-                          Text('No gear in inventory yet', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w600)),
+                          Text(
+                            'No gear in inventory yet',
+                            style: VaultTypography.sans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           const SizedBox(height: 6),
                           Text(
                             'Add your first item — a watch, a camera, a laptop — or scan a receipt with Gemini AI.',
@@ -528,7 +785,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             children: [
                               ElevatedButton.icon(
                                 onPressed: () => _showAddItemModal(),
-                                icon: const Icon(Icons.add_rounded, size: 16, color: VaultColors.background),
+                                icon: const Icon(
+                                  Icons.add_rounded,
+                                  size: 16,
+                                  color: VaultColors.background,
+                                ),
                                 label: Text(
                                   'Add Item',
                                   style: VaultTypography.sans(
@@ -541,14 +802,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   backgroundColor: VaultColors.ink,
                                   foregroundColor: VaultColors.background,
                                   elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 11,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 10),
                               ElevatedButton.icon(
                                 onPressed: _showAiScannerModal,
-                                icon: const Icon(Icons.auto_awesome_rounded, size: 15, color: VaultColors.accent),
+                                icon: const Icon(
+                                  Icons.auto_awesome_rounded,
+                                  size: 15,
+                                  color: VaultColors.accent,
+                                ),
                                 label: Text(
                                   'Scan Receipt',
                                   style: VaultTypography.sans(
@@ -561,9 +831,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   backgroundColor: VaultColors.cardHover,
                                   foregroundColor: VaultColors.ink,
                                   elevation: 0,
-                                  side: const BorderSide(color: VaultColors.hairline),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  side: const BorderSide(
+                                    color: VaultColors.hairline,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 11,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
                               ),
                             ],
@@ -581,13 +858,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     itemBuilder: (ctx, idx) {
                       final item = _items[idx];
                       final val = (item['current_valuation'] as num).toDouble();
-                      final purchase = (item['purchase_price'] as num).toDouble();
+                      final purchase = (item['purchase_price'] as num)
+                          .toDouble();
                       final warranty = item['warranty_expiry_date'] as String?;
                       final serial = item['serial_number'] as String? ?? 'N/A';
-                      final hash = item['blockchain_hash'] as String? ?? '0x7bfa8...';
-                      final registeredDate = item['purchase_date'] as String? ?? '2024-03-01';
+                      final hash =
+                          item['blockchain_hash'] as String? ?? '0x7bfa8...';
+                      final registeredDate =
+                          item['purchase_date'] as String? ?? '2024-03-01';
 
-                      return InkWell(
+                      final card = InkWell(
                         onTap: () {
                           BlockchainService.instance.showVerificationModal(
                             context: context,
@@ -617,7 +897,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       borderRadius: BorderRadius.circular(8),
                                       color: VaultColors.cardHover,
                                       image: DecorationImage(
-                                        image: NetworkImage(vaultImageUrl(item['image_url'] as String?)),
+                                        image: NetworkImage(
+                                          vaultImageUrl(
+                                            item['image_url'] as String?,
+                                          ),
+                                        ),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -625,17 +909,33 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   const SizedBox(width: 14),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(item['name'] as String, style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                                        Text(
+                                          item['name'] as String,
+                                          style: VaultTypography.sans(
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                         const SizedBox(height: 2),
                                         Text(
                                           'Paid: ${currencyFormatter.format(purchase)} · S/N: $serial',
-                                          style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink2),
+                                          style: VaultTypography.sans(
+                                            fontSize: 11,
+                                            color: VaultColors.ink2,
+                                          ),
                                         ),
                                         if (warranty != null) ...[
                                           const SizedBox(height: 2),
-                                          Text('Warranty until $warranty', style: VaultTypography.mono(fontSize: 10, color: VaultColors.accent)),
+                                          Text(
+                                            'Warranty until $warranty',
+                                            style: VaultTypography.mono(
+                                              fontSize: 10,
+                                              color: VaultColors.accent,
+                                            ),
+                                          ),
                                         ],
                                       ],
                                     ),
@@ -645,68 +945,110 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     children: [
                                       Text(
                                         currencyFormatter.format(val),
-                                        style: VaultTypography.mono(fontSize: 14, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                                        style: VaultTypography.mono(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: VaultColors.ink,
+                                        ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
                                         '-10.0%',
-                                        style: VaultTypography.mono(fontSize: 10, color: VaultColors.neg),
+                                        style: VaultTypography.mono(
+                                          fontSize: 10,
+                                          color: VaultColors.neg,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              const Divider(color: VaultColors.hairline, height: 1),
+                              const Divider(
+                                color: VaultColors.hairline,
+                                height: 1,
+                              ),
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(Icons.verified_user_rounded, size: 13, color: VaultColors.pos),
+                                      const Icon(
+                                        Icons.verified_user_rounded,
+                                        size: 13,
+                                        color: VaultColors.pos,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         'Polygon Amoy: ${hash.length > 14 ? "${hash.substring(0, 14)}..." : hash}',
-                                        style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2),
+                                        style: VaultTypography.mono(
+                                          fontSize: 10,
+                                          color: VaultColors.ink2,
+                                        ),
                                       ),
                                     ],
                                   ),
                                   InkWell(
                                     onTap: () async {
-                                      final sent = await NotificationService.instance.showWarrantyAlert(
-                                        itemName: item['name'] as String,
-                                        daysLeft: 42,
-                                      );
+                                      final sent = await NotificationService
+                                          .instance
+                                          .showWarrantyAlert(
+                                            itemName: item['name'] as String,
+                                            daysLeft: 42,
+                                          );
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
                                             backgroundColor: VaultColors.card,
                                             content: Text(
                                               sent
                                                   ? '🔔 Warranty notification dispatched for ${item['name']}!'
                                                   : 'Notification simulated for ${item['name']}.',
-                                              style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
+                                              style: VaultTypography.sans(
+                                                fontSize: 12,
+                                                color: VaultColors.ink,
+                                              ),
                                             ),
                                             behavior: SnackBarBehavior.floating,
-                                            duration: const Duration(seconds: 2),
+                                            duration: const Duration(
+                                              seconds: 2,
+                                            ),
                                           ),
                                         );
                                       }
                                     },
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: VaultColors.cardHover,
                                         borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: VaultColors.hairline),
+                                        border: Border.all(
+                                          color: VaultColors.hairline,
+                                        ),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.notifications_active_outlined, size: 12, color: VaultColors.accent),
+                                          const Icon(
+                                            Icons.notifications_active_outlined,
+                                            size: 12,
+                                            color: VaultColors.accent,
+                                          ),
                                           const SizedBox(width: 4),
-                                          Text('Test Alert', style: VaultTypography.mono(fontSize: 9.5, color: VaultColors.accent)),
+                                          Text(
+                                            'Test Alert',
+                                            style: VaultTypography.mono(
+                                              fontSize: 9.5,
+                                              color: VaultColors.accent,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -717,12 +1059,117 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           ),
                         ),
                       );
+
+                      // Kartu miring 3D mengikuti gyroscope
+                      return ValueListenableBuilder<Offset>(
+                        valueListenable: _tilt,
+                        builder: (context, t, child) => Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()
+                            ..setEntry(3, 2, 0.0012)
+                            ..rotateX(-t.dy * 0.6)
+                            ..rotateY(t.dx * 0.6),
+                          child: child,
+                        ),
+                        child: card,
+                      );
                     },
                   ),
                 ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: VaultColors.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: VaultColors.hairline),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search_rounded, size: 18, color: VaultColors.ink3),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: _searchCtrl,
+              style: VaultTypography.sans(
+                fontSize: 13.5,
+                color: VaultColors.ink,
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Search name, category, serial...',
+                hintStyle: VaultTypography.sans(
+                  fontSize: 13.5,
+                  color: VaultColors.ink3,
+                ),
+              ),
+              onChanged: (val) => setState(() => _query = val),
+            ),
+          ),
+          if (_query.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                _searchCtrl.clear();
+                setState(() => _query = '');
+              },
+              child: const Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: VaultColors.ink3,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGyroStatus() {
+    final String label;
+    if (_gyroActive) {
+      label = 'GYROSCOPE ACTIVE · tilt your phone to inspect cards';
+    } else if (kIsWeb) {
+      label = 'GYROSCOPE N/A ON WEB · run on a real device';
+    } else {
+      label = 'GYROSCOPE WAITING FOR SENSOR...';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: VaultColors.badgeBg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.screen_rotation_rounded,
+            size: 14,
+            color: _gyroActive ? VaultColors.pos : VaultColors.ink3,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: ValueListenableBuilder<Offset>(
+              valueListenable: _tilt,
+              builder: (context, t, _) => Text(
+                _gyroActive
+                    ? '$label\nx: ${t.dy.toStringAsFixed(2)}  y: ${t.dx.toStringAsFixed(2)} rad'
+                    : label,
+                style: VaultTypography.mono(
+                  fontSize: 9.5,
+                  color: VaultColors.ink2,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -736,7 +1183,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
         decoration: BoxDecoration(
           color: isSelected ? VaultColors.accent : VaultColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? VaultColors.accent : VaultColors.hairline),
+          border: Border.all(
+            color: isSelected ? VaultColors.accent : VaultColors.hairline,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -753,7 +1202,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
-                color: isSelected ? VaultColors.background.withValues(alpha: 0.25) : VaultColors.cardHover,
+                color: isSelected
+                    ? VaultColors.background.withValues(alpha: 0.25)
+                    : VaultColors.cardHover,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(

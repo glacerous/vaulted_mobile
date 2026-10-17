@@ -1,8 +1,10 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+
 import '../../core/constants/colors.dart';
 import '../../core/constants/typography.dart';
 import '../../core/database/database_helper.dart';
@@ -37,22 +39,46 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
   String _sortOrder = 'Value ↓';
   DateTime? _lastSyncTime;
 
+  // Search bar aset Steam
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
   List<Map<String, dynamic>> get _sortedSyncedItems {
-    final list = List<Map<String, dynamic>>.from(_syncedItems);
+    // Pencarian: cocokkan nama, game/kategori, atau serial number
+    final q = _searchQuery.trim().toLowerCase();
+    final list = _syncedItems.where((i) {
+      if (q.isEmpty) return true;
+      final name = (i['name'] ?? '').toString().toLowerCase();
+      final cat = (i['category'] ?? '').toString().toLowerCase();
+      final serial = (i['serial_number'] ?? '').toString().toLowerCase();
+      return name.contains(q) || cat.contains(q) || serial.contains(q);
+    }).toList();
     switch (_sortOrder) {
       case 'Value ↓':
-        list.sort((a, b) => ((b['current_valuation'] as num?)?.toDouble() ?? 0.0)
-            .compareTo((a['current_valuation'] as num?)?.toDouble() ?? 0.0));
+        list.sort(
+          (a, b) => ((b['current_valuation'] as num?)?.toDouble() ?? 0.0)
+              .compareTo((a['current_valuation'] as num?)?.toDouble() ?? 0.0),
+        );
         break;
       case 'Value ↑':
-        list.sort((a, b) => ((a['current_valuation'] as num?)?.toDouble() ?? 0.0)
-            .compareTo((b['current_valuation'] as num?)?.toDouble() ?? 0.0));
+        list.sort(
+          (a, b) => ((a['current_valuation'] as num?)?.toDouble() ?? 0.0)
+              .compareTo((b['current_valuation'] as num?)?.toDouble() ?? 0.0),
+        );
         break;
       case 'Name A-Z':
-        list.sort((a, b) => (a['name'] as String? ?? '').toLowerCase().compareTo((b['name'] as String? ?? '').toLowerCase()));
+        list.sort(
+          (a, b) => (a['name'] as String? ?? '').toLowerCase().compareTo(
+            (b['name'] as String? ?? '').toLowerCase(),
+          ),
+        );
         break;
       case 'Game':
-        list.sort((a, b) => (a['category'] as String? ?? '').toLowerCase().compareTo((b['category'] as String? ?? '').toLowerCase()));
+        list.sort(
+          (a, b) => (a['category'] as String? ?? '').toLowerCase().compareTo(
+            (b['category'] as String? ?? '').toLowerCase(),
+          ),
+        );
         break;
     }
     return list;
@@ -64,13 +90,21 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     _detectSteamAccount();
   }
 
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _detectSteamAccount() async {
     // 1. Purge legacy mock items
     await DatabaseHelper.instance.removeMockItems();
 
     // 2. Check if user already has synced Steam items in database
     final allItems = await DatabaseHelper.instance.getItems();
-    final existingSteam = allItems.where((i) => i['category'].toString().startsWith('Steam')).toList();
+    final existingSteam = allItems
+        .where((i) => i['category'].toString().startsWith('Steam'))
+        .toList();
     if (existingSteam.isNotEmpty && mounted) {
       setState(() {
         _isConnected = true;
@@ -89,19 +123,25 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
 
   Future<void> _fetchPlayerSummary(String steamId) async {
     final apiKey = dotenv.env['STEAM_API_KEY'];
-    if (apiKey != null && apiKey.isNotEmpty && !apiKey.contains('your_steam_api_key')) {
+    if (apiKey != null &&
+        apiKey.isNotEmpty &&
+        !apiKey.contains('your_steam_api_key')) {
       try {
         final sumUri = Uri.parse(
           'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=$apiKey&steamids=$steamId',
         );
-        final sumRes = await http.get(sumUri).timeout(const Duration(seconds: 5));
+        final sumRes = await http
+            .get(sumUri)
+            .timeout(const Duration(seconds: 5));
         if (sumRes.statusCode == 200) {
           final sumData = jsonDecode(sumRes.body);
           final player = sumData['response']?['players']?[0];
           if (player != null && mounted) {
             setState(() {
-              _detectedPersona = player['personaname'] as String? ?? _detectedPersona;
-              _detectedAvatar = player['avatarfull'] as String? ?? _detectedAvatar;
+              _detectedPersona =
+                  player['personaname'] as String? ?? _detectedPersona;
+              _detectedAvatar =
+                  player['avatarfull'] as String? ?? _detectedAvatar;
             });
           }
         }
@@ -120,19 +160,29 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       return idMatch.group(1);
     }
 
-    final vanityMatch = RegExp(r'steamcommunity\.com\/id\/([a-zA-Z0-9_\-]+)').firstMatch(input);
-    final vanity = vanityMatch != null ? vanityMatch.group(1) : (!input.contains('/') ? input : null);
+    final vanityMatch = RegExp(r'steamcommunity\.com\/id\/([a-zA-Z0-9_\-]+)')
+        .firstMatch(input);
+    final vanity = vanityMatch != null
+        ? vanityMatch.group(1)
+        : (!input.contains('/') ? input : null);
 
     if (vanity != null) {
       final apiKey = dotenv.env['STEAM_API_KEY'];
-      if (apiKey != null && apiKey.isNotEmpty && !apiKey.contains('your_steam_api_key')) {
+      if (apiKey != null &&
+          apiKey.isNotEmpty &&
+          !apiKey.contains('your_steam_api_key')) {
         try {
-          final res = await http.get(Uri.parse(
-            'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=$apiKey&vanityurl=$vanity',
-          )).timeout(const Duration(seconds: 5));
+          final res = await http
+              .get(
+                Uri.parse(
+                  'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=$apiKey&vanityurl=$vanity',
+                ),
+              )
+              .timeout(const Duration(seconds: 5));
           if (res.statusCode == 200) {
             final data = jsonDecode(res.body);
-            if (data['response']?['success'] == 1 && data['response']?['steamid'] != null) {
+            if (data['response']?['success'] == 1 &&
+                data['response']?['steamid'] != null) {
               return data['response']['steamid'].toString();
             }
           }
@@ -164,9 +214,14 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       final csUri = Uri.parse(
         'https://steamcommunity.com/inventory/$steamId/730/2?l=english&count=100',
       );
-      final csRes = await http.get(csUri, headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      }).timeout(const Duration(seconds: 8));
+      final csRes = await http
+          .get(
+            csUri,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+            },
+          )
+          .timeout(const Duration(seconds: 8));
 
       if (csRes.statusCode == 200) {
         final csData = jsonDecode(csRes.body);
@@ -176,16 +231,24 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
         final descriptions = csData['descriptions'] as List?;
         if (descriptions != null && descriptions.isNotEmpty) {
           for (var desc in descriptions) {
-            final String name = desc['name'] as String? ?? 'Counter-Strike 2 Item';
+            final String name =
+                desc['name'] as String? ?? 'Counter-Strike 2 Item';
             final String type = desc['type'] as String? ?? 'CS2 Skin';
-            final String marketHash = desc['market_hash_name'] as String? ?? name;
-            final String? iconUrl = desc['icon_url_large'] as String? ?? desc['icon_url'] as String?;
-            final String classid = desc['classid'] as String? ?? '${DateTime.now().millisecondsSinceEpoch}';
+            final String marketHash =
+                desc['market_hash_name'] as String? ?? name;
+            final String? iconUrl =
+                desc['icon_url_large'] as String? ??
+                desc['icon_url'] as String?;
+            final String classid =
+                desc['classid'] as String? ??
+                '${DateTime.now().millisecondsSinceEpoch}';
 
             double valuation = 2.50;
             if (name.contains('Case')) {
               valuation = 0.85;
-            } else if (name.contains('Covert') || name.contains('Knife') || name.contains('Gloves')) {
+            } else if (name.contains('Covert') ||
+                name.contains('Knife') ||
+                name.contains('Gloves')) {
               valuation = 125.00;
             } else if (name.contains('Classified')) {
               valuation = 22.50;
@@ -198,7 +261,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
               'category': 'Steam / $type',
               'purchase_price': valuation * 0.9,
               'current_valuation': valuation,
-              'purchase_date': DateTime.now().toIso8601String().split('T').first,
+              'purchase_date': DateTime.now()
+                  .toIso8601String()
+                  .split('T')
+                  .first,
               'warranty_expiry_date': null,
               'serial_number': 'CS2-730-$classid',
               'image_url': iconUrl != null && iconUrl.isNotEmpty
@@ -207,7 +273,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
               'is_collectible': 1,
               'is_marketable': desc['marketable'] == 1 ? 1 : 0,
               'market_hash_name': marketHash,
-              'blockchain_hash': '0xcs2${classid.hashCode.abs().toRadixString(16)}',
+              'blockchain_hash':
+                  '0xcs2${classid.hashCode.abs().toRadixString(16)}',
             };
             imported.add(itemMap);
           }
@@ -233,15 +300,25 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
           for (var desc in descriptions) {
             final String name = desc['name'] as String? ?? 'Steam Collectible';
             final String type = desc['type'] as String? ?? 'Steam Trading Card';
-            final String? iconUrl = desc['icon_url_large'] as String? ?? desc['icon_url'] as String?;
-            final String classid = desc['classid'] as String? ?? '${DateTime.now().millisecondsSinceEpoch}';
+            final String? iconUrl =
+                desc['icon_url_large'] as String? ??
+                desc['icon_url'] as String?;
+            final String classid =
+                desc['classid'] as String? ??
+                '${DateTime.now().millisecondsSinceEpoch}';
 
             double valuation = 0.45;
-            if (name.contains('Hornet') || name.contains('Silksong') || name.contains('Zote')) {
+            if (name.contains('Hornet') ||
+                name.contains('Silksong') ||
+                name.contains('Zote')) {
               valuation = 1.35;
-            } else if (name.contains('Avatar') || name.contains('Frame') || name.contains('Background')) {
+            } else if (name.contains('Avatar') ||
+                name.contains('Frame') ||
+                name.contains('Background')) {
               valuation = 2.50;
-            } else if (name.contains('Witch') || name.contains('Tank') || name.contains('Guide')) {
+            } else if (name.contains('Witch') ||
+                name.contains('Tank') ||
+                name.contains('Guide')) {
               valuation = 0.85;
             }
 
@@ -257,7 +334,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                   ? 'https://community.steamstatic.com/economy/image/$iconUrl'
                   : 'https://community.cloudflare.steamstatic.com/public/images/apps/753/default.png',
               'is_collectible': 1,
-              'blockchain_hash': '0xsteam753${classid.hashCode.abs().toRadixString(16)}',
+              'blockchain_hash':
+                  '0xsteam753${classid.hashCode.abs().toRadixString(16)}',
             };
             imported.add(itemMap);
           }
@@ -277,8 +355,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     }
 
     final all = await DatabaseHelper.instance.getItems();
-    final steamOnly = all.where((i) => i['category'].toString().startsWith('Steam')).toList();
-    final double totalVal = steamOnly.fold(0.0, (sum, i) => sum + (i['current_valuation'] as num).toDouble());
+    final steamOnly = all
+        .where((i) => i['category'].toString().startsWith('Steam'))
+        .toList();
+    final double totalVal = steamOnly.fold(
+      0.0,
+      (sum, i) => sum + (i['current_valuation'] as num).toDouble(),
+    );
 
     if (mounted) {
       setState(() {
@@ -294,17 +377,26 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
         SnackBar(
           backgroundColor: VaultColors.card,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           content: Row(
             children: [
-              const Icon(Icons.check_circle_rounded, color: VaultColors.pos, size: 20),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: VaultColors.pos,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   steamOnly.isNotEmpty
                       ? 'Steam inventory updated! ${steamOnly.length} assets synced (\$${totalVal.toStringAsFixed(2)}).'
                       : 'No public Steam items found. Ensure Steam inventory privacy is set to Public.',
-                  style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink),
+                  style: VaultTypography.sans(
+                    fontSize: 12.5,
+                    color: VaultColors.ink,
+                  ),
                 ),
               ),
             ],
@@ -321,8 +413,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
         SnackBar(
           backgroundColor: VaultColors.card,
           behavior: SnackBarBehavior.floating,
-          content: Text('Please enter a Steam profile link or 17-digit SteamID.',
-              style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink)),
+          content: Text(
+            'Please enter a Steam profile link or 17-digit SteamID.',
+            style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
+          ),
         ),
       );
       return;
@@ -335,8 +429,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
         SnackBar(
           backgroundColor: VaultColors.card,
           behavior: SnackBarBehavior.floating,
-          content: Text('Could not parse SteamID. Use format: https://steamcommunity.com/profiles/<17-digits>',
-              style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink)),
+          content: Text(
+            'Could not parse SteamID. Use format: https://steamcommunity.com/profiles/<17-digits>',
+            style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
+          ),
         ),
       );
       return;
@@ -350,14 +446,32 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: VaultColors.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: VaultColors.hairline)),
-        title: Text('Disconnect Steam Account?', style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w600, color: VaultColors.ink)),
-        content: Text('This will remove all synced Steam items from your vault and recalculate your net worth.',
-            style: VaultTypography.sans(fontSize: 13, color: VaultColors.body)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: VaultColors.hairline),
+        ),
+        title: Text(
+          'Disconnect Steam Account?',
+          style: VaultTypography.sans(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: VaultColors.ink,
+          ),
+        ),
+        content: Text(
+          'This will remove all synced Steam items from your vault and recalculate your net worth.',
+          style: VaultTypography.sans(fontSize: 13, color: VaultColors.body),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: VaultTypography.mono(fontSize: 12, color: VaultColors.ink2)),
+            child: Text(
+              'Cancel',
+              style: VaultTypography.mono(
+                fontSize: 12,
+                color: VaultColors.ink2,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -366,7 +480,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
               foregroundColor: VaultColors.neg,
               elevation: 0,
             ),
-            child: Text('Disconnect', style: VaultTypography.mono(fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(
+              'Disconnect',
+              style: VaultTypography.mono(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -384,7 +504,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
           SnackBar(
             backgroundColor: VaultColors.card,
             behavior: SnackBarBehavior.floating,
-            content: Text('Steam account disconnected from vault.', style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink)),
+            content: Text(
+              'Steam account disconnected from vault.',
+              style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
+            ),
           ),
         );
       }
@@ -399,7 +522,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     return '${diff.inHours}h ago';
   }
 
-  Future<double?> _fetchSteamMarketPrice(String marketHashName, {int appid = 730}) async {
+  Future<double?> _fetchSteamMarketPrice(
+    String marketHashName, {
+    int appid = 730,
+  }) async {
     try {
       final uri = Uri.parse(
         'https://steamcommunity.com/market/priceoverview/?appid=$appid&currency=1&market_hash_name=${Uri.encodeComponent(marketHashName)}',
@@ -471,28 +597,53 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                               color: VaultColors.accent.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.sports_esports_rounded, color: VaultColors.accent, size: 20),
+                            child: const Icon(
+                              Icons.sports_esports_rounded,
+                              color: VaultColors.accent,
+                              size: 20,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('COUNTER-STRIKE 2 ASSET',
-                                  style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.2, color: VaultColors.accent)),
-                              Text('Log Skin or Case',
-                                  style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w600)),
+                              Text(
+                                'COUNTER-STRIKE 2 ASSET',
+                                style: VaultTypography.mono(
+                                  fontSize: 10,
+                                  letterSpacing: 1.2,
+                                  color: VaultColors.accent,
+                                ),
+                              ),
+                              Text(
+                                'Log Skin or Case',
+                                style: VaultTypography.sans(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                         ],
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close_rounded, color: VaultColors.ink2),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: VaultColors.ink2,
+                        ),
                         onPressed: () => Navigator.pop(ctx),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text('ITEM / SKIN / CASE NAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.ink2)),
+                  Text(
+                    'ITEM / SKIN / CASE NAME',
+                    style: VaultTypography.mono(
+                      fontSize: 10,
+                      letterSpacing: 1.1,
+                      color: VaultColors.ink2,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -506,10 +657,14 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         Expanded(
                           child: TextField(
                             controller: nameCtrl,
-                            style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink),
+                            style: VaultTypography.sans(
+                              fontSize: 13,
+                              color: VaultColors.ink,
+                            ),
                             decoration: const InputDecoration(
                               border: InputBorder.none,
-                              hintText: 'e.g. Kilowatt Case, AK-47 | Slate (FT)',
+                              hintText:
+                                  'e.g. Kilowatt Case, AK-47 | Slate (FT)',
                             ),
                           ),
                         ),
@@ -520,7 +675,9 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                   final query = nameCtrl.text.trim();
                                   if (query.isEmpty) return;
                                   setModalState(() => isFetching = true);
-                                  final price = await _fetchSteamMarketPrice(query);
+                                  final price = await _fetchSteamMarketPrice(
+                                    query,
+                                  );
                                   setModalState(() {
                                     isFetching = false;
                                     if (price != null) {
@@ -529,14 +686,35 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                   });
                                 },
                           child: isFetching
-                              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: VaultColors.accent))
-                              : Text('Fetch Live Price', style: VaultTypography.mono(fontSize: 10.5, color: VaultColors.accent, fontWeight: FontWeight.w600)),
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: VaultColors.accent,
+                                  ),
+                                )
+                              : Text(
+                                  'Fetch Live Price',
+                                  style: VaultTypography.mono(
+                                    fontSize: 10.5,
+                                    color: VaultColors.accent,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Text('MARKET VALUE (\$ USD)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.ink2)),
+                  Text(
+                    'MARKET VALUE (\$ USD)',
+                    style: VaultTypography.mono(
+                      fontSize: 10,
+                      letterSpacing: 1.1,
+                      color: VaultColors.ink2,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -547,8 +725,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                     ),
                     child: TextField(
                       controller: costCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: VaultTypography.mono(fontSize: 13, color: VaultColors.ink),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      style: VaultTypography.mono(
+                        fontSize: 13,
+                        color: VaultColors.ink,
+                      ),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         hintText: '0.00',
@@ -562,7 +745,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                     child: ElevatedButton(
                       onPressed: () async {
                         final name = nameCtrl.text.trim();
-                        final val = double.tryParse(costCtrl.text.trim()) ?? 0.0;
+                        final val =
+                            double.tryParse(costCtrl.text.trim()) ?? 0.0;
                         if (name.isEmpty) return;
                         final messenger = ScaffoldMessenger.of(context);
                         Navigator.pop(ctx);
@@ -572,14 +756,19 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                           'category': 'Steam / Counter-Strike 2',
                           'purchase_price': val,
                           'current_valuation': val,
-                          'purchase_date': DateTime.now().toIso8601String().split('T').first,
+                          'purchase_date': DateTime.now()
+                              .toIso8601String()
+                              .split('T')
+                              .first,
                           'warranty_expiry_date': null,
-                          'serial_number': 'CS2-MANUAL-${DateTime.now().millisecondsSinceEpoch}',
+                          'serial_number':
+                              'CS2-MANUAL-${DateTime.now().millisecondsSinceEpoch}',
                           'image_url': 'https://community.cloudflare.steamstatic.com/public/images/apps/730/default.png',
                           'is_collectible': 1,
                           'is_marketable': 1,
                           'market_hash_name': name,
-                          'blockchain_hash': '0xcs2manual${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+                          'blockchain_hash':
+                              '0xcs2manual${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
                         };
 
                         await DatabaseHelper.instance.insertItem(itemMap);
@@ -590,7 +779,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                             SnackBar(
                               backgroundColor: VaultColors.card,
                               behavior: SnackBarBehavior.floating,
-                              content: Text('Added $name to Steam & Gaming Vault!', style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink)),
+                              content: Text(
+                                'Added $name to Steam & Gaming Vault!',
+                                style: VaultTypography.sans(
+                                  fontSize: 12.5,
+                                  color: VaultColors.ink,
+                                ),
+                              ),
                             ),
                           );
                         }
@@ -598,9 +793,17 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: VaultColors.accent,
                         foregroundColor: VaultColors.background,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      child: Text('Add to Steam Vault', style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        'Add to Steam Vault',
+                        style: VaultTypography.sans(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -652,23 +855,40 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                           color: VaultColors.accent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.security_rounded, color: VaultColors.accent, size: 20),
+                        child: const Icon(
+                          Icons.security_rounded,
+                          color: VaultColors.accent,
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('STEAM OPENID 2.0 AUTH',
-                              style: VaultTypography.mono(
-                                  fontSize: 10, letterSpacing: 1.2, color: VaultColors.accent)),
-                          Text('Secure Valve Handshake',
-                              style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w600)),
+                          Text(
+                            'STEAM OPENID 2.0 AUTH',
+                            style: VaultTypography.mono(
+                              fontSize: 10,
+                              letterSpacing: 1.2,
+                              color: VaultColors.accent,
+                            ),
+                          ),
+                          Text(
+                            'Secure Valve Handshake',
+                            style: VaultTypography.sans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: VaultColors.ink2),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: VaultColors.ink2,
+                    ),
                     onPressed: () => Navigator.pop(ctx),
                   ),
                 ],
@@ -685,16 +905,29 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.lock_outline_rounded, size: 16, color: VaultColors.pos),
+                        const Icon(
+                          Icons.lock_outline_rounded,
+                          size: 16,
+                          color: VaultColors.pos,
+                        ),
                         const SizedBox(width: 8),
-                        Text('Valve OpenID Realm: vaulted.local',
-                            style: VaultTypography.mono(fontSize: 11, color: VaultColors.ink2)),
+                        Text(
+                          'Valve OpenID Realm: vaulted.local',
+                          style: VaultTypography.mono(
+                            fontSize: 11,
+                            color: VaultColors.ink2,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
                     Text(
                       'VAULTED will not receive your Steam password or payment details. Steam authenticates your public SteamID64 token directly.',
-                      style: VaultTypography.sans(fontSize: 12, height: 1.4, color: VaultColors.body),
+                      style: VaultTypography.sans(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: VaultColors.body,
+                      ),
                     ),
                   ],
                 ),
@@ -709,13 +942,23 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                     _syncSteam();
                   },
                   icon: const Icon(Icons.sports_esports_rounded, size: 20),
-                  label: Text('Authorize Steam Connection',
-                      style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600)),
+                  label: Text(
+                    'Authorize Steam Connection',
+                    style: VaultTypography.sans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1B2838),
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF66C0F4), width: 0.8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    foregroundColor: VaultColors.ink,
+                    side: const BorderSide(
+                      color: Color(0xFF66C0F4),
+                      width: 0.8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -726,9 +969,58 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     );
   }
 
+  Widget _buildAssetSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: VaultColors.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: VaultColors.hairline),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search_rounded, size: 18, color: VaultColors.ink3),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: _searchCtrl,
+              style: VaultTypography.sans(
+                fontSize: 13.5,
+                color: VaultColors.ink,
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Search name, game, serial...',
+                hintStyle: VaultTypography.sans(
+                  fontSize: 13.5,
+                  color: VaultColors.ink3,
+                ),
+              ),
+              onChanged: (val) => setState(() => _searchQuery = val),
+            ),
+          ),
+          if (_searchQuery.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                _searchCtrl.clear();
+                setState(() => _searchQuery = '');
+              },
+              child: const Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: VaultColors.ink3,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildItemCard(Map<String, dynamic> item) {
-    final double valuation = (item['current_valuation'] as num?)?.toDouble() ?? 0.0;
-    final String hash = item['blockchain_hash'] as String? ?? '0xsteamassetverified';
+    final double valuation =
+        (item['current_valuation'] as num?)?.toDouble() ?? 0.0;
+    final String hash =
+        item['blockchain_hash'] as String? ?? '0xsteamassetverified';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -751,8 +1043,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                   child: Image.network(
                     vaultImageUrl(item['image_url'] as String?),
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.sports_esports_rounded, color: VaultColors.ink2),
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.sports_esports_rounded,
+                      color: VaultColors.ink2,
+                    ),
                   ),
                 ),
               ),
@@ -774,36 +1068,51 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                     const SizedBox(height: 4),
                     Text(
                       item['serial_number'] as String? ?? 'VALVE-ASSET',
-                      style: VaultTypography.mono(fontSize: 10.5, color: VaultColors.ink2),
+                      style: VaultTypography.mono(
+                        fontSize: 10.5,
+                        color: VaultColors.ink2,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
                         Text(
-                          valuation > 0 ? '\$${valuation.toStringAsFixed(2)}' : 'Points Shop',
+                          valuation > 0
+                              ? '\$${valuation.toStringAsFixed(2)}'
+                              : 'Points Shop',
                           style: VaultTypography.mono(
                             fontSize: valuation > 0 ? 15 : 12.5,
                             fontWeight: FontWeight.w600,
-                            color: valuation > 0 ? VaultColors.ink : VaultColors.accent,
+                            color: valuation > 0
+                                ? VaultColors.ink
+                                : VaultColors.accent,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
                           decoration: BoxDecoration(
-                            color: (item['is_marketable'] == 1 || item['is_marketable'] == true)
+                            color:
+                                (item['is_marketable'] == 1 ||
+                                    item['is_marketable'] == true)
                                 ? VaultColors.posBg
                                 : VaultColors.cardHover,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            (item['is_marketable'] == 1 || item['is_marketable'] == true)
+                            (item['is_marketable'] == 1 ||
+                                    item['is_marketable'] == true)
                                 ? 'SELLABLE'
                                 : 'ACCOUNT-BOUND',
                             style: VaultTypography.mono(
                               fontSize: 9,
                               fontWeight: FontWeight.w600,
-                              color: (item['is_marketable'] == 1 || item['is_marketable'] == true)
+                              color:
+                                  (item['is_marketable'] == 1 ||
+                                      item['is_marketable'] == true)
                                   ? VaultColors.pos
                                   : VaultColors.ink2,
                             ),
@@ -829,20 +1138,31 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.verified_user_rounded, size: 12, color: VaultColors.pos),
+                    const Icon(
+                      Icons.verified_user_rounded,
+                      size: 12,
+                      color: VaultColors.pos,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Polygon Hash: ${hash.length > 10 ? hash.substring(0, 10) : hash}...',
-                      style: VaultTypography.mono(fontSize: 9.5, color: VaultColors.ink2),
+                      style: VaultTypography.mono(
+                        fontSize: 9.5,
+                        color: VaultColors.ink2,
+                      ),
                     ),
                   ],
                 ),
                 Text(
-                  (item['is_marketable'] == 1 || item['is_marketable'] == true) ? 'STEAM MARKETABLE' : 'POINTS SHOP',
+                  (item['is_marketable'] == 1 || item['is_marketable'] == true)
+                      ? 'STEAM MARKETABLE'
+                      : 'POINTS SHOP',
                   style: VaultTypography.mono(
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
-                    color: (item['is_marketable'] == 1 || item['is_marketable'] == true)
+                    color:
+                        (item['is_marketable'] == 1 ||
+                            item['is_marketable'] == true)
                         ? VaultColors.pos
                         : VaultColors.accent,
                   ),
@@ -872,7 +1192,11 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                     onTap: () => Navigator.pop(context, true),
                     child: Row(
                       children: [
-                        const Icon(Icons.arrow_back_ios_new_rounded, size: 13, color: VaultColors.ink2),
+                        const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 13,
+                          color: VaultColors.ink2,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'COLLECTIBLES',
@@ -887,7 +1211,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: VaultColors.card,
                       borderRadius: BorderRadius.circular(12),
@@ -909,7 +1236,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
 
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
@@ -920,7 +1250,9 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: VaultColors.badgeBg,
-                        border: Border.all(color: VaultColors.accent.withValues(alpha: 0.4)),
+                        border: Border.all(
+                          color: VaultColors.accent.withValues(alpha: 0.4),
+                        ),
                       ),
                       child: const Icon(
                         Icons.sports_esports_rounded,
@@ -988,13 +1320,17 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                       width: 54,
                                       height: 54,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) => Container(
-                                        width: 54,
-                                        height: 54,
-                                        color: VaultColors.cardHover,
-                                        child: const Icon(Icons.person_rounded,
-                                            color: VaultColors.ink2),
-                                      ),
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              Container(
+                                                width: 54,
+                                                height: 54,
+                                                color: VaultColors.cardHover,
+                                                child: const Icon(
+                                                  Icons.person_rounded,
+                                                  color: VaultColors.ink2,
+                                                ),
+                                              ),
                                     ),
                                   ),
                                   Positioned(
@@ -1011,7 +1347,9 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                             ? Icons.check_circle_rounded
                                             : Icons.verified_rounded,
                                         size: 15,
-                                        color: _isConnected ? VaultColors.pos : VaultColors.accent,
+                                        color: _isConnected
+                                            ? VaultColors.pos
+                                            : VaultColors.accent,
                                       ),
                                     ),
                                   ),
@@ -1038,17 +1376,23 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                         const SizedBox(width: 6),
                                         Container(
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 6, vertical: 2),
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
                                           decoration: BoxDecoration(
                                             color: _isConnected
                                                 ? VaultColors.posBg
                                                 : VaultColors.badgeBg,
-                                            borderRadius: BorderRadius.circular(6),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
                                           ),
                                           child: Text(
                                             _isDetecting
                                                 ? 'SEARCHING'
-                                                : (_isConnected ? 'SYNCED' : 'READY'),
+                                                : (_isConnected
+                                                      ? 'SYNCED'
+                                                      : 'READY'),
                                             style: VaultTypography.mono(
                                               fontSize: 9,
                                               fontWeight: FontWeight.w600,
@@ -1089,10 +1433,16 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                     ? VaultColors.accent
                                     : VaultColors.background,
                                 side: _isConnected
-                                    ? BorderSide(color: VaultColors.accent.withValues(alpha: 0.6), width: 1.2)
+                                    ? BorderSide(
+                                        color: VaultColors.accent.withValues(
+                                          alpha: 0.6,
+                                        ),
+                                        width: 1.2,
+                                      )
                                     : null,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14)),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                                 elevation: 0,
                               ),
                               child: _isLoading
@@ -1105,7 +1455,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                       ),
                                     )
                                   : Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           _isConnected
@@ -1134,7 +1485,11 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                               children: [
                                 Text(
                                   'LAST SYNCED: ${_formatLastSync().toUpperCase()}',
-                                  style: VaultTypography.mono(fontSize: 10, letterSpacing: 0.8, color: VaultColors.ink2),
+                                  style: VaultTypography.mono(
+                                    fontSize: 10,
+                                    letterSpacing: 0.8,
+                                    color: VaultColors.ink2,
+                                  ),
                                 ),
                                 GestureDetector(
                                   onTap: _disconnectSteam,
@@ -1143,7 +1498,9 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                     style: VaultTypography.mono(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
-                                      color: VaultColors.neg.withValues(alpha: 0.85),
+                                      color: VaultColors.neg.withValues(
+                                        alpha: 0.85,
+                                      ),
                                       decoration: TextDecoration.underline,
                                     ),
                                   ),
@@ -1165,19 +1522,30 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFF261C14),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: VaultColors.warn.withValues(alpha: 0.5)),
+                          border: Border.all(
+                            color: VaultColors.warn.withValues(alpha: 0.5),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.privacy_tip_rounded, color: VaultColors.warn, size: 18),
+                                const Icon(
+                                  Icons.privacy_tip_rounded,
+                                  color: VaultColors.warn,
+                                  size: 18,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     'VALVE CS2 PRIVACY RESTRICTION ($_csPrivateCount ITEMS DETECTED)',
-                                    style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: VaultColors.warn),
+                                    style: VaultTypography.mono(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.8,
+                                      color: VaultColors.warn,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -1188,7 +1556,11 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                               '1. Open Steam → Edit Profile → Privacy Settings\n'
                               '2. Uncheck "Always keep Counter-Strike 2 inventory private"\n'
                               '3. Set Inventory to "Public", then tap Update above.',
-                              style: VaultTypography.sans(fontSize: 11.5, height: 1.45, color: VaultColors.ink),
+                              style: VaultTypography.sans(
+                                fontSize: 11.5,
+                                height: 1.45,
+                                color: VaultColors.ink,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             SizedBox(
@@ -1197,12 +1569,20 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                               child: ElevatedButton.icon(
                                 onPressed: _showAddCsItemDialog,
                                 icon: const Icon(Icons.add_rounded, size: 16),
-                                label: Text('Log My CS Skin / Case Manually', style: VaultTypography.sans(fontSize: 12, fontWeight: FontWeight.w600)),
+                                label: Text(
+                                  'Log My CS Skin / Case Manually',
+                                  style: VaultTypography.sans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: VaultColors.accent,
                                   foregroundColor: VaultColors.background,
                                   elevation: 0,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
                               ),
                             ),
@@ -1217,15 +1597,27 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       margin: const EdgeInsets.only(bottom: 16),
                       child: OutlinedButton.icon(
                         onPressed: _showAddCsItemDialog,
-                        icon: const Icon(Icons.add_circle_outline_rounded, size: 16, color: VaultColors.accent),
+                        icon: const Icon(
+                          Icons.add_circle_outline_rounded,
+                          size: 16,
+                          color: VaultColors.accent,
+                        ),
                         label: Text(
                           'Log CS2 Skin, Knife or Case Manually',
-                          style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w600, color: VaultColors.accent),
+                          style: VaultTypography.sans(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: VaultColors.accent,
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: BorderSide(color: VaultColors.accent.withValues(alpha: 0.35)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          side: BorderSide(
+                            color: VaultColors.accent.withValues(alpha: 0.35),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           backgroundColor: VaultColors.card,
                         ),
                       ),
@@ -1235,7 +1627,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                     if (_syncedItems.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: VaultColors.cardHover,
                           borderRadius: BorderRadius.circular(12),
@@ -1246,7 +1641,11 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.inventory_2_rounded, size: 14, color: VaultColors.accent),
+                                const Icon(
+                                  Icons.inventory_2_rounded,
+                                  size: 14,
+                                  color: VaultColors.accent,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'SYNCED ASSETS (${_syncedItems.length})',
@@ -1272,49 +1671,84 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       ),
                       const SizedBox(height: 12),
 
+                      // Search bar aset Steam
+                      _buildAssetSearchBar(),
+                      const SizedBox(height: 12),
+
                       // Interactive Sort Order Selector
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'SORT ASSETS',
-                            style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.ink2),
+                            style: VaultTypography.mono(
+                              fontSize: 10,
+                              letterSpacing: 1.1,
+                              color: VaultColors.ink2,
+                            ),
                           ),
                           Row(
-                            children: ['Value ↓', 'Value ↑', 'Name A-Z', 'Game'].map((sortKey) {
-                              final isSelected = _sortOrder == sortKey;
-                              return GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  setState(() => _sortOrder = sortKey);
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.only(left: 6),
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: isSelected ? VaultColors.accent : VaultColors.cardHover,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: isSelected ? VaultColors.accent : VaultColors.hairline,
-                                      width: 0.8,
+                            children: ['Value ↓', 'Value ↑', 'Name A-Z', 'Game']
+                                .map((sortKey) {
+                                  final isSelected = _sortOrder == sortKey;
+                                  return GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() => _sortOrder = sortKey);
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(left: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? VaultColors.accent
+                                            : VaultColors.cardHover,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? VaultColors.accent
+                                              : VaultColors.hairline,
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        sortKey,
+                                        style: VaultTypography.mono(
+                                          fontSize: 9.5,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: isSelected
+                                              ? VaultColors.background
+                                              : VaultColors.ink2,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  child: Text(
-                                    sortKey,
-                                    style: VaultTypography.mono(
-                                      fontSize: 9.5,
-                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSelected ? VaultColors.background : VaultColors.ink2,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                                  );
+                                })
+                                .toList(),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      ..._sortedSyncedItems.map((item) => _buildItemCard(item)),
+                      if (_sortedSyncedItems.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Center(
+                            child: Text(
+                              'No assets match "$_searchQuery".',
+                              style: VaultTypography.cardDescription,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        )
+                      else
+                        ..._sortedSyncedItems.map(
+                          (item) => _buildItemCard(item),
+                        ),
                       const SizedBox(height: 10),
                     ],
 
@@ -1324,7 +1758,11 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       height: 46,
                       child: OutlinedButton.icon(
                         onPressed: _showOpenIdSheet,
-                        icon: const Icon(Icons.language_rounded, size: 17, color: VaultColors.ink2),
+                        icon: const Icon(
+                          Icons.language_rounded,
+                          size: 17,
+                          color: VaultColors.ink2,
+                        ),
                         label: Text(
                           'Sign In via Steam OpenID Portal',
                           style: VaultTypography.sans(
@@ -1388,7 +1826,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         ),
                         child: TextField(
                           controller: _urlController,
-                          style: VaultTypography.mono(fontSize: 12, color: VaultColors.ink),
+                          style: VaultTypography.mono(
+                            fontSize: 12,
+                            color: VaultColors.ink,
+                          ),
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                             hintText: 'https://steamcommunity.com/profiles/...',
@@ -1403,14 +1844,20 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                           icon: const Icon(Icons.sync_rounded, size: 16),
                           label: Text(
                             'Sync Custom Profile',
-                            style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w500),
+                            style: VaultTypography.sans(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: VaultColors.cardHover,
                             foregroundColor: VaultColors.accent,
-                            side: BorderSide(color: VaultColors.accent.withValues(alpha: 0.5)),
+                            side: BorderSide(
+                              color: VaultColors.accent.withValues(alpha: 0.5),
+                            ),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
@@ -1425,4 +1872,3 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     );
   }
 }
-

@@ -364,17 +364,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
     }
   }
 
-  double _calculateDistance(double targetLat, double targetLng) {
-    if (_currentPosition == null) return 0.0;
-    return Geolocator.distanceBetween(
-          _currentPosition!.latitude,
-          _currentPosition!.longitude,
-          targetLat,
-          targetLng,
-        ) /
-        1000.0; // In kilometers
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

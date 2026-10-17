@@ -132,36 +132,14 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        'VAULTED',
-                        style: VaultTypography.mono(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.5,
-                          color: VaultColors.ink,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                        decoration: BoxDecoration(
-                          color: VaultColors.badgeBg,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: VaultColors.accent.withValues(alpha: 0.25)),
-                        ),
-                        child: Text(
-                          'RADAR',
-                          style: VaultTypography.mono(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.0,
-                            color: VaultColors.accent,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'VAULTED',
+                    style: VaultTypography.mono(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.5,
+                      color: VaultColors.ink,
+                    ),
                   ),
                   Container(
                     width: 32,

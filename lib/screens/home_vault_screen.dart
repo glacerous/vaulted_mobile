@@ -165,36 +165,35 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     });
 
     try {
-      final action = await ValtoAiService.instance.parseNaturalInput(text);
+      final result = await ValtoAiService.instance.processInput(text);
 
       if (!mounted) return;
 
-      if (action.type == 'expense') {
+      if (result.isAction) {
+        if (result.actionType == 'hardware') {
+          final usdAmount = result.currency == 'IDR' ? result.amount / 15850.0 : result.amount;
+          await DatabaseHelper.instance.insertItem({
+            'name': result.title,
+            'category': 'Hardware / ${result.category}',
+            'purchase_price': usdAmount,
+            'current_valuation': usdAmount * 0.9,
+            'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+            'warranty_expiry_date': result.warrantyMonths != null
+                ? DateFormat('yyyy-MM-dd').format(DateTime.now().add(Duration(days: result.warrantyMonths! * 30)))
+                : null,
+            'serial_number': result.serialNumber ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
+            'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
+            'is_collectible': 0,
+            'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+          });
+          await _loadVaultData();
+        }
         setState(() => _valtoMood = ValtoMood.happy);
-        _showSuccessSheet(action);
-      } else if (action.type == 'hardware') {
-        final usdAmount = action.currency == 'IDR' ? action.amount / 15850.0 : action.amount;
-        await DatabaseHelper.instance.insertItem({
-          'name': action.title,
-          'category': 'Hardware / ${action.category}',
-          'purchase_price': usdAmount,
-          'current_valuation': usdAmount * 0.9,
-          'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-          'warranty_expiry_date': action.warrantyMonths != null
-              ? DateFormat('yyyy-MM-dd').format(DateTime.now().add(Duration(days: action.warrantyMonths! * 30)))
-              : null,
-          'serial_number': action.serialNumber ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
-          'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
-          'is_collectible': 0,
-          'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
-        });
-        await _loadVaultData();
-        setState(() => _valtoMood = ValtoMood.happy);
-        _showSuccessSheet(action);
       } else {
-        setState(() => _valtoMood = ValtoMood.vigilant);
-        _showSuccessSheet(action);
+        setState(() => _valtoMood = ValtoMood.playful);
       }
+
+      _showAgentResponseSheet(result);
 
       _promptController.clear();
       _promptFocus.unfocus();
@@ -205,7 +204,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     }
   }
 
-  void _showSuccessSheet(ValtoParsedAction action) {
+  void _showAgentResponseSheet(ValtoAgentResult result) {
     showModalBottomSheet(
       context: context,
       backgroundColor: VaultColors.card,
@@ -231,18 +230,21 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
             const SizedBox(height: 20),
             Row(
               children: [
-                const ValtoMascot(size: 40, mood: ValtoMood.happy),
+                ValtoMascot(
+                  size: 42,
+                  mood: result.isAction ? ValtoMood.happy : ValtoMood.playful,
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'VALTO NOTED YOUR ACTION',
+                        result.isAction ? 'VALTO EXECUTED ACTION' : 'VALTO SENTINEL RESPONSE',
                         style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent),
                       ),
                       Text(
-                        action.title,
+                        result.title,
                         style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w700, color: VaultColors.ink),
                       ),
                     ],
@@ -252,24 +254,68 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
             ),
             const SizedBox(height: 18),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: VaultColors.cardHover,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: VaultColors.hairline),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Logged Amount', style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink2)),
                   Text(
-                    action.currency == 'IDR'
-                        ? 'Rp ${NumberFormat('#,###').format(action.amount)}'
-                        : '\$${action.amount.toStringAsFixed(2)}',
-                    style: VaultTypography.mono(fontSize: 16, fontWeight: FontWeight.w700, color: VaultColors.ink),
+                    result.speechText,
+                    style: VaultTypography.sans(fontSize: 13.5, height: 1.45, color: VaultColors.ink),
                   ),
+                  if (result.isAction && result.amount > 0) ...[
+                    const SizedBox(height: 12),
+                    const Divider(color: VaultColors.hairline, height: 1),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Recorded Amount', style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink2)),
+                        Text(
+                          result.currency == 'IDR'
+                              ? 'Rp ${NumberFormat('#,###').format(result.amount)}'
+                              : '\$${result.amount.toStringAsFixed(2)}',
+                          style: VaultTypography.mono(fontSize: 15, fontWeight: FontWeight.w700, color: VaultColors.ink),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
+            if (result.suggestions.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: result.suggestions.map((sug) {
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _promptController.text = sug.replaceAll('"', '');
+                      _handlePromptSubmit();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: VaultColors.badgeBg,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      child: Text(
+                        sug,
+                        style: VaultTypography.mono(fontSize: 10.5, color: VaultColors.accent),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
             const SizedBox(height: 22),
             SizedBox(
               width: double.infinity,
@@ -283,7 +329,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                 ),
                 child: Text(
-                  'Done',
+                  'Dismiss',
                   style: VaultTypography.sans(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w600,
@@ -1149,7 +1195,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                               color: Colors.white,
                                             ),
                                             decoration: InputDecoration(
-                                              hintText: 'Ask Valto anything',
+                                              hintText: 'Ask Valto or log (e.g. kopi 25k)...',
                                               hintStyle: VaultTypography.sans(
                                                 fontSize: 13,
                                                 color: Colors.white.withValues(alpha: 0.80),

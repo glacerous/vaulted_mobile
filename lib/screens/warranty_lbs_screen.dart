@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
+import '../core/database/database_helper.dart';
 
 class WarrantyLbsScreen extends StatefulWidget {
   const WarrantyLbsScreen({super.key});
@@ -19,6 +20,9 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
   bool _loadingLocation = false;
   String _locationStatus = 'Tap to get current GPS location';
   String? _currentAddress;
+
+  List<Map<String, dynamic>> _userWarrantyItems = [];
+  bool _loadingWarrantyItems = true;
 
   // Hasil pencarian service center asli dari OpenStreetMap (Nominatim Search)
   List<Map<String, dynamic>> _serviceCenters = [];
@@ -365,6 +369,30 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadWarrantyItems();
+    _determinePosition();
+  }
+
+  Future<void> _loadWarrantyItems() async {
+    try {
+      final items = await DatabaseHelper.instance.getItems();
+      final withWarranty = items.where((i) => i['warranty_expiry_date'] != null).toList();
+      if (mounted) {
+        setState(() {
+          _userWarrantyItems = withWarranty;
+          _loadingWarrantyItems = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadingWarrantyItems = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: VaultColors.background,
@@ -519,7 +547,148 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+
+              // 2. YOUR PROTECTED HARDWARE (Live from SQLite)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Your Protected Hardware',
+                    style: VaultTypography.sectionTitle,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: VaultColors.badgeBg,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${_userWarrantyItems.length} COVERED',
+                      style: VaultTypography.mono(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: VaultColors.accent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              if (_loadingWarrantyItems)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: VaultColors.accent),
+                    ),
+                  ),
+                )
+              else if (_userWarrantyItems.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: VaultColors.card,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: VaultColors.hairline),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'No hardware warranties logged yet',
+                        style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Scan a purchase invoice using Gemini OCR or command Valto to log your tech gear with warranty coverage.',
+                        style: VaultTypography.sans(fontSize: 11.5, color: VaultColors.ink2),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 115,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _userWarrantyItems.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    itemBuilder: (ctx, i) {
+                      final it = _userWarrantyItems[i];
+                      final name = it['name'] as String? ?? 'Asset';
+                      final serial = it['serial_number'] as String? ?? 'SN-N/A';
+                      final warranty = it['warranty_expiry_date'] as String? ?? 'N/A';
+
+                      return Container(
+                        width: 220,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: VaultColors.card,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: VaultColors.hairline),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.shield_outlined, size: 16, color: VaultColors.accent),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    name,
+                                    style: VaultTypography.sans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: VaultColors.ink,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'S/N: $serial',
+                                  style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.check_circle_rounded, size: 12, color: VaultColors.pos),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Valid to $warranty',
+                                      style: VaultTypography.mono(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: VaultColors.accent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+              const SizedBox(height: 22),
 
               // Service Centers List
               Text(

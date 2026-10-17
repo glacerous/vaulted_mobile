@@ -41,6 +41,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   ValtoMood _valtoMood = ValtoMood.vigilant;
 
   // Real Chat Thread state: User messages + Valto replies
+  bool _isChatModalOpen = false;
   final List<Map<String, dynamic>> _chatHistory = [
     {
       'isUser': false,
@@ -225,7 +226,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
         });
       });
 
-      _openValtoChatModal();
+      if (!_isChatModalOpen) {
+        _openValtoChatModal();
+      }
     } catch (_) {
       if (mounted) setState(() => _valtoMood = ValtoMood.vigilant);
     } finally {
@@ -236,6 +239,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   void _openValtoChatModal() {
     final chatInputCtrl = TextEditingController();
     final scrollCtrl = ScrollController();
+
+    _isChatModalOpen = true;
 
     showModalBottomSheet(
       context: context,
@@ -540,7 +545,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
           },
         );
       },
-    );
+    ).whenComplete(() {
+      _isChatModalOpen = false;
+    });
   }
 
   void _showManualAddAssetModal() {

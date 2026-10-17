@@ -280,7 +280,14 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                 ),
-                child: Text('Done', style: VaultTypography.sans(fontSize: 14.5, fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Done',
+                  style: VaultTypography.sans(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],
@@ -388,11 +395,15 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       icon: const Icon(Icons.auto_awesome_rounded, size: 18),
                       label: Text(
                         isProcessing ? 'Analyzing with Gemini...' : 'Extract & Save to Vault',
-                        style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600),
+                        style: VaultTypography.sans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: VaultColors.primaryButton,
-                        foregroundColor: VaultColors.primaryButtonInk,
+                        backgroundColor: const Color(0xFF141413),
+                        foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                       ),

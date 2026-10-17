@@ -12,19 +12,6 @@ class DatabaseHelper {
 
   // Web fallback in-memory cache
   final List<Map<String, dynamic>> _webItems = [
-    {
-      'id': 1,
-      'name': 'Charizard ★ δ (Delta Species)',
-      'category': 'Collectibles',
-      'purchase_price': 21.00,
-      'current_valuation': 27500.00,
-      'purchase_date': '2019-04-12',
-      'warranty_expiry_date': null,
-      'serial_number': 'PSA-9-EX-DF-100',
-      'image_url': 'https://images.pokemontcg.io/ex15/100_hires.png',
-      'is_collectible': 1,
-      'blockchain_hash': '0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069',
-    },
     ...xelSteamAssets,
   ];
 

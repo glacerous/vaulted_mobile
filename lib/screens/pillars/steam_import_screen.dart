@@ -713,7 +713,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1B2838),
-                    foregroundColor: VaultColors.ink,
+                    foregroundColor: Colors.white,
                     side: const BorderSide(color: Color(0xFF66C0F4), width: 0.8),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),

@@ -52,22 +52,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         if (now.difference(_lastShakeTime).inSeconds > 2) {
           _lastShakeTime = now;
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                backgroundColor: VaultColors.card,
-                behavior: SnackBarBehavior.floating,
-                content: Row(
-                  children: [
-                    const Icon(Icons.security_rounded, color: VaultColors.accent, size: 18),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Accelerometer Sensor: Shake detected! Stealth mode active.',
-                      style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
-                    ),
-                  ],
-                ),
-                duration: const Duration(seconds: 2),
-              ),
+            VaultToast.show(
+              context,
+              icon: Icons.security_rounded,
+              iconColor: VaultColors.accent,
+              message: 'Accelerometer Sensor: Shake detected! Stealth mode active.',
             );
           }
         }

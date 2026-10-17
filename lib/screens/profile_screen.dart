@@ -24,29 +24,31 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        Icons.brightness_low_rounded,
-                        color: VaultColors.accent,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
                       Text(
-                        'VAULT',
-                        style: VaultTypography.sans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                        'VAULTED',
+                        style: VaultTypography.mono(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: 1.5,
                           color: VaultColors.ink,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        '·  PROFILE',
-                        style: VaultTypography.mono(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 1.2,
-                          color: VaultColors.ink2,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: VaultColors.badgeBg,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: VaultColors.accent.withValues(alpha: 0.25)),
+                        ),
+                        child: Text(
+                          'PROFILE',
+                          style: VaultTypography.mono(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.0,
+                            color: VaultColors.accent,
+                          ),
                         ),
                       ),
                     ],

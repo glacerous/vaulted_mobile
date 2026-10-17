@@ -960,19 +960,18 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       ),
                     const SizedBox(height: 18),
 
-                    // Black Primary Pill Button ("Check & close today" from reference)
+                    // Black Primary Pill Button ("Check & close today" - Daily Audit Confirmation)
                     SizedBox(
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton(
                         onPressed: () {
                           HapticFeedback.mediumImpact();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Vault audited & confirmed for today.', style: VaultTypography.sans(fontSize: 12)),
-                              behavior: SnackBarBehavior.floating,
-                              duration: const Duration(seconds: 2),
-                            ),
+                          VaultToast.show(
+                            context,
+                            icon: Icons.verified_user_rounded,
+                            iconColor: VaultColors.accent,
+                            message: 'Vault audited & verified for today (${DateFormat('MMM d, yyyy').format(now)}). All balances locked.',
                           );
                         },
                         style: ElevatedButton.styleFrom(
@@ -983,13 +982,20 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             borderRadius: BorderRadius.circular(24),
                           ),
                         ),
-                        child: Text(
-                          'Check & close today',
-                          style: VaultTypography.sans(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check_circle_outline_rounded, size: 17, color: VaultColors.accent),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Check & close today',
+                              style: VaultTypography.sans(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

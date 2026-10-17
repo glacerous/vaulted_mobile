@@ -15,9 +15,11 @@ class VaultColors {
   static const Color ink3 = Color(0xFFA6A49B);       // Muted captions & placeholders
   static const Color body = Color(0xFF52504B);       // Body copy text
 
-  // Accents & Badges
-  static const Color accent = Color(0xFFD97706);     // Warm golden amber signature
+  // Accents & Badges (Alpine Dawn Warm Gold & Sun Amber)
+  static const Color accent = Color(0xFFC0A85C);     // Signature Alpine Warm Gold
+  static const Color accentWarm = Color(0xFFD97706); // Warm amber secondary
   static const Color badgeBg = Color(0xFFFEF3C7);    // Soft warm gold badge pill
+  static const Color toastBg = Color(0xFF1D1D1B);    // Premium deep dark titanium for toasts/modals
 
   // Primary Action Button (Jet Black with Crisp White Text like Oyenza CTA)
   static const Color primaryButton = Color(0xFF141413);
@@ -51,3 +53,45 @@ class VaultColors {
   static Color glassBg = Colors.white.withValues(alpha: 0.85);
   static Color glassBorder = const Color(0xFF141413).withValues(alpha: 0.08);
 }
+
+/// Universal Toast & SnackBar Utility for consistent contrast across VAULTED
+class VaultToast {
+  static void show(
+    BuildContext context, {
+    required String message,
+    IconData icon = Icons.info_outline_rounded,
+    Color iconColor = VaultColors.accent,
+    Duration duration = const Duration(seconds: 2),
+  }) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFF1D1D1B),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: Color(0xFF2A2A28), width: 1),
+        ),
+        duration: duration,
+        content: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFFF2F2EF),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

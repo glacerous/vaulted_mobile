@@ -928,46 +928,6 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       ),
                     const SizedBox(height: 18),
 
-                    // Black Primary Pill Button ("Check & close today" - Daily Audit Confirmation)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          HapticFeedback.mediumImpact();
-                          VaultToast.show(
-                            context,
-                            icon: Icons.verified_user_rounded,
-                            iconColor: VaultColors.accent,
-                            message: 'Vault audited & verified for today (${DateFormat('MMM d, yyyy').format(now)}). All balances locked.',
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF141413),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.check_circle_outline_rounded, size: 17, color: VaultColors.accent),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Check & close today',
-                              style: VaultTypography.sans(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
 
                     // Quick Action Buttons (Receipt OCR & Add Manual Asset)
                     Row(

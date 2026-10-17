@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
@@ -80,6 +81,57 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     super.dispose();
   }
 
+  Widget _buildTabItem({
+    required int index,
+    required String label,
+    required IconData icon,
+    required IconData activeIcon,
+  }) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _currentIndex = index);
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (isSelected)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEDEBE4),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Icon(
+                activeIcon,
+                size: 20,
+                color: const Color(0xFF141413),
+              ),
+            )
+          else ...[
+            Icon(
+              icon,
+              size: 20,
+              color: const Color(0xFF73716A),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: VaultTypography.sans(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF73716A),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,41 +142,43 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          color: VaultColors.background,
-          border: Border(top: BorderSide(color: VaultColors.hairline, width: 1)),
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFEBE8E0), width: 1)),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          backgroundColor: VaultColors.background,
-          selectedItemColor: VaultColors.accent,
-          unselectedItemColor: VaultColors.ink3,
-          type: BottomNavigationBarType.fixed,
-          selectedLabelStyle: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: VaultTypography.mono(fontSize: 10),
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shield_outlined, size: 20),
-              activeIcon: Icon(Icons.shield, size: 20),
-              label: 'Vault',
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 60,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildTabItem(
+                  index: 0,
+                  label: 'Vault',
+                  icon: Icons.shield_outlined,
+                  activeIcon: Icons.shield_rounded,
+                ),
+                _buildTabItem(
+                  index: 1,
+                  label: 'Radar',
+                  icon: Icons.radar_outlined,
+                  activeIcon: Icons.radar_rounded,
+                ),
+                _buildTabItem(
+                  index: 2,
+                  label: 'LBS Care',
+                  icon: Icons.near_me_outlined,
+                  activeIcon: Icons.near_me_rounded,
+                ),
+                _buildTabItem(
+                  index: 3,
+                  label: 'Profile',
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.radar_outlined, size: 20),
-              activeIcon: Icon(Icons.radar, size: 20),
-              label: 'Radar',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.near_me_outlined, size: 20),
-              activeIcon: Icon(Icons.near_me, size: 20),
-              label: 'LBS Care',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline, size: 20),
-              activeIcon: Icon(Icons.person, size: 20),
-              label: 'Profile',
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -7,7 +8,6 @@ import '../core/database/database_helper.dart';
 import '../core/services/valto_ai_service.dart';
 import '../core/services/gemini_service.dart';
 import '../core/widgets/valto_mascot.dart';
-import '../core/widgets/ascii_cloud_sea_header.dart';
 import 'pillars/inventory_screen.dart';
 import 'pillars/collectibles_hub_screen.dart';
 import 'warranty_lbs_screen.dart';
@@ -20,15 +20,20 @@ class HomeVaultScreen extends StatefulWidget {
   State<HomeVaultScreen> createState() => _HomeVaultScreenState();
 }
 
-class _HomeVaultScreenState extends State<HomeVaultScreen> {
+class _HomeVaultScreenState extends State<HomeVaultScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _promptController = TextEditingController();
   final FocusNode _promptFocus = FocusNode();
+
+  late AnimationController _animController;
+  static const int _frameCount = 36;
 
   bool _isBalanceVisible = true;
   double _inventoryTotal = 0.0;
   double _collectiblesTotal = 0.0;
   int _steamItemsCount = 0;
   String _selectedCurrency = 'IDR';
+  List<Map<String, dynamic>> _recentItems = [];
 
   bool _isAiProcessing = false;
   ValtoMood _valtoMood = ValtoMood.vigilant;
@@ -44,11 +49,27 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
   @override
   void initState() {
     super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2800),
+    )..repeat();
     _loadVaultData();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    for (int i = 0; i < _frameCount; i++) {
+      precacheImage(
+        AssetImage('assets/images/alpine_dawn_frames/f_$i.png'),
+        context,
+      );
+    }
+  }
+
+  @override
   void dispose() {
+    _animController.dispose();
     _promptController.dispose();
     _promptFocus.dispose();
     super.dispose();
@@ -77,6 +98,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
         _inventoryTotal = inv;
         _collectiblesTotal = col;
         _steamItemsCount = steamCount;
+        _recentItems = items.take(4).toList();
       });
     }
   }
@@ -97,6 +119,29 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
       case 'USD':
       default:
         return '\$${NumberFormat('#,##0.00').format(converted)}';
+    }
+  }
+
+  String _formatRawNumber(double usdAmount) {
+    final rate = _exchangeRates[_selectedCurrency] ?? 1.0;
+    final converted = usdAmount * rate;
+    if (_selectedCurrency == 'IDR' || _selectedCurrency == 'JPY') {
+      return NumberFormat('#,###').format(converted);
+    }
+    return NumberFormat('#,##0.00').format(converted);
+  }
+
+  String get _currencyPrefix {
+    switch (_selectedCurrency) {
+      case 'IDR':
+        return 'Rp ';
+      case 'EUR':
+        return '€ ';
+      case 'JPY':
+        return '¥ ';
+      case 'USD':
+      default:
+        return '\$ ';
     }
   }
 
@@ -404,337 +449,788 @@ class _HomeVaultScreenState extends State<HomeVaultScreen> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final datePill = DateFormat('MMM d').format(now).toUpperCase();
 
     return Scaffold(
-      backgroundColor: VaultColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      backgroundColor: Colors.white, // Pure white matching the sheet so no contrast sliver can ever appear
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          children: [
+            // 1. EXPANSIVE FULL-BLEED SCENIC SKY HEADER (Edge-to-Edge with Clear Separator)
+            SizedBox(
+              width: double.infinity,
+              child: Stack(
+                children: [
+                  // Animated Scenic Dithered Background (Full vivid scenery, NO fading gradient)
+                  Positioned.fill(
+                    child: AnimatedBuilder(
+                      animation: _animController,
+                      builder: (context, _) {
+                        final frameIndex = (_animController.value * _frameCount).floor() % _frameCount;
+                        return Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.asset(
+                              'assets/images/alpine_dawn_frames/f_$frameIndex.png',
+                              fit: BoxFit.cover,
+                              alignment: Alignment.center,
+                              gaplessPlayback: true,
+                            ),
+                            // Contrast Scrim ensuring crystal-clear text readability over mountains
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.40),
+                                    Colors.black.withValues(alpha: 0.16),
+                                    Colors.black.withValues(alpha: 0.48),
+                                  ],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                ),
+                              ),
+                            ),
+                            // Glowing celestial moon in upper right as in reference photo
+                            Positioned(
+                              top: 48,
+                              right: 28,
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.22),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.white.withValues(alpha: 0.35),
+                                      blurRadius: 18,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+
+                  // Header Content (Generous vertical spacing to make the scenic header wide & expansive)
+                  SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 14, 22, 54),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // AUTHENTIC VAULTED TOP APP BAR
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'VAULTED',
+                                style: VaultTypography.mono(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.5,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.7),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.90),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.white),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.06),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      DateFormat('MMM d').format(now).toUpperCase(),
+                                      style: VaultTypography.mono(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF1D1D1B),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: _showAiScannerModal,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.90),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: Colors.white),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.06),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(Icons.receipt_long_rounded, size: 16, color: Color(0xFF1D1D1B)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: _showVoiceModal,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.90),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: Colors.white),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.06),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(Icons.mic_none_rounded, size: 16, color: Color(0xFF1D1D1B)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 28),
+
+                          // GREETING LINE
+                          Text(
+                            '${_getGreeting()}, azzaky.',
+                            style: VaultTypography.sans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.8),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+
+                          // DATE SUBTITLE + PRIVACY EYE TOGGLE
+                          Row(
+                            children: [
+                              Text(
+                                'Today · ${DateFormat('EEEE, d MMMM').format(now)}',
+                                style: VaultTypography.sans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.7),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              GestureDetector(
+                                onTap: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
+                                child: Icon(
+                                  _isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  size: 14,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // HERO BALANCE (Full Width Clean Typography)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                _currencyPrefix,
+                                style: VaultTypography.mono(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(alpha: 0.8),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    _isBalanceVisible ? _formatRawNumber(_netWorth) : '••••••••',
+                                    style: VaultTypography.mono(
+                                      fontSize: 38,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.8,
+                                      color: Colors.white,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withValues(alpha: 0.85),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                        Shadow(
+                                          color: Colors.black.withValues(alpha: 0.5),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '$_steamItemsCount vault items active',
+                            style: VaultTypography.sans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.85),
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.7),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 42),
+
+                          // ASK VALTO FROSTED GLASS OMNIBAR WITH VALTO MASCOT PERCHED ON TOP
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(26),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.22),
+                                      borderRadius: BorderRadius.circular(26),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.42),
+                                        width: 1.2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.15),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.22),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.auto_awesome_rounded,
+                                            size: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: TextField(
+                                            controller: _promptController,
+                                            focusNode: _promptFocus,
+                                            onSubmitted: (_) => _handlePromptSubmit(),
+                                            style: VaultTypography.sans(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white,
+                                            ),
+                                            decoration: InputDecoration(
+                                              hintText: 'Ask Valto anything',
+                                              hintStyle: VaultTypography.sans(
+                                                fontSize: 13,
+                                                color: Colors.white.withValues(alpha: 0.80),
+                                              ),
+                                              border: InputBorder.none,
+                                              isDense: true,
+                                            ),
+                                          ),
+                                        ),
+                                        if (_isAiProcessing)
+                                          const Padding(
+                                            padding: EdgeInsets.only(right: 6),
+                                            child: SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          )
+                                        else
+                                          GestureDetector(
+                                            onTap: _handlePromptSubmit,
+                                            child: Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(alpha: 0.25),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: Colors.white.withValues(alpha: 0.50),
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: const Icon(
+                                                Icons.arrow_forward_rounded,
+                                                size: 16,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Valto Mascot Sitting Directly on Top of the Frosted Glass Search Bar
+                              Positioned(
+                                top: -38,
+                                right: 24,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(() {
+                                      _valtoMood = _valtoMood == ValtoMood.happy ? ValtoMood.vigilant : ValtoMood.happy;
+                                    });
+                                  },
+                                  child: ValtoMascot(
+                                    size: 46,
+                                    mood: _valtoMood,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 2. MAIN COMPONENT SHEET (Smooth Circled Edge Seamlessly Overlapping Scenic Header)
+            Transform.translate(
+              offset: const Offset(0, -32),
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x10000000),
+                      blurRadius: 20,
+                      offset: Offset(0, -6),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 36),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Currency Switcher Header Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'RECENT ACTIVITY',
+                          style: VaultTypography.mono(
+                            fontSize: 10.5,
+                            letterSpacing: 1.2,
+                            color: VaultColors.ink2,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: VaultColors.cardHover,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
+                              final isSel = _selectedCurrency == curr;
+                              return GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _selectedCurrency = curr);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: isSel ? Colors.white : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(7),
+                                    boxShadow: isSel
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.08),
+                                              blurRadius: 4,
+                                            )
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Text(
+                                    curr,
+                                    style: VaultTypography.mono(
+                                      fontSize: 9.5,
+                                      fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                                      color: isSel ? VaultColors.ink : VaultColors.ink2,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Dynamic Activity Items from Real SQLite Data
+                    if (_recentItems.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: Text(
+                            'No assets tracked yet. Scan a receipt to start.',
+                            style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink3),
+                          ),
+                        ),
+                      )
+                    else
+                      Column(
+                        children: [
+                          for (int i = 0; i < _recentItems.length; i++) ...[
+                            if (i > 0)
+                              const Divider(height: 18, thickness: 1, color: VaultColors.hairline),
+                            _buildDynamicActivityItem(_recentItems[i]),
+                          ],
+                        ],
+                      ),
+                    const SizedBox(height: 18),
+
+                    // Black Primary Pill Button ("Check & close today" from reference)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          HapticFeedback.mediumImpact();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Vault audited & confirmed for today.', style: VaultTypography.sans(fontSize: 12)),
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF141413),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: Text(
+                          'Check & close today',
+                          style: VaultTypography.sans(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Quick Action Buttons (Receipt & Voice)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildActionTile(
+                            icon: Icons.receipt_long_rounded,
+                            label: 'Receipt OCR',
+                            onTap: _showAiScannerModal,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildActionTile(
+                            icon: Icons.mic_none_rounded,
+                            label: 'Voice Logger',
+                            onTap: _showVoiceModal,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Vault Pillars Section
+                    Text(
+                      'YOUR VAULT SPACES',
+                      style: VaultTypography.mono(fontSize: 10.5, letterSpacing: 1.2, color: VaultColors.ink2),
+                    ),
+                    const SizedBox(height: 12),
+
+                    Container(
+                      decoration: BoxDecoration(
+                        color: VaultColors.cardHover,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: VaultColors.hairline),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF141413).withValues(alpha: 0.025),
+                            blurRadius: 14,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _buildPillarRow(
+                            icon: Icons.sports_esports_rounded,
+                            iconColor: VaultColors.accent,
+                            title: 'Steam & Gaming Vault',
+                            subtitle: '$_steamItemsCount verified items · Live Valve sync',
+                            value: _formatAmount(_collectiblesTotal),
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const CollectiblesHubScreen()),
+                              );
+                              _loadVaultData();
+                            },
+                          ),
+                          const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
+                          _buildPillarRow(
+                            icon: Icons.laptop_mac_rounded,
+                            iconColor: VaultColors.ink,
+                            title: 'Hardware & Devices',
+                            subtitle: 'Equipment, serials & on-chain proof',
+                            value: _formatAmount(_inventoryTotal),
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const InventoryScreen()),
+                              );
+                              _loadVaultData();
+                            },
+                          ),
+                          const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
+                          _buildPillarRow(
+                            icon: Icons.monetization_on_outlined,
+                            iconColor: VaultColors.accent,
+                            title: "Valto's Appraisal Challenge",
+                            subtitle: 'Market valuation mini-trial',
+                            value: 'Play',
+                            isAction: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const GameScreen()),
+                              );
+                            },
+                          ),
+                          const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
+                          _buildPillarRow(
+                            icon: Icons.near_me_rounded,
+                            iconColor: VaultColors.ink2,
+                            title: 'LBS Repair Centers',
+                            subtitle: 'Authorized Apple & Samsung in Sleman',
+                            value: 'Radar',
+                            isAction: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const WarrantyLbsScreen()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDynamicActivityItem(Map<String, dynamic> item) {
+    final cat = item['category']?.toString() ?? '';
+    final name = item['name']?.toString() ?? 'Asset';
+    final serial = item['serial_number']?.toString();
+    final valuation = (item['current_valuation'] as num?)?.toDouble() ?? 0.0;
+
+    IconData icon = Icons.inventory_2_outlined;
+    if (cat.contains('Steam') || cat.contains('Gaming')) {
+      icon = Icons.sports_esports_rounded;
+    } else if (cat.contains('Hardware') || cat.contains('Device') || cat.contains('Laptop') || cat.contains('MacBook')) {
+      icon = Icons.laptop_mac_rounded;
+    } else if (cat.contains('Watch') || cat.contains('Horology') || cat.contains('Collectible')) {
+      icon = Icons.watch_outlined;
+    }
+
+    final subtitle = serial != null && serial.isNotEmpty
+        ? '$cat · SN: $serial'
+        : (item['purchase_date'] != null ? '$cat · ${item['purchase_date']}' : cat);
+
+    return InkWell(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const InventoryScreen()),
+        ).then((_) => _loadVaultData());
+      },
+      child: _buildActivityItem(
+        icon: icon,
+        title: name,
+        subtitle: subtitle,
+        amount: '+ ${_formatAmount(valuation)}',
+        isExpense: false,
+      ),
+    );
+  }
+
+  Widget _buildActivityItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String amount,
+    required bool isExpense,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: VaultColors.cardHover,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: VaultColors.ink),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. MINIMAL APP HEADER (Iconic Valto + Brand + Actions)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'VAULTED',
-                    style: VaultTypography.sans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.5,
-                      color: VaultColors.ink,
-                    ),
-                  ),
-
-                  // Header Action Buttons
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: VaultColors.cardHover,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          datePill,
-                          style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, color: VaultColors.ink2),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _showAiScannerModal,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: VaultColors.cardHover,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.receipt_long_rounded, size: 16, color: VaultColors.ink),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _showVoiceModal,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: VaultColors.cardHover,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.mic_none_rounded, size: 16, color: VaultColors.ink),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // 2. ALPINE DAWN DITHERED SCENIC HEADER (Permanent signature artwork)
-              AlpineDawnHeader(
-                promptController: _promptController,
-                promptFocus: _promptFocus,
-                isAiProcessing: _isAiProcessing,
-                valtoMood: _valtoMood,
-                onSubmit: _handlePromptSubmit,
-              ),
-              const SizedBox(height: 26),
-
-              // 3. FOCAL GLANCE HERO (Giant Net Worth & Valto Perched on Rim)
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
-                    decoration: BoxDecoration(
-                      color: VaultColors.card,
-                      borderRadius: BorderRadius.circular(26),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF141413).withValues(alpha: 0.03),
-                          blurRadius: 18,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Subtitle & Status indicator
-                        Row(
-                          children: [
-                            Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: VaultColors.pos,
-                              ),
-                            ),
-                            const SizedBox(width: 7),
-                            Text(
-                              '$_steamItemsCount Steam items & vault assets active',
-                              style: VaultTypography.sans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: VaultColors.ink2,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Huge Bold Primary Counter
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _isBalanceVisible ? _formatAmount(_netWorth) : '••••••••',
-                                style: VaultTypography.mono(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.8,
-                                  color: VaultColors.ink,
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(
-                                  color: VaultColors.cardHover,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  _isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                  size: 16,
-                                  color: VaultColors.ink2,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-
-                        // Currency Segment Switcher
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${_getGreeting()}, azzaky',
-                              style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink3),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: VaultColors.cardHover,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
-                                  final isSel = _selectedCurrency == curr;
-                                  return GestureDetector(
-                                    onTap: () {
-                                      HapticFeedback.selectionClick();
-                                      setState(() => _selectedCurrency = curr);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                                      decoration: BoxDecoration(
-                                        color: isSel ? VaultColors.card : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: isSel
-                                            ? [
-                                                BoxShadow(
-                                                  color: Colors.black.withValues(alpha: 0.05),
-                                                  blurRadius: 4,
-                                                  offset: const Offset(0, 1),
-                                                )
-                                              ]
-                                            : null,
-                                      ),
-                                      child: Text(
-                                        curr,
-                                        style: VaultTypography.mono(
-                                          fontSize: 10,
-                                          fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                          color: isSel ? VaultColors.ink : VaultColors.ink2,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Valto Mascot Loafing on the Card Rim (56px, clearly visible, physical resting pose)
-                  Positioned(
-                    top: -24,
-                    right: 22,
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Valto is resting on your vault. All assets secure.',
-                              style: VaultTypography.sans(fontSize: 12, color: Colors.white),
-                            ),
-                            duration: const Duration(seconds: 2),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            backgroundColor: const Color(0xFF141413),
-                          ),
-                        );
-                      },
-                      child: const ValtoMascot(
-                        size: 56,
-                        mood: ValtoMood.sleeping,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // 4. VAULT PILLARS SECTION (Clean, Unified Luxury Grouped Card)
               Text(
-                'YOUR VAULT SPACES',
-                style: VaultTypography.mono(fontSize: 10.5, letterSpacing: 1.2, color: VaultColors.ink2),
+                title,
+                style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.ink),
               ),
-              const SizedBox(height: 12),
-
-              Container(
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF141413).withValues(alpha: 0.025),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _buildPillarRow(
-                      icon: Icons.sports_esports_rounded,
-                      iconColor: VaultColors.accent,
-                      title: 'Steam & Gaming Vault',
-                      subtitle: '$_steamItemsCount verified items · Live Valve sync',
-                      value: _formatAmount(_collectiblesTotal),
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const CollectiblesHubScreen()),
-                        );
-                        _loadVaultData();
-                      },
-                    ),
-                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
-                    _buildPillarRow(
-                      icon: Icons.laptop_mac_rounded,
-                      iconColor: VaultColors.ink,
-                      title: 'Hardware & Devices',
-                      subtitle: 'Equipment, serials & on-chain proof',
-                      value: _formatAmount(_inventoryTotal),
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const InventoryScreen()),
-                        );
-                        _loadVaultData();
-                      },
-                    ),
-                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
-                    _buildPillarRow(
-                      icon: Icons.monetization_on_outlined,
-                      iconColor: VaultColors.accent,
-                      title: "Valto's Appraisal Challenge",
-                      subtitle: 'Market valuation mini-trial',
-                      value: 'Play',
-                      isAction: true,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const GameScreen()),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
-                    _buildPillarRow(
-                      icon: Icons.near_me_rounded,
-                      iconColor: VaultColors.ink2,
-                      title: 'LBS Repair Centers',
-                      subtitle: 'Authorized Apple & Samsung in Sleman',
-                      value: 'Radar',
-                      isAction: true,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const WarrantyLbsScreen()),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink3),
               ),
-              const SizedBox(height: 28),
             ],
           ),
+        ),
+        Text(
+          amount,
+          style: VaultTypography.mono(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            color: isExpense ? VaultColors.ink : const Color(0xFF16A34A),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: VaultColors.card,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: VaultColors.hairline),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF141413).withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: VaultColors.ink),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.ink),
+            ),
+          ],
         ),
       ),
     );

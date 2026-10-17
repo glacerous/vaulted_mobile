@@ -28,6 +28,8 @@ class VaultColors {
   static const Color posBg = Color(0xFFDCFCE7);      // Soft green badge background
   static const Color neg = Color(0xFFDC2626);        // Negative loss red
   static const Color negBg = Color(0xFFFEE2E2);      // Soft red badge background
+  static const Color warn = Color(0xFFD97706);       // Amber warning
+  static const Color warnBg = Color(0xFFFEF3C7);     // Soft amber background
 
   // Delicate Morning Glow & Ambient Tokens
   static const Color sunsetTop = Color(0xFFFFF6EE);     // Soft warm peach glow

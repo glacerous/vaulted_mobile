@@ -41,9 +41,9 @@ class VaultedApp extends StatelessWidget {
       title: 'VAULTED',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.dark,
+        brightness: Brightness.light,
         scaffoldBackgroundColor: VaultColors.background,
-        colorScheme: const ColorScheme.dark(
+        colorScheme: const ColorScheme.light(
           primary: VaultColors.accent,
           surface: VaultColors.card,
         ),

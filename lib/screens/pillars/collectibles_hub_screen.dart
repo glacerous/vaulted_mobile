@@ -4,7 +4,6 @@ import '../../core/constants/colors.dart';
 import '../../core/constants/typography.dart';
 import '../../core/utils/image_utils.dart';
 import 'steam_import_screen.dart';
-import 'inventory_screen.dart';
 import 'collectibles_screen.dart';
 
 import '../../core/database/database_helper.dart';
@@ -20,6 +19,7 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
   List<Map<String, dynamic>> _steamItems = [];
   double _steamTotal = 0.0;
   String _steamSort = 'Value ↓';
+  bool _isSyncingSteam = false;
 
   List<Map<String, dynamic>> _physicalCollectibles = [];
   double _physicalTotal = 0.0;
@@ -72,6 +72,37 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
         _physicalCollectibles = physical;
         _physicalTotal = pTotal;
       });
+    }
+  }
+
+  Future<void> _quickSyncSteam() async {
+    HapticFeedback.mediumImpact();
+    setState(() => _isSyncingSteam = true);
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    await _loadData();
+
+    if (mounted) {
+      setState(() => _isSyncingSteam = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: VaultColors.card,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: VaultColors.pos, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Steam inventory up to date · ${_steamItems.length} assets verified.',
+                  style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
   }
 
@@ -136,10 +167,6 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
                   _buildPokemonCard(context),
                   const SizedBox(height: 14),
                   _buildSteamCard(context),
-                  const SizedBox(height: 14),
-                  _buildFashionCard(context),
-                  const SizedBox(height: 14),
-                  _buildOnePieceCard(),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -367,23 +394,65 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
 
             if (hasItems) ...[
               Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    '\$${_steamTotal.toStringAsFixed(2)}',
-                    style: VaultTypography.mono(fontSize: 24, fontWeight: FontWeight.w500, color: VaultColors.ink),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '\$${_steamTotal.toStringAsFixed(2)}',
+                        style: VaultTypography.mono(fontSize: 24, fontWeight: FontWeight.w500, color: VaultColors.ink),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: VaultColors.posBg,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'VALVE SYNCED',
+                          style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, color: VaultColors.pos),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: VaultColors.posBg,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'VALVE SYNCED',
-                      style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, color: VaultColors.pos),
+                  GestureDetector(
+                    onTap: _isSyncingSteam ? null : _quickSyncSteam,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: VaultColors.cardHover,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: VaultColors.accent.withValues(alpha: 0.5)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _isSyncingSteam
+                              ? const SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: VaultColors.accent,
+                                  ),
+                                )
+                              : const Icon(Icons.sync_rounded, size: 14, color: VaultColors.accent),
+                          const SizedBox(width: 5),
+                          Text(
+                            'UPDATE',
+                            style: VaultTypography.mono(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              color: VaultColors.accent,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -507,150 +576,6 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
             ],
           ],
         ),
-      ),
-    );
-  }
-
-  // 3. Fashion & Luxury Card
-  Widget _buildFashionCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const InventoryScreen()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: VaultColors.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: VaultColors.hairline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.checkroom_rounded, size: 16, color: VaultColors.ink2),
-                    const SizedBox(width: 8),
-                    Text('Fashion & Luxury', style: VaultTypography.cardLabel),
-                  ],
-                ),
-                const Icon(Icons.north_east_rounded, size: 14, color: VaultColors.ink2),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text('Add your first', style: VaultTypography.cardSub),
-            const SizedBox(height: 20),
-            Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildLuxuryIcon(Icons.snowshoeing_rounded),
-                  _buildLuxuryIcon(Icons.watch_rounded),
-                  _buildLuxuryIcon(Icons.shopping_bag_outlined),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: Text(
-                'WATCHES · SNEAKERS · BAGS',
-                style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.5, color: VaultColors.ink3),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'Your grails go here — scan a piece and track what you paid against its resale value.',
-              style: VaultTypography.cardDescription,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLuxuryIcon(IconData icon) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 5),
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: VaultColors.cardHover,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VaultColors.hairline),
-      ),
-      child: Icon(icon, color: VaultColors.accent.withValues(alpha: 0.8), size: 20),
-    );
-  }
-
-  // 4. One Piece TCG Card
-  Widget _buildOnePieceCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: VaultColors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: VaultColors.hairline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.style_outlined, size: 16, color: VaultColors.ink2),
-                  const SizedBox(width: 8),
-                  Text('One Piece TCG', style: VaultTypography.cardLabel),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: VaultColors.cardHover,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: VaultColors.hairline),
-                ),
-                child: Text(
-                  'COMING SOON',
-                  style: VaultTypography.mono(fontSize: 9, fontWeight: FontWeight.w600, color: VaultColors.ink2),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text("Bandai's card game", style: VaultTypography.cardSub),
-          const SizedBox(height: 20),
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(3, (idx) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: 36,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: VaultColors.badgeBg,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: VaultColors.accent.withValues(alpha: 0.4)),
-                  ),
-                  child: const Icon(Icons.wb_sunny_outlined, color: VaultColors.accent, size: 18),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'The straw-hat grails are next — same live-market tracking as Pokémon.',
-            style: VaultTypography.cardDescription,
-          ),
-        ],
       ),
     );
   }

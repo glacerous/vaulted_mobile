@@ -29,6 +29,14 @@ class AuthService {
     return false;
   }
 
+  Future<bool> register(String username, String password, {String? fullName}) async {
+    final success = await DatabaseHelper.instance.registerUser(username, password, fullName: fullName);
+    if (success) {
+      return await login(username, password);
+    }
+    return false;
+  }
+
   Future<bool> authenticateWithBiometrics() async {
     if (kIsWeb) {
       // Simulate successful biometric on web browser

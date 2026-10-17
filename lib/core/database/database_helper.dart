@@ -126,6 +126,26 @@ class DatabaseHelper {
     return null;
   }
 
+  Future<bool> registerUser(String username, String rawPassword, {String? fullName}) async {
+    if (kIsWeb) {
+      return true;
+    }
+    final db = await database;
+    if (db == null) return false;
+    final hash = sha256.convert(utf8.encode(rawPassword)).toString();
+    try {
+      await db.insert('users', {
+        'username': username,
+        'password_hash': hash,
+        'full_name': fullName ?? username,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getItems() async {
     if (kIsWeb) {
       return List.from(_webItems);
@@ -167,6 +187,32 @@ class DatabaseHelper {
           'AK-47 | Case Hardened (Tier 2 Blue Gem)',
           'Butterfly Knife | Doppler (Phase 2)',
         ]);
+  }
+
+  Future<void> replaceSteamItems(List<Map<String, dynamic>> newItems) async {
+    if (kIsWeb) {
+      _webItems.removeWhere((i) => i['category'].toString().startsWith('Steam'));
+      _webItems.addAll(newItems);
+      return;
+    }
+    final db = await database;
+    if (db == null) return;
+    await db.delete('items', where: "category LIKE 'Steam%'");
+    for (var item in newItems) {
+      final insertMap = Map<String, dynamic>.from(item);
+      insertMap.remove('id');
+      await db.insert('items', insertMap);
+    }
+  }
+
+  Future<void> clearSteamItems() async {
+    if (kIsWeb) {
+      _webItems.removeWhere((i) => i['category'].toString().startsWith('Steam'));
+      return;
+    }
+    final db = await database;
+    if (db == null) return;
+    await db.delete('items', where: "category LIKE 'Steam%'");
   }
 
   final List<Map<String, dynamic>> _webSubscriptions = [

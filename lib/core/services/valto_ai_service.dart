@@ -164,27 +164,31 @@ Return ONLY valid JSON with no markdown formatting:
                 ]
               }
             ],
-            'generationConfig': {'temperature': 0.2, 'maxOutputTokens': 300},
+            'generationConfig': {
+              'temperature': 0.3,
+              'maxOutputTokens': 1024,
+              'responseMimeType': 'application/json',
+            },
           }),
-        ).timeout(const Duration(seconds: 5));
+        ).timeout(const Duration(seconds: 12));
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'] as String?;
-          if (text != null) {
-            final sanitized = text.replaceAll('```json', '').replaceAll('```', '').trim();
+          if (text != null && text.isNotEmpty) {
+            String sanitized = text.replaceAll('```json', '').replaceAll('```', '').trim();
             final json = jsonDecode(sanitized);
 
             final isAct = json['isAction'] == true;
             return ValtoAgentResult(
               isAction: isAct,
-              actionType: json['actionType'] as String? ?? (isAct ? 'expense' : 'query'),
+              actionType: json['actionType'] as String? ?? (isAct ? 'hardware' : 'query'),
               title: json['title'] as String? ?? cleanPrompt,
               speechText: json['speechText'] as String? ?? 'Processed your request.',
-              amount: (json['amount'] as num?)?.toDouble() ?? (isAct ? _fallbackAmount(cleanPrompt) : 0),
+              amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
               currency: json['currency'] as String? ?? (lower.contains('usd') || cleanPrompt.contains('\$') ? 'USD' : 'IDR'),
               category: json['category'] as String? ?? 'General',
-              wallet: json['wallet'] as String? ?? 'Cash',
+              wallet: json['wallet'] as String? ?? 'Vault Ledger',
               serialNumber: json['serialNumber'] as String?,
               warrantyMonths: (json['warrantyMonths'] as num?)?.toInt(),
             );

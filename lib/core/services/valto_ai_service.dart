@@ -121,15 +121,10 @@ class ValtoAiService {
       }
     }
 
-    // 3. Try Gemini 3.8 Flash API for natural language extraction & deep query reasoning
+    // 3. Try Gemini Flash API for natural language extraction & deep query reasoning
     final apiKey = VaultConfig.geminiApiKey;
     if (apiKey.isNotEmpty && !apiKey.contains('your_gemini')) {
-      try {
-        final uri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$apiKey',
-        );
-
-        final systemInstruction = '''
+      final systemInstruction = '''
 You are Valto, an ultra-luxury agentic assistant inside the VAULTED asset app.
 Current User Context:
 - Total Items in Vault: $totalItems
@@ -153,51 +148,56 @@ Return ONLY valid JSON with no markdown formatting:
 }
 ''';
 
-        final response = await http.post(
-          uri,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'contents': [
-              {
-                'parts': [
-                  {'text': '$systemInstruction\nUser input: "$cleanPrompt"'}
-                ]
-              }
-            ],
-            'generationConfig': {
-              'temperature': 0.3,
-              'maxOutputTokens': 1024,
-              'responseMimeType': 'application/json',
-            },
-          }),
-        ).timeout(const Duration(seconds: 12));
+      for (final model in ['gemini-3.5-flash', 'gemini-3.1-flash-lite']) {
+        try {
+          final uri = Uri.parse(
+            'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
+          );
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'] as String?;
-          if (text != null && text.isNotEmpty) {
-            String sanitized = text.replaceAll('```json', '').replaceAll('```', '').trim();
-            final json = jsonDecode(sanitized);
+          final response = await http.post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'contents': [
+                {
+                  'parts': [
+                    {'text': '$systemInstruction\nUser input: "$cleanPrompt"'}
+                  ]
+                }
+              ],
+              'generationConfig': {
+                'temperature': 0.3,
+                'maxOutputTokens': 1024,
+                'responseMimeType': 'application/json',
+              },
+            }),
+          ).timeout(const Duration(seconds: 8));
 
-            final isAct = json['isAction'] == true;
-            return ValtoAgentResult(
-              isAction: isAct,
-              actionType: json['actionType'] as String? ?? (isAct ? 'hardware' : 'query'),
-              title: json['title'] as String? ?? cleanPrompt,
-              speechText: json['speechText'] as String? ?? 'Processed your request.',
-              amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-              currency: json['currency'] as String? ?? (lower.contains('usd') || cleanPrompt.contains('\$') ? 'USD' : 'IDR'),
-              category: json['category'] as String? ?? 'General',
-              wallet: json['wallet'] as String? ?? 'Vault Ledger',
-              serialNumber: json['serialNumber'] as String?,
-              warrantyMonths: (json['warrantyMonths'] as num?)?.toInt(),
-            );
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'] as String?;
+            if (text != null && text.isNotEmpty) {
+              String sanitized = text.replaceAll('```json', '').replaceAll('```', '').trim();
+              final json = jsonDecode(sanitized);
+
+              final isAct = json['isAction'] == true;
+              return ValtoAgentResult(
+                isAction: isAct,
+                actionType: json['actionType'] as String? ?? (isAct ? 'hardware' : 'query'),
+                title: json['title'] as String? ?? cleanPrompt,
+                speechText: json['speechText'] as String? ?? 'Processed your request.',
+                amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+                currency: json['currency'] as String? ?? (lower.contains('usd') || cleanPrompt.contains('\$') ? 'USD' : 'IDR'),
+                category: json['category'] as String? ?? 'General',
+                wallet: json['wallet'] as String? ?? 'Vault Ledger',
+                serialNumber: json['serialNumber'] as String?,
+                warrantyMonths: (json['warrantyMonths'] as num?)?.toInt(),
+              );
+            }
           }
-        } else {
-          debugPrint('Valto Gemini API Error [${response.statusCode}]: ${response.body}');
+        } catch (e) {
+          debugPrint('[ValtoAiService] Model $model error: $e');
         }
-      } catch (e, stack) {
-        debugPrint('Valto Gemini processor fallback: $e\n$stack');
       }
     }
 

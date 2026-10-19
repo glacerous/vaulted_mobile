@@ -32,13 +32,8 @@ class GeminiService {
     final bool hasValidKey = apiKey.isNotEmpty && !apiKey.contains('your_gemini_api_key');
 
     if (hasValidKey) {
-      try {
-        final uri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$apiKey',
-        );
-
-        final base64Image = base64Encode(imageBytes);
-        final prompt = '''
+      final base64Image = base64Encode(imageBytes);
+      final prompt = '''
 Analyze this image of an invoice, receipt, warranty card, or purchase ticket.
 Extract JSON with exactly these keys:
 {
@@ -52,50 +47,55 @@ Extract JSON with exactly these keys:
 Respond ONLY with valid JSON. Do not include markdown codeblocks or extra text.
 ''';
 
-        final response = await http.post(
-          uri,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'contents': [
-              {
-                'parts': [
-                  {'text': prompt},
-                  {
-                    'inline_data': {
-                      'mime_type': mimeType,
-                      'data': base64Image,
-                    }
-                  }
-                ]
-              }
-            ],
-            'generationConfig': {
-              'temperature': 0.2,
-              'responseMimeType': 'application/json',
-            },
-          }),
-        ).timeout(const Duration(seconds: 15));
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final candidateText = data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
-          final cleanJson = candidateText.replaceAll(RegExp(r'```json|```'), '').trim();
-          final parsed = jsonDecode(cleanJson);
-
-          return GeminiInvoiceResult(
-            itemName: parsed['name'] ?? 'Vault Item',
-            category: parsed['category'] ?? 'Tech & Gadgets',
-            purchasePrice: (parsed['price'] as num?)?.toDouble() ?? 1200.0,
-            serialNumber: parsed['serial_number'] ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
-            warrantyMonths: (parsed['warranty_months'] as num?)?.toInt() ?? 12,
-            rawResponse: cleanJson,
-            isAiGenerated: true,
+      for (final model in ['gemini-3.5-flash', 'gemini-3.1-flash-lite']) {
+        try {
+          final uri = Uri.parse(
+            'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
           );
-        } else {
-          debugPrint('Gemini Image OCR returned status ${response.statusCode}: ${response.body}');
+
+          final response = await http.post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'contents': [
+                {
+                  'parts': [
+                    {'text': prompt},
+                    {
+                      'inline_data': {
+                        'mime_type': mimeType,
+                        'data': base64Image,
+                      }
+                    }
+                  ]
+                }
+              ],
+              'generationConfig': {
+                'temperature': 0.2,
+                'responseMimeType': 'application/json',
+              },
+            }),
+          ).timeout(const Duration(seconds: 8));
+
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final candidateText = data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
+            final cleanJson = candidateText.replaceAll(RegExp(r'```json|```'), '').trim();
+            final parsed = jsonDecode(cleanJson);
+
+            return GeminiInvoiceResult(
+              itemName: parsed['name'] ?? 'Vault Item',
+              category: parsed['category'] ?? 'Tech & Gadgets',
+              purchasePrice: (parsed['price'] as num?)?.toDouble() ?? 1200.0,
+              serialNumber: parsed['serial_number'] ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
+              warrantyMonths: (parsed['warranty_months'] as num?)?.toInt() ?? 12,
+              rawResponse: cleanJson,
+              isAiGenerated: true,
+            );
+          }
+        } catch (e) {
+          debugPrint('[GeminiService] Vision model $model notice: $e');
         }
-      } catch (e) {
-        debugPrint('Gemini Image OCR notice ($e), using local fallback.');
       }
     }
 
@@ -107,12 +107,7 @@ Respond ONLY with valid JSON. Do not include markdown codeblocks or extra text.
     final bool hasValidKey = apiKey.isNotEmpty && !apiKey.contains('your_gemini_api_key');
 
     if (hasValidKey) {
-      try {
-        final uri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$apiKey',
-        );
-
-        final prompt = '''
+      final prompt = '''
 You are an expert asset registrar and invoice extractor. 
 Analyze the following invoice / purchase receipt text and extract JSON with exactly these keys:
 {
@@ -129,42 +124,46 @@ Receipt Text:
 $text
 ''';
 
-        final response = await http.post(
-          uri,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'contents': [
-              {
-                'parts': [
-                  {'text': prompt}
-                ]
-              }
-            ]
-          }),
-        );
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final candidateText = data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
-          
-          // Clean possible markdown code fences
-          final cleanJson = candidateText.replaceAll(RegExp(r'```json|```'), '').trim();
-          final parsed = jsonDecode(cleanJson);
-
-          return GeminiInvoiceResult(
-            itemName: parsed['name'] ?? 'Vault Item',
-            category: parsed['category'] ?? 'Tech & Gadgets',
-            purchasePrice: (parsed['price'] as num?)?.toDouble() ?? 1200.0,
-            serialNumber: parsed['serial_number'] ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
-            warrantyMonths: (parsed['warranty_months'] as num?)?.toInt() ?? 12,
-            rawResponse: cleanJson,
-            isAiGenerated: true,
+      for (final model in ['gemini-3.5-flash', 'gemini-3.1-flash-lite']) {
+        try {
+          final uri = Uri.parse(
+            'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
           );
-        } else {
-          debugPrint('Gemini API returned status ${response.statusCode}: ${response.body}');
+
+          final response = await http.post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'contents': [
+                {
+                  'parts': [
+                    {'text': prompt}
+                  ]
+                }
+              ]
+            }),
+          ).timeout(const Duration(seconds: 8));
+
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final candidateText = data['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
+            
+            final cleanJson = candidateText.replaceAll(RegExp(r'```json|```'), '').trim();
+            final parsed = jsonDecode(cleanJson);
+
+            return GeminiInvoiceResult(
+              itemName: parsed['name'] ?? 'Vault Item',
+              category: parsed['category'] ?? 'Tech & Gadgets',
+              purchasePrice: (parsed['price'] as num?)?.toDouble() ?? 1200.0,
+              serialNumber: parsed['serial_number'] ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
+              warrantyMonths: (parsed['warranty_months'] as num?)?.toInt() ?? 12,
+              rawResponse: cleanJson,
+              isAiGenerated: true,
+            );
+          }
+        } catch (e) {
+          debugPrint('[GeminiService] Text model $model notice: $e');
         }
-      } catch (e) {
-        debugPrint('Gemini API call failed: $e. Falling back to local heuristic parser.');
       }
     }
 

@@ -76,26 +76,33 @@ class _LoginScreenState extends State<LoginScreen>
     if (user.isEmpty || pass.isEmpty) return;
 
     setModalState(() => _isLoading = true);
-    final success = await AuthService.instance.login(user, pass);
+    try {
+      final success = await AuthService.instance.login(user, pass);
 
-    if (!mounted) return;
-    setModalState(() => _isLoading = false);
+      if (!mounted) return;
 
-    if (success) {
-      Navigator.pop(context); // Close sheet
-      _navigateToApp();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Incorrect username or password.',
-            style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+      if (success) {
+        Navigator.pop(context); // Close sheet
+        _navigateToApp();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Incorrect username or password.',
+              style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: const Color(0xFF141413),
           ),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          backgroundColor: const Color(0xFF141413),
-        ),
-      );
+        );
+      }
+    } catch (e) {
+      debugPrint('[LoginScreen] Sign-in error: $e');
+    } finally {
+      if (mounted) {
+        setModalState(() => _isLoading = false);
+      }
     }
   }
 
@@ -119,26 +126,33 @@ class _LoginScreenState extends State<LoginScreen>
     }
 
     setModalState(() => _isLoading = true);
-    final success = await AuthService.instance.register(user, pass);
+    try {
+      final success = await AuthService.instance.register(user, pass);
 
-    if (!mounted) return;
-    setModalState(() => _isLoading = false);
+      if (!mounted) return;
 
-    if (success) {
-      Navigator.pop(context); // Close sheet
-      _navigateToApp();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Could not create vault. Please try another username.',
-            style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+      if (success) {
+        Navigator.pop(context); // Close sheet
+        _navigateToApp();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Could not create vault. Please try another username.',
+              style: VaultTypography.sans(fontSize: 12, color: Colors.white),
+            ),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: const Color(0xFF141413),
           ),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          backgroundColor: const Color(0xFF141413),
-        ),
-      );
+        );
+      }
+    } catch (e) {
+      debugPrint('[LoginScreen] Sign-up error: $e');
+    } finally {
+      if (mounted) {
+        setModalState(() => _isLoading = false);
+      }
     }
   }
 

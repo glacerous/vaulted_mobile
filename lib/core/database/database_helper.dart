@@ -17,6 +17,32 @@ class DatabaseHelper {
 
   DatabaseHelper._init();
 
+  static const Set<String> _validItemColumns = {
+    'id',
+    'name',
+    'category',
+    'purchase_price',
+    'current_valuation',
+    'purchase_date',
+    'warranty_expiry_date',
+    'serial_number',
+    'image_url',
+    'is_collectible',
+    'is_marketable',
+    'market_hash_name',
+    'blockchain_hash',
+  };
+
+  Map<String, dynamic> _sanitizeItemForDb(Map<String, dynamic> item) {
+    final clean = <String, dynamic>{};
+    for (var entry in item.entries) {
+      if (_validItemColumns.contains(entry.key)) {
+        clean[entry.key] = entry.value;
+      }
+    }
+    return clean;
+  }
+
   Future<Database?> get database async {
     if (kIsWeb) return null;
     if (_database != null) return _database!;
@@ -30,8 +56,18 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          try {
+            await db.execute('ALTER TABLE items ADD COLUMN is_marketable INTEGER NOT NULL DEFAULT 0');
+          } catch (_) {}
+          try {
+            await db.execute('ALTER TABLE items ADD COLUMN market_hash_name TEXT');
+          } catch (_) {}
+        }
+      },
     );
   }
 
@@ -58,6 +94,8 @@ class DatabaseHelper {
         serial_number TEXT,
         image_url TEXT,
         is_collectible INTEGER NOT NULL DEFAULT 0,
+        is_marketable INTEGER NOT NULL DEFAULT 0,
+        market_hash_name TEXT,
         blockchain_hash TEXT
       )
     ''');
@@ -83,13 +121,16 @@ class DatabaseHelper {
     });
 
     for (var item in _webItems) {
-      await db.insert('items', item);
+      await db.insert('items', _sanitizeItemForDb(item));
     }
   }
 
   Future<Map<String, dynamic>?> authenticateUser(String username, String rawPassword) async {
+    final cleanUser = username.trim().toLowerCase();
+    final cleanPass = rawPassword.trim();
+
     if (kIsWeb) {
-      if (username == 'azzaky' && rawPassword == 'admin123') {
+      if (cleanUser == 'azzaky' && cleanPass == 'admin123') {
         return {
           'id': 1,
           'username': 'azzaky',
@@ -99,54 +140,68 @@ class DatabaseHelper {
       return null;
     }
 
-    final db = await database;
-    if (db == null) return null;
+    try {
+      final db = await database;
+      if (db == null) {
+        if (cleanUser == 'azzaky' && cleanPass == 'admin123') {
+          return {'id': 1, 'username': 'azzaky', 'full_name': 'Azzaky Raihan'};
+        }
+        return null;
+      }
 
-    final cleanUser = username.trim().toLowerCase();
-    final cleanPass = rawPassword.trim();
-    final hash = sha256.convert(utf8.encode(cleanPass)).toString();
+      final hash = sha256.convert(utf8.encode(cleanPass)).toString();
 
-    // Check if user table has any user, seed default demo user if empty
-    final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM users')) ?? 0;
-    if (count == 0) {
-      final initialHash = sha256.convert(utf8.encode('admin123')).toString();
-      await db.insert('users', {
-        'username': 'azzaky',
-        'password_hash': initialHash,
-        'full_name': 'Azzaky Raihan',
-        'created_at': DateTime.now().toIso8601String(),
-      });
-    }
-
-    final results = await db.query(
-      'users',
-      where: 'LOWER(username) = ? AND password_hash = ?',
-      whereArgs: [cleanUser, hash],
-    );
-    if (results.isNotEmpty) {
-      return results.first;
-    }
-
-    // Safety fallback for demo user 'azzaky' / 'admin123'
-    if (cleanUser == 'azzaky' && cleanPass == 'admin123') {
-      try {
+      // Check if user table has any user, seed default demo user if empty
+      final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM users')) ?? 0;
+      if (count == 0) {
         final initialHash = sha256.convert(utf8.encode('admin123')).toString();
-        await db.insert(
-          'users',
-          {
-            'username': 'azzaky',
-            'password_hash': initialHash,
-            'full_name': 'Azzaky Raihan',
-            'created_at': DateTime.now().toIso8601String(),
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      } catch (_) {}
-      return {
-        'id': 1,
-        'username': 'azzaky',
-        'full_name': 'Azzaky Raihan',
-      };
+        await db.insert('users', {
+          'username': 'azzaky',
+          'password_hash': initialHash,
+          'full_name': 'Azzaky Raihan',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      final results = await db.query(
+        'users',
+        where: 'LOWER(username) = ? AND password_hash = ?',
+        whereArgs: [cleanUser, hash],
+      );
+      if (results.isNotEmpty) {
+        return results.first;
+      }
+
+      // Safety fallback for demo user 'azzaky' / 'admin123'
+      if (cleanUser == 'azzaky' && cleanPass == 'admin123') {
+        try {
+          final initialHash = sha256.convert(utf8.encode('admin123')).toString();
+          await db.insert(
+            'users',
+            {
+              'username': 'azzaky',
+              'password_hash': initialHash,
+              'full_name': 'Azzaky Raihan',
+              'created_at': DateTime.now().toIso8601String(),
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        } catch (_) {}
+        return {
+          'id': 1,
+          'username': 'azzaky',
+          'full_name': 'Azzaky Raihan',
+        };
+      }
+    } catch (e) {
+      debugPrint('[DatabaseHelper] Authentication notice: $e');
+      if (cleanUser == 'azzaky' && cleanPass == 'admin123') {
+        return {
+          'id': 1,
+          'username': 'azzaky',
+          'full_name': 'Azzaky Raihan',
+        };
+      }
     }
 
     return null;
@@ -178,16 +233,21 @@ class DatabaseHelper {
     if (kIsWeb) {
       return List.from(_webItems);
     }
-    final db = await database;
-    if (db == null) return [];
-    var items = await db.query('items', orderBy: 'id DESC');
-    if (!items.any((i) => i['category'].toString().startsWith('Steam'))) {
-      for (var asset in xelSteamAssets) {
-        await db.insert('items', Map<String, dynamic>.from(asset));
+    try {
+      final db = await database;
+      if (db == null) return List.from(_webItems);
+      var items = await db.query('items', orderBy: 'id DESC');
+      if (!items.any((i) => i['category'].toString().startsWith('Steam'))) {
+        for (var asset in xelSteamAssets) {
+          await db.insert('items', _sanitizeItemForDb(asset));
+        }
+        items = await db.query('items', orderBy: 'id DESC');
       }
-      items = await db.query('items', orderBy: 'id DESC');
+      return items;
+    } catch (e) {
+      debugPrint('[DatabaseHelper] getItems fallback: $e');
+      return List.from(_webItems);
     }
-    return items;
   }
 
   Future<int> insertItem(Map<String, dynamic> item) async {
@@ -195,9 +255,18 @@ class DatabaseHelper {
       _webItems.add(item);
       return _webItems.length;
     }
-    final db = await database;
-    if (db == null) return 0;
-    return await db.insert('items', item);
+    try {
+      final db = await database;
+      if (db == null) {
+        _webItems.add(item);
+        return _webItems.length;
+      }
+      return await db.insert('items', _sanitizeItemForDb(item));
+    } catch (e) {
+      debugPrint('[DatabaseHelper] insertItem fallback: $e');
+      _webItems.add(item);
+      return _webItems.length;
+    }
   }
 
   Future<void> removeMockItems() async {
@@ -207,14 +276,20 @@ class DatabaseHelper {
           i['name'] == 'Butterfly Knife | Doppler (Phase 2)');
       return;
     }
-    final db = await database;
-    if (db == null) return;
-    await db.delete('items',
-        where: 'name IN (?, ?)',
-        whereArgs: [
-          'AK-47 | Case Hardened (Tier 2 Blue Gem)',
-          'Butterfly Knife | Doppler (Phase 2)',
-        ]);
+    try {
+      final db = await database;
+      if (db == null) return;
+      await db.delete('items',
+          where: 'name IN (?, ?)',
+          whereArgs: [
+            'AK-47 | Case Hardened (Tier 2 Blue Gem)',
+            'Butterfly Knife | Doppler (Phase 2)',
+          ]);
+    } catch (_) {
+      _webItems.removeWhere((i) =>
+          i['name'] == 'AK-47 | Case Hardened (Tier 2 Blue Gem)' ||
+          i['name'] == 'Butterfly Knife | Doppler (Phase 2)');
+    }
   }
 
   Future<void> replaceSteamItems(List<Map<String, dynamic>> newItems) async {
@@ -223,24 +298,34 @@ class DatabaseHelper {
       _webItems.addAll(newItems);
       return;
     }
-    final db = await database;
-    if (db == null) return;
-    await db.delete('items', where: "category LIKE 'Steam%'");
-    for (var item in newItems) {
-      final insertMap = Map<String, dynamic>.from(item);
-      insertMap.remove('id');
-      await db.insert('items', insertMap);
+    try {
+      final db = await database;
+      if (db == null) {
+        _webItems.removeWhere((i) => i['category'].toString().startsWith('Steam'));
+        _webItems.addAll(newItems);
+        return;
+      }
+      await db.delete('items', where: "category LIKE 'Steam%'");
+      for (var item in newItems) {
+        final insertMap = _sanitizeItemForDb(item);
+        insertMap.remove('id');
+        await db.insert('items', insertMap);
+      }
+    } catch (e) {
+      debugPrint('[DatabaseHelper] replaceSteamItems fallback: $e');
+      _webItems.removeWhere((i) => i['category'].toString().startsWith('Steam'));
+      _webItems.addAll(newItems);
     }
   }
 
   Future<void> clearSteamItems() async {
-    if (kIsWeb) {
-      _webItems.removeWhere((i) => i['category'].toString().startsWith('Steam'));
-      return;
-    }
-    final db = await database;
-    if (db == null) return;
-    await db.delete('items', where: "category LIKE 'Steam%'");
+    _webItems.removeWhere((i) => i['category'].toString().startsWith('Steam'));
+    if (kIsWeb) return;
+    try {
+      final db = await database;
+      if (db == null) return;
+      await db.delete('items', where: "category LIKE 'Steam%'");
+    } catch (_) {}
   }
 
   final List<Map<String, dynamic>> _webSubscriptions = [

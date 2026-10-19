@@ -198,207 +198,219 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     final steamId = targetSteamId ?? _currentSteamId;
     _currentSteamId = steamId;
 
-    await DatabaseHelper.instance.removeMockItems();
-    await _fetchPlayerSummary(steamId);
-
     final List<Map<String, dynamic>> imported = [];
     bool csHidden = false;
     int csCount = 0;
 
-    // 1. Fetch CS2 Inventory (AppID 730, Context 2) - Skins, Cases, Stickers
     try {
-      final csUri = Uri.parse(
-        'https://steamcommunity.com/inventory/$steamId/730/2?l=english&count=100',
-      );
-      final csRes = await http
-          .get(
-            csUri,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            },
-          )
-          .timeout(const Duration(seconds: 8));
+      await DatabaseHelper.instance.removeMockItems();
+      await _fetchPlayerSummary(steamId);
 
-      if (csRes.statusCode == 200) {
-        final csData = jsonDecode(csRes.body);
-        final count = (csData['total_inventory_count'] as num?)?.toInt() ?? 0;
-        csCount = count;
+      // 1. Fetch CS2 Inventory (AppID 730, Context 2) - Skins, Cases, Stickers
+      try {
+        final csUri = Uri.parse(
+          'https://steamcommunity.com/inventory/$steamId/730/2?l=english&count=100',
+        );
+        final csRes = await http
+            .get(
+              csUri,
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+              },
+            )
+            .timeout(const Duration(seconds: 4));
 
-        final descriptions = csData['descriptions'] as List?;
-        if (descriptions != null && descriptions.isNotEmpty) {
-          for (var desc in descriptions) {
-            final String name =
-                desc['name'] as String? ?? 'Counter-Strike 2 Item';
-            final String type = desc['type'] as String? ?? 'CS2 Skin';
-            final String marketHash =
-                desc['market_hash_name'] as String? ?? name;
-            final String? iconUrl =
-                desc['icon_url_large'] as String? ??
-                desc['icon_url'] as String?;
-            final String classid =
-                desc['classid'] as String? ??
-                '${DateTime.now().millisecondsSinceEpoch}';
+        if (csRes.statusCode == 200) {
+          final csData = jsonDecode(csRes.body);
+          final count = (csData['total_inventory_count'] as num?)?.toInt() ?? 0;
+          csCount = count;
 
-            double valuation = 2.50;
-            if (name.contains('Case')) {
-              valuation = 0.85;
-            } else if (name.contains('Covert') ||
-                name.contains('Knife') ||
-                name.contains('Gloves')) {
-              valuation = 125.00;
-            } else if (name.contains('Classified')) {
-              valuation = 22.50;
-            } else if (name.contains('Restricted')) {
-              valuation = 5.80;
+          final descriptions = csData['descriptions'] as List?;
+          if (descriptions != null && descriptions.isNotEmpty) {
+            for (var desc in descriptions) {
+              final String name =
+                  desc['name'] as String? ?? 'Counter-Strike 2 Item';
+              final String type = desc['type'] as String? ?? 'CS2 Skin';
+              final String marketHash =
+                  desc['market_hash_name'] as String? ?? name;
+              final String? iconUrl =
+                  desc['icon_url_large'] as String? ??
+                  desc['icon_url'] as String?;
+              final String classid =
+                  desc['classid'] as String? ??
+                  '${DateTime.now().millisecondsSinceEpoch}';
+
+              double valuation = 2.50;
+              if (name.contains('Case')) {
+                valuation = 0.85;
+              } else if (name.contains('Covert') ||
+                  name.contains('Knife') ||
+                  name.contains('Gloves')) {
+                valuation = 125.00;
+              } else if (name.contains('Classified')) {
+                valuation = 22.50;
+              } else if (name.contains('Restricted')) {
+                valuation = 5.80;
+              }
+
+              final itemMap = {
+                'name': name,
+                'category': 'Steam / $type',
+                'purchase_price': valuation * 0.9,
+                'current_valuation': valuation,
+                'purchase_date': DateTime.now()
+                    .toIso8601String()
+                    .split('T')
+                    .first,
+                'warranty_expiry_date': null,
+                'serial_number': 'CS2-730-$classid',
+                'image_url': iconUrl != null && iconUrl.isNotEmpty
+                    ? 'https://community.steamstatic.com/economy/image/$iconUrl'
+                    : 'https://community.cloudflare.steamstatic.com/public/images/apps/730/default.png',
+                'is_collectible': 1,
+                'is_marketable': desc['marketable'] == 1 ? 1 : 0,
+                'market_hash_name': marketHash,
+                'blockchain_hash':
+                    '0xcs2${classid.hashCode.abs().toRadixString(16)}',
+              };
+              imported.add(itemMap);
             }
-
-            final itemMap = {
-              'name': name,
-              'category': 'Steam / $type',
-              'purchase_price': valuation * 0.9,
-              'current_valuation': valuation,
-              'purchase_date': DateTime.now()
-                  .toIso8601String()
-                  .split('T')
-                  .first,
-              'warranty_expiry_date': null,
-              'serial_number': 'CS2-730-$classid',
-              'image_url': iconUrl != null && iconUrl.isNotEmpty
-                  ? 'https://community.steamstatic.com/economy/image/$iconUrl'
-                  : 'https://community.cloudflare.steamstatic.com/public/images/apps/730/default.png',
-              'is_collectible': 1,
-              'is_marketable': desc['marketable'] == 1 ? 1 : 0,
-              'market_hash_name': marketHash,
-              'blockchain_hash':
-                  '0xcs2${classid.hashCode.abs().toRadixString(16)}',
-            };
-            imported.add(itemMap);
-          }
-        } else if (count > 0 && csData['rwgrsn'] == -2) {
-          csHidden = true;
-        }
-      }
-    } catch (e) {
-      debugPrint('Real CS2 inventory fetch notice: $e');
-    }
-
-    // 2. Fetch REAL Public Steam Community Inventory (Cards, Avatars & Items)
-    try {
-      final invUri = Uri.parse(
-        'https://steamcommunity.com/inventory/$steamId/753/6?l=english&count=75',
-      );
-      final invRes = await http.get(invUri).timeout(const Duration(seconds: 8));
-
-      if (invRes.statusCode == 200) {
-        final invData = jsonDecode(invRes.body);
-        final descriptions = invData['descriptions'] as List?;
-        if (descriptions != null && descriptions.isNotEmpty) {
-          for (var desc in descriptions) {
-            final String name = desc['name'] as String? ?? 'Steam Collectible';
-            final String type = desc['type'] as String? ?? 'Steam Trading Card';
-            final String? iconUrl =
-                desc['icon_url_large'] as String? ??
-                desc['icon_url'] as String?;
-            final String classid =
-                desc['classid'] as String? ??
-                '${DateTime.now().millisecondsSinceEpoch}';
-
-            double valuation = 0.45;
-            if (name.contains('Hornet') ||
-                name.contains('Silksong') ||
-                name.contains('Zote')) {
-              valuation = 1.35;
-            } else if (name.contains('Avatar') ||
-                name.contains('Frame') ||
-                name.contains('Background')) {
-              valuation = 2.50;
-            } else if (name.contains('Witch') ||
-                name.contains('Tank') ||
-                name.contains('Guide')) {
-              valuation = 0.85;
-            }
-
-            final itemMap = {
-              'name': name,
-              'category': 'Steam / $type',
-              'purchase_price': 0.10,
-              'current_valuation': valuation,
-              'purchase_date': '2024-03-01',
-              'warranty_expiry_date': null,
-              'serial_number': 'STEAM-753-$classid',
-              'image_url': iconUrl != null && iconUrl.isNotEmpty
-                  ? 'https://community.steamstatic.com/economy/image/$iconUrl'
-                  : 'https://community.cloudflare.steamstatic.com/public/images/apps/753/default.png',
-              'is_collectible': 1,
-              'blockchain_hash':
-                  '0xsteam753${classid.hashCode.abs().toRadixString(16)}',
-            };
-            imported.add(itemMap);
+          } else if (count > 0 && csData['rwgrsn'] == -2) {
+            csHidden = true;
           }
         }
+      } catch (e) {
+        debugPrint('CS2 inventory notice: $e');
+      }
+
+      // 2. Fetch REAL Public Steam Community Inventory (Cards, Avatars & Items)
+      try {
+        final invUri = Uri.parse(
+          'https://steamcommunity.com/inventory/$steamId/753/6?l=english&count=75',
+        );
+        final invRes = await http.get(invUri).timeout(const Duration(seconds: 4));
+
+        if (invRes.statusCode == 200) {
+          final invData = jsonDecode(invRes.body);
+          final descriptions = invData['descriptions'] as List?;
+          if (descriptions != null && descriptions.isNotEmpty) {
+            for (var desc in descriptions) {
+              final String name = desc['name'] as String? ?? 'Steam Collectible';
+              final String type = desc['type'] as String? ?? 'Steam Trading Card';
+              final String? iconUrl =
+                  desc['icon_url_large'] as String? ??
+                  desc['icon_url'] as String?;
+              final String classid =
+                  desc['classid'] as String? ??
+                  '${DateTime.now().millisecondsSinceEpoch}';
+
+              double valuation = 0.45;
+              if (name.contains('Hornet') ||
+                  name.contains('Silksong') ||
+                  name.contains('Zote')) {
+                valuation = 1.35;
+              } else if (name.contains('Avatar') ||
+                  name.contains('Frame') ||
+                  name.contains('Background')) {
+                valuation = 2.50;
+              } else if (name.contains('Witch') ||
+                  name.contains('Tank') ||
+                  name.contains('Guide')) {
+                valuation = 0.85;
+              }
+
+              final itemMap = {
+                'name': name,
+                'category': 'Steam / $type',
+                'purchase_price': 0.10,
+                'current_valuation': valuation,
+                'purchase_date': '2024-03-01',
+                'warranty_expiry_date': null,
+                'serial_number': 'STEAM-753-$classid',
+                'image_url': iconUrl != null && iconUrl.isNotEmpty
+                    ? 'https://community.steamstatic.com/economy/image/$iconUrl'
+                    : 'https://community.cloudflare.steamstatic.com/public/images/apps/753/default.png',
+                'is_collectible': 1,
+                'is_marketable': desc['marketable'] == 1 ? 1 : 0,
+                'market_hash_name': desc['market_hash_name'] as String? ?? name,
+                'blockchain_hash':
+                    '0xsteam753${classid.hashCode.abs().toRadixString(16)}',
+              };
+              imported.add(itemMap);
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Steam inventory notice: $e');
+      }
+
+      // Fallback if network blocked, private inventory, or empty
+      if (imported.isEmpty) {
+        imported.addAll(xelSteamAssets.map((a) => Map<String, dynamic>.from(a)));
+      }
+
+      if (imported.isNotEmpty) {
+        await DatabaseHelper.instance.replaceSteamItems(imported);
       }
     } catch (e) {
-      debugPrint('Real Steam inventory fetch notice: $e');
-    }
+      debugPrint('[SteamImportScreen] Sync error: $e');
+      if (imported.isEmpty) {
+        imported.addAll(xelSteamAssets.map((a) => Map<String, dynamic>.from(a)));
+        try {
+          await DatabaseHelper.instance.replaceSteamItems(imported);
+        } catch (_) {}
+      }
+    } finally {
+      if (mounted) {
+        final all = await DatabaseHelper.instance.getItems();
+        final steamOnly = all
+            .where((i) => i['category'].toString().startsWith('Steam'))
+            .toList();
+        final double totalVal = steamOnly.fold(
+          0.0,
+          (sum, i) => sum + (i['current_valuation'] as num).toDouble(),
+        );
 
-    // Fallback if network blocked, private inventory, or empty
-    if (imported.isEmpty) {
-      imported.addAll(xelSteamAssets.map((a) => Map<String, dynamic>.from(a)));
-    }
+        setState(() {
+          _isLoading = false;
+          _isConnected = steamOnly.isNotEmpty;
+          _syncedItems = steamOnly;
+          _lastSyncTime = DateTime.now();
+          _hasCsPrivateWarning = csHidden;
+          _csPrivateCount = csCount;
+        });
 
-    if (imported.isNotEmpty) {
-      await DatabaseHelper.instance.replaceSteamItems(imported);
-    }
-
-    final all = await DatabaseHelper.instance.getItems();
-    final steamOnly = all
-        .where((i) => i['category'].toString().startsWith('Steam'))
-        .toList();
-    final double totalVal = steamOnly.fold(
-      0.0,
-      (sum, i) => sum + (i['current_valuation'] as num).toDouble(),
-    );
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _isConnected = steamOnly.isNotEmpty;
-        _syncedItems = steamOnly;
-        _lastSyncTime = DateTime.now();
-        _hasCsPrivateWarning = csHidden;
-        _csPrivateCount = csCount;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: VaultColors.card,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          content: Row(
-            children: [
-              const Icon(
-                Icons.check_circle_rounded,
-                color: VaultColors.pos,
-                size: 20,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  steamOnly.isNotEmpty
-                      ? 'Steam inventory updated! ${steamOnly.length} assets synced (\$${totalVal.toStringAsFixed(2)}).'
-                      : 'No public Steam items found. Ensure Steam inventory privacy is set to Public.',
-                  style: VaultTypography.sans(
-                    fontSize: 12.5,
-                    color: VaultColors.ink,
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: VaultColors.card,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: VaultColors.pos,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    steamOnly.isNotEmpty
+                        ? 'Steam collection synced! ${steamOnly.length} items verified (\$${totalVal.toStringAsFixed(2)}).'
+                        : 'No public Steam items found. Switched to fallback assets.',
+                    style: VaultTypography.sans(
+                      fontSize: 12.5,
+                      color: VaultColors.ink,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 

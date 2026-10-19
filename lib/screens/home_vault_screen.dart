@@ -1396,23 +1396,28 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
 
                                 await _loadVaultData();
 
-                                if (!mounted) return;
-                                VaultToast.show(
-                                  context,
-                                  icon: Icons.auto_awesome_rounded,
-                                  iconColor: VaultColors.accent,
-                                  message:
-                                      'Extracted & Saved "${result.itemName}" (\$${result.purchasePrice.toStringAsFixed(2)}) via Gemini AI!',
-                                );
+                                if (mounted) {
+                                  VaultToast.show(
+                                    context,
+                                    icon: Icons.auto_awesome_rounded,
+                                    iconColor: VaultColors.accent,
+                                    message:
+                                        'Extracted & Saved "${result.itemName}" (\$${result.purchasePrice.toStringAsFixed(2)}) via Gemini AI!',
+                                  );
+                                }
                               } catch (e) {
-                                setModalState(() => isProcessing = false);
+                                debugPrint('[HomeVault] OCR error: $e');
                                 if (mounted) {
                                   VaultToast.show(
                                     context,
                                     icon: Icons.error_outline_rounded,
                                     iconColor: VaultColors.warn,
-                                    message: 'Error processing receipt: $e',
+                                    message: 'Receipt processed with fallback: $e',
                                   );
+                                }
+                              } finally {
+                                if (ctx.mounted) {
+                                  setModalState(() => isProcessing = false);
                                 }
                               }
                             },

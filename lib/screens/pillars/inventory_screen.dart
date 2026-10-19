@@ -489,7 +489,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   );
                                 }
                               } catch (e) {
-                                setModalState(() => isProcessing = false);
+                                debugPrint('[InventoryScreen] OCR error: $e');
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -501,6 +501,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       ),
                                     ),
                                   );
+                                }
+                              } finally {
+                                if (ctx.mounted) {
+                                  setModalState(() => isProcessing = false);
                                 }
                               }
                             },

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import '../constants/vault_config.dart';
 
 class GeminiInvoiceResult {
   final String itemName;
@@ -28,8 +28,8 @@ class GeminiService {
   static final GeminiService instance = GeminiService._();
 
   Future<GeminiInvoiceResult> parseInvoiceImage(Uint8List imageBytes, {String mimeType = 'image/jpeg'}) async {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    final bool hasValidKey = apiKey != null && apiKey.isNotEmpty && !apiKey.contains('your_gemini_api_key');
+    final apiKey = VaultConfig.geminiApiKey;
+    final bool hasValidKey = apiKey.isNotEmpty && !apiKey.contains('your_gemini_api_key');
 
     if (hasValidKey) {
       try {
@@ -68,9 +68,13 @@ Respond ONLY with valid JSON. Do not include markdown codeblocks or extra text.
                   }
                 ]
               }
-            ]
+            ],
+            'generationConfig': {
+              'temperature': 0.2,
+              'responseMimeType': 'application/json',
+            },
           }),
-        );
+        ).timeout(const Duration(seconds: 15));
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -91,7 +95,7 @@ Respond ONLY with valid JSON. Do not include markdown codeblocks or extra text.
           debugPrint('Gemini Image OCR returned status ${response.statusCode}: ${response.body}');
         }
       } catch (e) {
-        debugPrint('Gemini Image OCR failed: $e');
+        debugPrint('Gemini Image OCR notice ($e), using local fallback.');
       }
     }
 
@@ -99,13 +103,13 @@ Respond ONLY with valid JSON. Do not include markdown codeblocks or extra text.
   }
 
   Future<GeminiInvoiceResult> parseInvoiceText(String text) async {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    final bool hasValidKey = apiKey != null && apiKey.isNotEmpty && !apiKey.contains('your_gemini_api_key');
+    final apiKey = VaultConfig.geminiApiKey;
+    final bool hasValidKey = apiKey.isNotEmpty && !apiKey.contains('your_gemini_api_key');
 
     if (hasValidKey) {
       try {
         final uri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=$apiKey',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$apiKey',
         );
 
         final prompt = '''

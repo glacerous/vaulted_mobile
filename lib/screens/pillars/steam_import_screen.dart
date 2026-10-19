@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 import '../../core/constants/colors.dart';
 import '../../core/constants/typography.dart';
+import '../../core/constants/vault_config.dart';
 import '../../core/database/database_helper.dart';
 import '../../core/data/real_steam_assets.dart';
 import '../../core/utils/image_utils.dart';
@@ -122,10 +122,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
   }
 
   Future<void> _fetchPlayerSummary(String steamId) async {
-    final apiKey = dotenv.env['STEAM_API_KEY'];
-    if (apiKey != null &&
-        apiKey.isNotEmpty &&
-        !apiKey.contains('your_steam_api_key')) {
+    final apiKey = VaultConfig.steamApiKey;
+    if (apiKey.isNotEmpty && !apiKey.contains('your_steam_api_key')) {
       try {
         final sumUri = Uri.parse(
           'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=$apiKey&steamids=$steamId',
@@ -167,10 +165,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
         : (!input.contains('/') ? input : null);
 
     if (vanity != null) {
-      final apiKey = dotenv.env['STEAM_API_KEY'];
-      if (apiKey != null &&
-          apiKey.isNotEmpty &&
-          !apiKey.contains('your_steam_api_key')) {
+      final apiKey = VaultConfig.steamApiKey;
+      if (apiKey.isNotEmpty && !apiKey.contains('your_steam_api_key')) {
         try {
           final res = await http
               .get(

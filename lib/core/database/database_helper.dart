@@ -158,14 +158,16 @@ class DatabaseHelper {
     }
     final db = await database;
     if (db == null) return false;
-    final hash = sha256.convert(utf8.encode(rawPassword)).toString();
+    final cleanUser = username.trim().toLowerCase();
+    final cleanPass = rawPassword.trim();
+    final hash = sha256.convert(utf8.encode(cleanPass)).toString();
     try {
       await db.insert('users', {
-        'username': username,
+        'username': cleanUser,
         'password_hash': hash,
-        'full_name': fullName ?? username,
+        'full_name': (fullName?.trim().isNotEmpty == true) ? fullName!.trim() : username.trim(),
         'created_at': DateTime.now().toIso8601String(),
-      });
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
       return true;
     } catch (_) {
       return false;

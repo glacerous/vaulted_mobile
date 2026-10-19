@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../constants/colors.dart';
 import '../constants/typography.dart';
+import '../constants/vault_config.dart';
 
 class BlockchainService {
   BlockchainService._();
@@ -27,7 +27,7 @@ class BlockchainService {
     required String hash,
     required String registeredDate,
   }) {
-    final rpcUrl = dotenv.env['POLYGON_RPC_URL'] ?? 'https://rpc-amoy.polygon.technology';
+    final rpcUrl = VaultConfig.polygonRpcUrl;
 
     showModalBottomSheet(
       context: context,

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import '../constants/vault_config.dart';
 import '../database/database_helper.dart';
 
 class ValtoAgentResult {
@@ -122,8 +122,8 @@ class ValtoAiService {
     }
 
     // 3. Try Gemini 3.8 Flash API for natural language extraction & deep query reasoning
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    if (apiKey != null && apiKey.isNotEmpty && !apiKey.contains('your_gemini')) {
+    final apiKey = VaultConfig.geminiApiKey;
+    if (apiKey.isNotEmpty && !apiKey.contains('your_gemini')) {
       try {
         final uri = Uri.parse(
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$apiKey',

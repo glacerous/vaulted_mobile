@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/constants/colors.dart';
+import 'core/constants/vault_config.dart';
 import 'core/security/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_navigation_screen.dart';
@@ -9,11 +9,7 @@ import 'screens/main_navigation_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (_) {
-    // Graceful fallback if .env is missing
-  }
+  await VaultConfig.initialize();
 
   // Dark navigation bar & status bar overlay matching Vantis Vault
   SystemChrome.setSystemUIOverlayStyle(

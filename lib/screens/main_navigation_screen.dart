@@ -143,9 +143,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               children: [
                 _buildTabItem(
                   index: 0,
-                  label: 'Vault',
-                  icon: Icons.shield_outlined,
-                  activeIcon: Icons.shield_rounded,
+                  label: 'Home',
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home_rounded,
                 ),
                 _buildTabItem(
                   index: 1,

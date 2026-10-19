@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -14,6 +15,7 @@ import '../../core/services/gemini_service.dart';
 import '../../core/services/blockchain_service.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/utils/image_utils.dart';
+import '../../core/widgets/valto_mascot.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -167,66 +169,70 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   void _showAiScannerModal() {
-    final textController = TextEditingController(
-      text: 'Apple Store Receipt #90214\nModel: Apple MacBook Pro 14" M3 Max\nSerial: C02G90PLQ6L4\nDate: 2024-03-12\nTotal: \$1,999.00 USD\nAppleCare+ Warranty: 24 Months Coverage Included',
-    );
+    final textController = TextEditingController();
+    Uint8List? selectedImageBytes;
     bool isProcessing = false;
+    final picker = ImagePicker();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: VaultColors.card,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (ctx) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (modalCtx, setModalState) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 24,
+                left: 22,
+                right: 22,
+                top: 20,
                 bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Container(
+                      width: 38,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: VaultColors.hairline,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: VaultColors.accent.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.auto_awesome_rounded,
-                              color: VaultColors.accent,
-                              size: 20,
-                            ),
+                          const ValtoMascot(
+                            size: 36,
+                            mood: ValtoMood.detective,
+                            showHat: true,
                           ),
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'GOOGLE GEMINI 1.5 FLASH',
+                                'VALTO OCR (AI VISION)',
                                 style: VaultTypography.mono(
                                   fontSize: 10,
-                                  letterSpacing: 1.2,
+                                  letterSpacing: 1.1,
                                   color: VaultColors.accent,
                                 ),
                               ),
                               Text(
-                                'AI Receipt & Warranty OCR',
+                                'Scan Receipt or Warranty Card',
                                 style: VaultTypography.sans(
                                   fontSize: 15,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
@@ -243,42 +249,170 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    'PRESET RECEIPT SAMPLE',
-                    style: VaultTypography.mono(
-                      fontSize: 10,
-                      letterSpacing: 1,
-                      color: VaultColors.ink2,
+
+                  // Image Preview or Camera / Gallery Upload Trigger Buttons
+                  if (selectedImageBytes != null) ...[
+                    Container(
+                      width: double.infinity,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        color: VaultColors.cardHover,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: VaultColors.accent.withValues(alpha: 0.5),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(15),
+                            child: Image.memory(
+                              selectedImageBytes!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: 160,
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  selectedImageBytes = null;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black87,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+                    const SizedBox(height: 12),
+                  ] else ...[
+                    Row(
                       children: [
-                        _buildPresetChip(
-                          'MacBook Pro M3',
-                          'Apple Store Receipt #90214\nModel: Apple MacBook Pro 14" M3 Max\nSerial: C02G90PLQ6L4\nTotal: \$1,999.00\nAppleCare: 24 Months',
-                          textController,
+                        Expanded(
+                          child: InkWell(
+                            onTap: isProcessing
+                                ? null
+                                : () async {
+                                    try {
+                                      final photo = await picker.pickImage(
+                                        source: ImageSource.camera,
+                                        maxWidth: 1200,
+                                        imageQuality: 85,
+                                      );
+                                      if (photo != null) {
+                                        final bytes = await photo.readAsBytes();
+                                        setModalState(() {
+                                          selectedImageBytes = bytes;
+                                        });
+                                      }
+                                    } catch (e) {
+                                      debugPrint('Camera error: $e');
+                                    }
+                                  },
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: VaultColors.cardHover,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: VaultColors.hairline),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(
+                                    Icons.photo_camera_rounded,
+                                    color: VaultColors.accent,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Take Photo',
+                                    style: VaultTypography.sans(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: VaultColors.ink,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        _buildPresetChip(
-                          'Rolex Submariner',
-                          'Bucherer Geneva Warranty Certificate\nRolex Submariner Date 126610LN\nSerial: RX-9918231\nPrice: \$10,250.00\nWarranty: 60 Months International',
-                          textController,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildPresetChip(
-                          'Leica M11',
-                          'Leica Store Wetzlar\nLeica M11 Rangefinder Black Paint\nSerial: LC-5829104\nTotal: \$8,995.00\nWarranty: 36 Months',
-                          textController,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            onTap: isProcessing
+                                ? null
+                                : () async {
+                                    try {
+                                      final image = await picker.pickImage(
+                                        source: ImageSource.gallery,
+                                        maxWidth: 1200,
+                                        imageQuality: 85,
+                                      );
+                                      if (image != null) {
+                                        final bytes = await image.readAsBytes();
+                                        setModalState(() {
+                                          selectedImageBytes = bytes;
+                                        });
+                                      }
+                                    } catch (e) {
+                                      debugPrint('Gallery error: $e');
+                                    }
+                                  },
+                            borderRadius: BorderRadius.circular(14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: VaultColors.cardHover,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: VaultColors.hairline),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(
+                                    Icons.photo_library_rounded,
+                                    color: VaultColors.ink,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Upload Image',
+                                    style: VaultTypography.sans(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: VaultColors.ink,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 14),
+                    const SizedBox(height: 12),
+                  ],
+
                   Text(
-                    'INVOICE / RECEIPT TEXT',
+                    'OR PASTE RECEIPT TEXT / SERIAL NUMBER',
                     style: VaultTypography.mono(
                       fontSize: 10,
                       letterSpacing: 1,
@@ -288,49 +422,86 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: textController,
-                    maxLines: 4,
-                    style: VaultTypography.mono(
-                      fontSize: 12,
+                    maxLines: 3,
+                    style: VaultTypography.sans(
+                      fontSize: 13,
                       color: VaultColors.ink,
                     ),
                     decoration: InputDecoration(
+                      hintText: 'e.g. MacBook Pro 14 M3, Serial C02G90PLQ6L4, Total \$1,999...',
+                      hintStyle: VaultTypography.sans(
+                        fontSize: 12.5,
+                        color: VaultColors.ink3,
+                      ),
                       filled: true,
-                      fillColor: VaultColors.background,
+                      fillColor: VaultColors.cardHover,
                       contentPadding: const EdgeInsets.all(12),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: VaultColors.hairline,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: VaultColors.hairline,
-                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
+
                   SizedBox(
                     width: double.infinity,
-                    height: 48,
+                    height: 50,
                     child: ElevatedButton.icon(
                       onPressed: isProcessing
                           ? null
                           : () async {
-                              setModalState(() => isProcessing = true);
-                              final result = await GeminiService.instance
-                                  .parseInvoiceText(textController.text);
-                              if (ctx.mounted) {
-                                Navigator.pop(ctx);
-                                _showAddItemModal(
-                                  initialName: result.itemName,
-                                  initialCategory: result.category,
-                                  initialPrice: result.purchasePrice,
-                                  initialSerial: result.serialNumber,
-                                  initialWarranty: result.warrantyMonths,
+                              final text = textController.text.trim();
+                              if (selectedImageBytes == null && text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: VaultColors.card,
+                                    behavior: SnackBarBehavior.floating,
+                                    content: Text(
+                                      'Please take a photo or enter receipt text first.',
+                                      style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink),
+                                    ),
+                                  ),
                                 );
+                                return;
+                              }
+
+                              setModalState(() => isProcessing = true);
+
+                              try {
+                                GeminiInvoiceResult result;
+                                if (selectedImageBytes != null) {
+                                  result = await GeminiService.instance
+                                      .parseInvoiceImage(selectedImageBytes!);
+                                } else {
+                                  result = await GeminiService.instance
+                                      .parseInvoiceText(text);
+                                }
+
+                                if (ctx.mounted) {
+                                  Navigator.pop(ctx);
+                                  _showAddItemModal(
+                                    initialName: result.itemName,
+                                    initialCategory: result.category,
+                                    initialPrice: result.purchasePrice,
+                                    initialSerial: result.serialNumber,
+                                    initialWarranty: result.warrantyMonths,
+                                  );
+                                }
+                              } catch (e) {
+                                setModalState(() => isProcessing = false);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: VaultColors.card,
+                                      behavior: SnackBarBehavior.floating,
+                                      content: Text(
+                                        'Error processing receipt: $e',
+                                        style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink),
+                                      ),
+                                    ),
+                                  );
+                                }
                               }
                             },
                       icon: isProcessing
@@ -345,7 +516,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           : const Icon(Icons.auto_awesome_rounded, size: 18),
                       label: Text(
                         isProcessing
-                            ? 'Analyzing with Gemini...'
+                            ? 'Analyzing with AI Vision...'
                             : 'Extract & Auto-Fill',
                         style: VaultTypography.sans(
                           fontSize: 14,
@@ -358,7 +529,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         foregroundColor: VaultColors.background,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                     ),

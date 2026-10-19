@@ -24,7 +24,7 @@ class InventoryScreen extends StatefulWidget {
 
 class _InventoryScreenState extends State<InventoryScreen> {
   List<Map<String, dynamic>> _allItems = [];
-  String _selectedFilter = 'All';
+  String _selectedFilter = 'All Hardware';
   String _selectedSort = 'Value ↓';
   bool _isLoading = true;
 
@@ -105,16 +105,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   List<Map<String, dynamic>> get _items {
+    // InventoryScreen is dedicated purely to physical Hardware, Tech & Devices.
+    // Steam collectibles are managed in the Steam & Gaming Vault.
+    final hardwareOnly = _allItems
+        .where((i) => !i['category'].toString().startsWith('Steam') && i['is_collectible'] == 0)
+        .toList();
+
     List<Map<String, dynamic>> list;
-    if (_selectedFilter == 'Hardware') {
-      list = _allItems.where((i) => i['is_collectible'] == 0).toList();
-    } else if (_selectedFilter == 'Steam' ||
-        _selectedFilter.contains('Steam')) {
-      list = _allItems
-          .where((i) => i['category'].toString().startsWith('Steam'))
+    if (_selectedFilter == 'Protected' || _selectedFilter == 'With Warranty') {
+      list = hardwareOnly
+          .where((i) => i['warranty_expiry_date'] != null && i['warranty_expiry_date'].toString().isNotEmpty)
+          .toList();
+    } else if (_selectedFilter == 'Apple' || _selectedFilter == 'Sony' || _selectedFilter == 'Samsung') {
+      list = hardwareOnly
+          .where((i) => (i['name'] ?? '').toString().toLowerCase().contains(_selectedFilter.toLowerCase()))
           .toList();
     } else {
-      list = List.from(_allItems);
+      list = List.from(hardwareOnly);
     }
 
     // Pencarian: cocokkan nama, kategori, atau serial number
@@ -594,7 +601,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
           onPressed: () => Navigator.pop(context, true),
         ),
-        title: Text('Inventory', style: VaultTypography.sectionTitle),
+        title: Text('Hardware & Devices', style: VaultTypography.sectionTitle),
         actions: [
           IconButton(
             tooltip: 'AI Invoice Scanner (Gemini)',
@@ -606,7 +613,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             onPressed: _showAiScannerModal,
           ),
           IconButton(
-            tooltip: 'Add Item',
+            tooltip: 'Add Hardware Item',
             icon: const Icon(
               Icons.add_rounded,
               color: VaultColors.ink,
@@ -623,7 +630,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'TOTAL INVENTORY VALUE',
+                'TOTAL HARDWARE VALUE',
                 style: VaultTypography.mono(
                   fontSize: 10,
                   letterSpacing: 1.2,
@@ -649,25 +656,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
               const SizedBox(height: 12),
               _buildSearchBar(),
               const SizedBox(height: 12),
-              // Category filter pills
+              // Category filter pills for hardware only
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 child: Row(
                   children: [
-                    _buildFilterChip('All', _allItems.length),
-                    const SizedBox(width: 8),
                     _buildFilterChip(
-                      'Hardware',
-                      _allItems.where((i) => i['is_collectible'] == 0).length,
+                      'All Hardware',
+                      _allItems.where((i) => !i['category'].toString().startsWith('Steam') && i['is_collectible'] == 0).length,
                     ),
                     const SizedBox(width: 8),
                     _buildFilterChip(
-                      'Steam Items',
+                      'With Warranty',
                       _allItems
-                          .where(
-                            (i) => i['category'].toString().startsWith('Steam'),
-                          )
+                          .where((i) =>
+                              !i['category'].toString().startsWith('Steam') &&
+                              i['is_collectible'] == 0 &&
+                              i['warranty_expiry_date'] != null &&
+                              i['warranty_expiry_date'].toString().isNotEmpty)
                           .length,
                     ),
                   ],
@@ -767,7 +774,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           ),
                           const SizedBox(height: 14),
                           Text(
-                            'No gear in inventory yet',
+                            'No hardware logged yet',
                             style: VaultTypography.sans(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -775,7 +782,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Add your first item — a watch, a camera, a laptop — or scan a receipt with Gemini AI.',
+                            'Add your tech gear, laptops, cameras, or timepieces — or scan an invoice using Gemini OCR.',
                             style: VaultTypography.cardDescription,
                             textAlign: TextAlign.center,
                           ),

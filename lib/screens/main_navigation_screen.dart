@@ -83,40 +83,37 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         setState(() => _currentIndex = index);
       },
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (isSelected)
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFEDEBE4),
-                borderRadius: BorderRadius.circular(18),
+                color: isSelected
+                    ? VaultColors.cardHover
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
-                activeIcon,
+                isSelected ? activeIcon : icon,
                 size: 20,
-                color: const Color(0xFF141413),
+                color: isSelected ? VaultColors.ink : VaultColors.ink2,
               ),
-            )
-          else ...[
-            Icon(
-              icon,
-              size: 20,
-              color: const Color(0xFF73716A),
             ),
             const SizedBox(height: 3),
             Text(
               label,
               style: VaultTypography.sans(
                 fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF73716A),
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? VaultColors.ink : VaultColors.ink2,
               ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -131,8 +128,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFEBE8E0), width: 1)),
+          color: VaultColors.card,
+          border: Border(top: BorderSide(color: VaultColors.hairline, width: 1)),
         ),
         child: SafeArea(
           top: false,

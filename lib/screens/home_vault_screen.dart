@@ -2169,8 +2169,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                           _buildPillarRow(
                             icon: Icons.near_me_rounded,
                             iconColor: VaultColors.ink2,
-                            title: 'LBS Repair Centers',
-                            subtitle: 'Authorized Apple & Samsung in Sleman',
+                            title: 'LBS Care Centers',
+                            subtitle: 'Official warranty service radar near you',
                             value: 'Radar',
                             isAction: true,
                             onTap: () {

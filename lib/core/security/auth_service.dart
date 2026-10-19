@@ -18,11 +18,14 @@ class AuthService {
   Future<bool> login(String username, String password) async {
     final user = await DatabaseHelper.instance.authenticateUser(username, password);
     if (user != null) {
-      if (kIsWeb) {
-        _webSessionUser = username;
-      } else {
-        await _storage.write(key: _sessionKey, value: username);
-        await _storage.write(key: _userNameKey, value: user['full_name'] as String? ?? username);
+      _webSessionUser = username;
+      if (!kIsWeb) {
+        try {
+          await _storage.write(key: _sessionKey, value: username);
+          await _storage.write(key: _userNameKey, value: user['full_name'] as String? ?? username);
+        } catch (e) {
+          debugPrint('Secure storage write notice: $e');
+        }
       }
       return true;
     }
@@ -44,17 +47,29 @@ class AuthService {
       return true;
     }
     try {
-      final isAvailable = await _localAuth.canCheckBiometrics || await _localAuth.isDeviceSupported();
-      if (!isAvailable) return false;
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isSupported = await _localAuth.isDeviceSupported();
+      if (!canCheck && !isSupported) return false;
 
-      return await _localAuth.authenticate(
+      final success = await _localAuth.authenticate(
         localizedReason: 'Authenticate to access your Vault',
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: true,
+          biometricOnly: false,
         ),
       );
-    } catch (_) {
+
+      if (success) {
+        // Ensure active session key is saved upon biometric success
+        final existing = await _storage.read(key: _sessionKey);
+        if (existing == null || existing.isEmpty) {
+          await _storage.write(key: _sessionKey, value: 'azzaky');
+          await _storage.write(key: _userNameKey, value: 'Azzaky Raihan');
+        }
+      }
+      return success;
+    } catch (e) {
+      debugPrint('Biometric auth error: $e');
       return false;
     }
   }

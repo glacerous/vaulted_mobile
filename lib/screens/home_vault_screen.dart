@@ -1,9 +1,11 @@
 import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/database/database_helper.dart';
@@ -48,8 +50,12 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
       'isUser': false,
       'text': 'Good day. I am Valto, your Agentic Vault Sentinel. Ask me about your portfolio valuation, check active warranties, or command me to register high-value tech and gaming assets.',
       'time': 'Just now',
-      'suggestions': ['Total vault value?', 'Show active warranties', 'Log RTX 4090 \$1600'],
-    }
+      'suggestions': [
+        'Total vault value?',
+        'Show active warranties',
+        'Log RTX 4090 \$1600',
+      ],
+    },
   ];
 
   // Live exchange rates (Base USD)
@@ -176,11 +182,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     setState(() {
       _isAiProcessing = true;
       _valtoMood = ValtoMood.detective;
-      _chatHistory.add({
-        'isUser': true,
-        'text': text,
-        'time': timeStr,
-      });
+      _chatHistory.add({'isUser': true, 'text': text, 'time': timeStr});
     });
     _modalSetState?.call(() {});
 
@@ -193,7 +195,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
 
       if (result.isAction) {
         if (result.actionType == 'hardware') {
-          final usdAmount = result.currency == 'IDR' ? result.amount / 15850.0 : result.amount;
+          final usdAmount = result.currency == 'IDR'
+              ? result.amount / 15850.0
+              : result.amount;
           await DatabaseHelper.instance.insertItem({
             'name': result.title,
             'category': 'Hardware / ${result.category}',
@@ -201,12 +205,19 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
             'current_valuation': usdAmount * 0.9,
             'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
             'warranty_expiry_date': result.warrantyMonths != null
-                ? DateFormat('yyyy-MM-dd').format(DateTime.now().add(Duration(days: result.warrantyMonths! * 30)))
+                ? DateFormat('yyyy-MM-dd').format(
+                    DateTime.now().add(
+                      Duration(days: result.warrantyMonths! * 30),
+                    ),
+                  )
                 : null,
-            'serial_number': result.serialNumber ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
+            'serial_number':
+                result.serialNumber ??
+                'SN-${DateTime.now().millisecondsSinceEpoch}',
             'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
             'is_collectible': 0,
-            'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+            'blockchain_hash':
+                '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
           });
           await _loadVaultData();
         }
@@ -278,11 +289,18 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                 children: [
                   // 1. CHAT HEADER
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
                     decoration: const BoxDecoration(
                       color: VaultColors.card,
-                      border: Border(bottom: BorderSide(color: VaultColors.hairline)),
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                      border: Border(
+                        bottom: BorderSide(color: VaultColors.hairline),
+                      ),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -296,7 +314,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               children: [
                                 Text(
                                   'Valto Sentinel',
-                                  style: VaultTypography.sans(fontSize: 14.5, fontWeight: FontWeight.w700, color: VaultColors.ink),
+                                  style: VaultTypography.sans(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: VaultColors.ink,
+                                  ),
                                 ),
                                 Row(
                                   children: [
@@ -309,7 +331,13 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                       ),
                                     ),
                                     const SizedBox(width: 5),
-                                    Text('Online · Vault Sentinel', style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2)),
+                                    Text(
+                                      'Online · Vault Sentinel',
+                                      style: VaultTypography.mono(
+                                        fontSize: 10,
+                                        color: VaultColors.ink2,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -317,7 +345,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                           ],
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: VaultColors.ink2, size: 20),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: VaultColors.ink2,
+                            size: 20,
+                          ),
                           onPressed: () => Navigator.pop(ctx),
                         ),
                       ],
@@ -328,7 +360,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                   Expanded(
                     child: ListView.builder(
                       controller: scrollCtrl,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                       itemCount: _chatHistory.length,
                       itemBuilder: (context, idx) {
                         final msg = _chatHistory[idx];
@@ -336,17 +371,27 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         final text = msg['text'] as String? ?? '';
                         final time = msg['time'] as String? ?? '';
                         final isAction = msg['isAction'] == true;
-                        final amount = (msg['amount'] as num?)?.toDouble() ?? 0.0;
+                        final amount =
+                            (msg['amount'] as num?)?.toDouble() ?? 0.0;
                         final currency = msg['currency'] as String? ?? 'IDR';
-                        final suggestions = (msg['suggestions'] as List<dynamic>?)?.cast<String>() ?? [];
+                        final suggestions =
+                            (msg['suggestions'] as List<dynamic>?)
+                                ?.cast<String>() ??
+                            [];
 
                         if (isUser) {
                           // USER BUBBLE (Right aligned)
                           return Align(
                             alignment: Alignment.centerRight,
                             child: Container(
-                              margin: const EdgeInsets.only(bottom: 12, left: 48),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              margin: const EdgeInsets.only(
+                                bottom: 12,
+                                left: 48,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: VaultColors.accent,
                                 borderRadius: const BorderRadius.only(
@@ -361,12 +406,21 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                 children: [
                                   Text(
                                     text,
-                                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w500, color: VaultColors.background),
+                                    style: VaultTypography.sans(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: VaultColors.background,
+                                    ),
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
                                     time,
-                                    style: VaultTypography.mono(fontSize: 9, color: VaultColors.background.withValues(alpha: 0.6)),
+                                    style: VaultTypography.mono(
+                                      fontSize: 9,
+                                      color: VaultColors.background.withValues(
+                                        alpha: 0.6,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -378,18 +432,28 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         return Align(
                           alignment: Alignment.centerLeft,
                           child: Container(
-                            margin: const EdgeInsets.only(bottom: 14, right: 36),
+                            margin: const EdgeInsets.only(
+                              bottom: 14,
+                              right: 36,
+                            ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const ValtoMascot(size: 26, mood: ValtoMood.vigilant),
+                                const ValtoMascot(
+                                  size: 26,
+                                  mood: ValtoMood.vigilant,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 12,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: VaultColors.card,
                                           borderRadius: const BorderRadius.only(
@@ -398,34 +462,61 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                             bottomLeft: Radius.circular(16),
                                             bottomRight: Radius.circular(16),
                                           ),
-                                          border: Border.all(color: VaultColors.hairline),
+                                          border: Border.all(
+                                            color: VaultColors.hairline,
+                                          ),
                                         ),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               text,
-                                              style: VaultTypography.sans(fontSize: 13, height: 1.45, color: VaultColors.ink),
+                                              style: VaultTypography.sans(
+                                                fontSize: 13,
+                                                height: 1.45,
+                                                color: VaultColors.ink,
+                                              ),
                                             ),
                                             if (isAction && amount > 0) ...[
                                               const SizedBox(height: 10),
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 6,
+                                                    ),
                                                 decoration: BoxDecoration(
                                                   color: VaultColors.badgeBg,
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  border: Border.all(color: VaultColors.hairline),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: VaultColors.hairline,
+                                                  ),
                                                 ),
                                                 child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
                                                   children: [
-                                                    const Icon(Icons.check_circle_rounded, size: 14, color: VaultColors.pos),
+                                                    const Icon(
+                                                      Icons
+                                                          .check_circle_rounded,
+                                                      size: 14,
+                                                      color: VaultColors.pos,
+                                                    ),
                                                     const SizedBox(width: 6),
                                                     Text(
                                                       currency == 'IDR'
                                                           ? 'Rp ${NumberFormat('#,###').format(amount)} Logged'
                                                           : '\$${amount.toStringAsFixed(2)} Logged',
-                                                      style: VaultTypography.mono(fontSize: 11, fontWeight: FontWeight.w700, color: VaultColors.accent),
+                                                      style:
+                                                          VaultTypography.mono(
+                                                            fontSize: 11,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            color: VaultColors
+                                                                .accent,
+                                                          ),
                                                     ),
                                                   ],
                                                 ),
@@ -437,10 +528,17 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                       const SizedBox(height: 4),
                                       Padding(
                                         padding: const EdgeInsets.only(left: 4),
-                                        child: Text(time, style: VaultTypography.mono(fontSize: 9, color: VaultColors.ink3)),
+                                        child: Text(
+                                          time,
+                                          style: VaultTypography.mono(
+                                            fontSize: 9,
+                                            color: VaultColors.ink3,
+                                          ),
+                                        ),
                                       ),
                                       // Suggestion pills
-                                      if (suggestions.isNotEmpty && idx == _chatHistory.length - 1) ...[
+                                      if (suggestions.isNotEmpty &&
+                                          idx == _chatHistory.length - 1) ...[
                                         const SizedBox(height: 8),
                                         Wrap(
                                           spacing: 6,
@@ -448,20 +546,33 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                           children: suggestions.map((sug) {
                                             return InkWell(
                                               onTap: () {
-                                                _handlePromptSubmit(sug.replaceAll('"', ''));
+                                                _handlePromptSubmit(
+                                                  sug.replaceAll('"', ''),
+                                                );
                                                 setModalState(() {});
                                               },
-                                              borderRadius: BorderRadius.circular(16),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                               child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 5,
+                                                    ),
                                                 decoration: BoxDecoration(
                                                   color: VaultColors.cardHover,
-                                                  borderRadius: BorderRadius.circular(16),
-                                                  border: Border.all(color: VaultColors.hairline),
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  border: Border.all(
+                                                    color: VaultColors.hairline,
+                                                  ),
                                                 ),
                                                 child: Text(
                                                   sug,
-                                                  style: VaultTypography.sans(fontSize: 11, color: VaultColors.accent),
+                                                  style: VaultTypography.sans(
+                                                    fontSize: 11,
+                                                    color: VaultColors.accent,
+                                                  ),
                                                 ),
                                               ),
                                             );
@@ -485,10 +596,16 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       padding: const EdgeInsets.only(left: 16, bottom: 10),
                       child: Row(
                         children: [
-                          const ValtoMascot(size: 20, mood: ValtoMood.detective),
+                          const ValtoMascot(
+                            size: 20,
+                            mood: ValtoMood.detective,
+                          ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: VaultColors.card,
                               borderRadius: BorderRadius.circular(12),
@@ -500,10 +617,19 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                 const SizedBox(
                                   width: 10,
                                   height: 10,
-                                  child: CircularProgressIndicator(strokeWidth: 1.5, color: VaultColors.accent),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: VaultColors.accent,
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
-                                Text('Valto is thinking...', style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2)),
+                                Text(
+                                  'Valto is thinking...',
+                                  style: VaultTypography.mono(
+                                    fontSize: 10,
+                                    color: VaultColors.ink2,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -513,10 +639,15 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
 
                   // 3. IN-CHAT MESSAGE INPUT DOCK
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: const BoxDecoration(
                       color: VaultColors.card,
-                      border: Border(top: BorderSide(color: VaultColors.hairline)),
+                      border: Border(
+                        top: BorderSide(color: VaultColors.hairline),
+                      ),
                     ),
                     child: SafeArea(
                       child: Row(
@@ -531,13 +662,22 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ),
                               child: TextField(
                                 controller: chatInputCtrl,
-                                style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink),
+                                style: VaultTypography.sans(
+                                  fontSize: 13,
+                                  color: VaultColors.ink,
+                                ),
                                 cursorColor: VaultColors.accent,
                                 decoration: InputDecoration(
                                   hintText: 'Message Valto or log asset...',
-                                  hintStyle: VaultTypography.sans(fontSize: 12, color: VaultColors.ink3),
+                                  hintStyle: VaultTypography.sans(
+                                    fontSize: 12,
+                                    color: VaultColors.ink3,
+                                  ),
                                   border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
                                 ),
                                 onSubmitted: (val) {
                                   if (val.trim().isNotEmpty) {
@@ -622,7 +762,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     child: Container(
                       width: 38,
                       height: 4,
-                      decoration: BoxDecoration(color: VaultColors.hairline, borderRadius: BorderRadius.circular(2)),
+                      decoration: BoxDecoration(
+                        color: VaultColors.hairline,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -637,37 +780,76 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               color: VaultColors.badgeBg,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.add_box_rounded, color: VaultColors.accent, size: 20),
+                            child: const Icon(
+                              Icons.add_box_rounded,
+                              color: VaultColors.accent,
+                              size: 20,
+                            ),
                           ),
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('NEW ASSET ENTRY', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent)),
-                              Text('Add High-Value Item', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w700)),
+                              Text(
+                                'NEW ASSET ENTRY',
+                                style: VaultTypography.mono(
+                                  fontSize: 10,
+                                  letterSpacing: 1.1,
+                                  color: VaultColors.accent,
+                                ),
+                              ),
+                              Text(
+                                'Add High-Value Item',
+                                style: VaultTypography.sans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ],
                           ),
                         ],
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close_rounded, color: VaultColors.ink2),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: VaultColors.ink2,
+                        ),
                         onPressed: () => Navigator.pop(ctx),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text('ITEM NAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                  Text(
+                    'ITEM NAME',
+                    style: VaultTypography.mono(
+                      fontSize: 10,
+                      letterSpacing: 1,
+                      color: VaultColors.ink2,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: nameCtrl,
-                    style: VaultTypography.sans(fontSize: 13.5, color: VaultColors.ink),
+                    style: VaultTypography.sans(
+                      fontSize: 13.5,
+                      color: VaultColors.ink,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'e.g. Sony WH-1000XM5, iPhone 15 Pro',
-                      hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
+                      hintStyle: VaultTypography.sans(
+                        fontSize: 13,
+                        color: VaultColors.ink3,
+                      ),
                       filled: true,
                       fillColor: VaultColors.cardHover,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -677,19 +859,41 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('PRICE (USD)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                            Text(
+                              'PRICE (USD)',
+                              style: VaultTypography.mono(
+                                fontSize: 10,
+                                letterSpacing: 1,
+                                color: VaultColors.ink2,
+                              ),
+                            ),
                             const SizedBox(height: 6),
                             TextField(
                               controller: priceCtrl,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              style: VaultTypography.mono(fontSize: 13.5, color: VaultColors.ink),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              style: VaultTypography.mono(
+                                fontSize: 13.5,
+                                color: VaultColors.ink,
+                              ),
                               decoration: InputDecoration(
                                 hintText: '399.00',
-                                hintStyle: VaultTypography.mono(fontSize: 13, color: VaultColors.ink3),
+                                hintStyle: VaultTypography.mono(
+                                  fontSize: 13,
+                                  color: VaultColors.ink3,
+                                ),
                                 filled: true,
                                 fillColor: VaultColors.cardHover,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
                               ),
                             ),
                           ],
@@ -700,19 +904,38 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('WARRANTY (MO)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                            Text(
+                              'WARRANTY (MO)',
+                              style: VaultTypography.mono(
+                                fontSize: 10,
+                                letterSpacing: 1,
+                                color: VaultColors.ink2,
+                              ),
+                            ),
                             const SizedBox(height: 6),
                             TextField(
                               controller: warrantyCtrl,
                               keyboardType: TextInputType.number,
-                              style: VaultTypography.mono(fontSize: 13.5, color: VaultColors.ink),
+                              style: VaultTypography.mono(
+                                fontSize: 13.5,
+                                color: VaultColors.ink,
+                              ),
                               decoration: InputDecoration(
                                 hintText: '12',
-                                hintStyle: VaultTypography.mono(fontSize: 13, color: VaultColors.ink3),
+                                hintStyle: VaultTypography.mono(
+                                  fontSize: 13,
+                                  color: VaultColors.ink3,
+                                ),
                                 filled: true,
                                 fillColor: VaultColors.cardHover,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
                               ),
                             ),
                           ],
@@ -721,18 +944,37 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text('SERIAL NUMBER (FOR LBS & WARRANTY)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                  Text(
+                    'SERIAL NUMBER (FOR LBS & WARRANTY)',
+                    style: VaultTypography.mono(
+                      fontSize: 10,
+                      letterSpacing: 1,
+                      color: VaultColors.ink2,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: serialCtrl,
-                    style: VaultTypography.mono(fontSize: 13, color: VaultColors.ink),
+                    style: VaultTypography.mono(
+                      fontSize: 13,
+                      color: VaultColors.ink,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'e.g. SN-SNY90841284',
-                      hintStyle: VaultTypography.mono(fontSize: 12.5, color: VaultColors.ink3),
+                      hintStyle: VaultTypography.mono(
+                        fontSize: 12.5,
+                        color: VaultColors.ink3,
+                      ),
                       filled: true,
                       fillColor: VaultColors.cardHover,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -742,9 +984,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     child: ElevatedButton(
                       onPressed: () async {
                         final name = nameCtrl.text.trim();
-                        final price = double.tryParse(priceCtrl.text.trim()) ?? 0.0;
+                        final price =
+                            double.tryParse(priceCtrl.text.trim()) ?? 0.0;
                         final serial = serialCtrl.text.trim();
-                        final warrantyMonths = int.tryParse(warrantyCtrl.text.trim()) ?? 12;
+                        final warrantyMonths =
+                            int.tryParse(warrantyCtrl.text.trim()) ?? 12;
 
                         if (name.isEmpty || price <= 0) {
                           VaultToast.show(
@@ -762,14 +1006,21 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                           'category': 'Hardware / $selectedCategory',
                           'purchase_price': price,
                           'current_valuation': price * 0.95,
-                          'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-                          'warranty_expiry_date': DateFormat('yyyy-MM-dd').format(
-                            DateTime.now().add(Duration(days: warrantyMonths * 30)),
-                          ),
-                          'serial_number': serial.isNotEmpty ? serial : 'SN-${DateTime.now().millisecondsSinceEpoch}',
+                          'purchase_date': DateFormat('yyyy-MM-dd')
+                              .format(DateTime.now()),
+                          'warranty_expiry_date': DateFormat('yyyy-MM-dd')
+                              .format(
+                                DateTime.now().add(
+                                  Duration(days: warrantyMonths * 30),
+                                ),
+                              ),
+                          'serial_number': serial.isNotEmpty
+                              ? serial
+                              : 'SN-${DateTime.now().millisecondsSinceEpoch}',
                           'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
                           'is_collectible': 0,
-                          'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+                          'blockchain_hash':
+                              '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
                         };
 
                         await DatabaseHelper.instance.insertItem(itemMap);
@@ -787,11 +1038,17 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         backgroundColor: const Color(0xFF141413),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
                       ),
                       child: Text(
                         'Save Asset to Vault',
-                        style: VaultTypography.sans(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                        style: VaultTypography.sans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -835,7 +1092,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     child: Container(
                       width: 38,
                       height: 4,
-                      decoration: BoxDecoration(color: VaultColors.hairline, borderRadius: BorderRadius.circular(2)),
+                      decoration: BoxDecoration(
+                        color: VaultColors.hairline,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -844,19 +1104,39 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     children: [
                       Row(
                         children: [
-                          const ValtoMascot(size: 36, mood: ValtoMood.detective, showHat: true),
+                          const ValtoMascot(
+                            size: 36,
+                            mood: ValtoMood.detective,
+                            showHat: true,
+                          ),
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('VALTO OCR (GEMINI VISION AI)', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.1, color: VaultColors.accent)),
-                              Text('Scan Receipt or Warranty Card', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w700)),
+                              Text(
+                                'VALTO OCR (GEMINI VISION AI)',
+                                style: VaultTypography.mono(
+                                  fontSize: 10,
+                                  letterSpacing: 1.1,
+                                  color: VaultColors.accent,
+                                ),
+                              ),
+                              Text(
+                                'Scan Receipt or Warranty Card',
+                                style: VaultTypography.sans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ],
                           ),
                         ],
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close_rounded, color: VaultColors.ink2),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: VaultColors.ink2,
+                        ),
                         onPressed: () => Navigator.pop(ctx),
                       ),
                     ],
@@ -871,7 +1151,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       decoration: BoxDecoration(
                         color: VaultColors.cardHover,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: VaultColors.accent.withValues(alpha: 0.5), width: 1.5),
+                        border: Border.all(
+                          color: VaultColors.accent.withValues(alpha: 0.5),
+                          width: 1.5,
+                        ),
                       ),
                       child: Stack(
                         alignment: Alignment.center,
@@ -900,7 +1183,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   color: Colors.black87,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.close, color: Colors.white, size: 16),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
                               ),
                             ),
                           ),
@@ -926,7 +1213,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                         final bytes = await photo.readAsBytes();
                                         setModalState(() {
                                           selectedImageBytes = bytes;
-                                                                                  });
+                                        });
                                       }
                                     } catch (e) {
                                       debugPrint('Camera error: $e');
@@ -942,11 +1229,19 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ),
                               child: Column(
                                 children: [
-                                  const Icon(Icons.photo_camera_rounded, color: VaultColors.accent, size: 24),
+                                  const Icon(
+                                    Icons.photo_camera_rounded,
+                                    color: VaultColors.accent,
+                                    size: 24,
+                                  ),
                                   const SizedBox(height: 6),
                                   Text(
                                     'Take Photo',
-                                    style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                                    style: VaultTypography.sans(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: VaultColors.ink,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -969,7 +1264,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                         final bytes = await image.readAsBytes();
                                         setModalState(() {
                                           selectedImageBytes = bytes;
-                                                                                  });
+                                        });
                                       }
                                     } catch (e) {
                                       debugPrint('Gallery error: $e');
@@ -985,11 +1280,19 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ),
                               child: Column(
                                 children: [
-                                  const Icon(Icons.photo_library_rounded, color: VaultColors.ink, size: 24),
+                                  const Icon(
+                                    Icons.photo_library_rounded,
+                                    color: VaultColors.ink,
+                                    size: 24,
+                                  ),
                                   const SizedBox(height: 6),
                                   Text(
                                     'Upload Image',
-                                    style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                                    style: VaultTypography.sans(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: VaultColors.ink,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1003,20 +1306,33 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
 
                   Text(
                     'OR PASTE RECEIPT TEXT / SERIAL NUMBER',
-                    style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2),
+                    style: VaultTypography.mono(
+                      fontSize: 10,
+                      letterSpacing: 1,
+                      color: VaultColors.ink2,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: textController,
                     maxLines: 3,
-                    style: VaultTypography.sans(fontSize: 13, color: VaultColors.ink),
+                    style: VaultTypography.sans(
+                      fontSize: 13,
+                      color: VaultColors.ink,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'e.g. MacBook Pro 14 M3, Serial C02G90PLQ6L4, Total \$1,999...',
-                      hintStyle: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink3),
+                      hintStyle: VaultTypography.sans(
+                        fontSize: 12.5,
+                        color: VaultColors.ink3,
+                      ),
                       filled: true,
                       fillColor: VaultColors.cardHover,
                       contentPadding: const EdgeInsets.all(12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -1041,50 +1357,83 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
 
                               setModalState(() => isProcessing = true);
 
-                              GeminiInvoiceResult result;
-                              if (selectedImageBytes != null) {
-                                result = await GeminiService.instance.parseInvoiceImage(selectedImageBytes!);
-                              } else {
-                                result = await GeminiService.instance.parseInvoiceText(text);
+                              try {
+                                GeminiInvoiceResult result;
+                                if (selectedImageBytes != null) {
+                                  result = await GeminiService.instance
+                                      .parseInvoiceImage(selectedImageBytes!);
+                                } else {
+                                  result = await GeminiService.instance
+                                      .parseInvoiceText(text);
+                                }
+
+                                await DatabaseHelper.instance.insertItem({
+                                  'name': result.itemName,
+                                  'category': 'Hardware / ${result.category}',
+                                  'purchase_price': result.purchasePrice,
+                                  'current_valuation':
+                                      result.purchasePrice * 0.95,
+                                  'purchase_date': DateFormat('yyyy-MM-dd')
+                                      .format(DateTime.now()),
+                                  'warranty_expiry_date':
+                                      DateFormat('yyyy-MM-dd').format(
+                                        DateTime.now().add(
+                                          Duration(
+                                            days: result.warrantyMonths * 30,
+                                          ),
+                                        ),
+                                      ),
+                                  'serial_number': result.serialNumber,
+                                  'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
+                                  'is_collectible': 0,
+                                  'blockchain_hash':
+                                      '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+                                });
+
+                                if (ctx.mounted) {
+                                  Navigator.pop(ctx);
+                                }
+
+                                await _loadVaultData();
+
+                                if (!mounted) return;
+                                VaultToast.show(
+                                  context,
+                                  icon: Icons.auto_awesome_rounded,
+                                  iconColor: VaultColors.accent,
+                                  message:
+                                      'Extracted & Saved "${result.itemName}" (\$${result.purchasePrice.toStringAsFixed(2)}) via Gemini AI!',
+                                );
+                              } catch (e) {
+                                setModalState(() => isProcessing = false);
+                                if (mounted) {
+                                  VaultToast.show(
+                                    context,
+                                    icon: Icons.error_outline_rounded,
+                                    iconColor: VaultColors.warn,
+                                    message: 'Error processing receipt: $e',
+                                  );
+                                }
                               }
-
-                              if (!ctx.mounted) return;
-                              Navigator.pop(ctx);
-
-                              await DatabaseHelper.instance.insertItem({
-                                'name': result.itemName,
-                                'category': 'Hardware / ${result.category}',
-                                'purchase_price': result.purchasePrice,
-                                'current_valuation': result.purchasePrice * 0.95,
-                                'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-                                'warranty_expiry_date': DateFormat('yyyy-MM-dd').format(
-                                  DateTime.now().add(Duration(days: result.warrantyMonths * 30)),
-                                ),
-                                'serial_number': result.serialNumber,
-                                'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
-                                'is_collectible': 0,
-                                'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
-                              });
-
-                              await _loadVaultData();
-
-                              if (!mounted) return;
-                              VaultToast.show(
-                                context,
-                                icon: Icons.auto_awesome_rounded,
-                                iconColor: VaultColors.accent,
-                                message: 'Extracted & Saved "${result.itemName}" (\$${result.purchasePrice.toStringAsFixed(2)}) via Gemini AI!',
-                              );
                             },
                       icon: isProcessing
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : const Icon(Icons.auto_awesome_rounded, size: 18, color: Colors.white),
+                          : const Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
                       label: Text(
-                        isProcessing ? 'Analyzing with Gemini Vision...' : 'Extract & Save to Vault',
+                        isProcessing
+                            ? 'Analyzing with Gemini Vision...'
+                            : 'Extract & Save to Vault',
                         style: VaultTypography.sans(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1095,7 +1444,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         backgroundColor: const Color(0xFF141413),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
                       ),
                     ),
                   ),
@@ -1107,7 +1458,6 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -1129,7 +1479,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     child: AnimatedBuilder(
                       animation: _animController,
                       builder: (context, _) {
-                        final frameIndex = (_animController.value * _frameCount).floor() % _frameCount;
+                        final frameIndex =
+                            (_animController.value * _frameCount).floor() %
+                            _frameCount;
                         return Stack(
                           fit: StackFit.expand,
                           children: [
@@ -1165,7 +1517,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   color: Colors.white.withValues(alpha: 0.22),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.white.withValues(alpha: 0.35),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.35,
+                                      ),
                                       blurRadius: 18,
                                     ),
                                   ],
@@ -1199,7 +1553,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   color: Colors.white,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withValues(alpha: 0.7),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.7,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 1),
                                     ),
@@ -1209,21 +1565,30 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 9,
+                                      vertical: 4.5,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.90),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.90,
+                                      ),
                                       borderRadius: BorderRadius.circular(10),
                                       border: Border.all(color: Colors.white),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.06),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.06,
+                                          ),
                                           blurRadius: 6,
                                           offset: const Offset(0, 2),
                                         ),
                                       ],
                                     ),
                                     child: Text(
-                                      DateFormat('MMM d').format(now).toUpperCase(),
+                                      DateFormat('MMM d')
+                                          .format(now)
+                                          .toUpperCase(),
                                       style: VaultTypography.mono(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700,
@@ -1235,14 +1600,21 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   GestureDetector(
                                     onTap: _showAiScannerModal,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.90),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.90,
+                                        ),
                                         borderRadius: BorderRadius.circular(10),
                                         border: Border.all(color: Colors.white),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.06),
+                                            color: Colors.black.withValues(
+                                              alpha: 0.06,
+                                            ),
                                             blurRadius: 6,
                                             offset: const Offset(0, 2),
                                           ),
@@ -1251,7 +1623,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.receipt_long_rounded, size: 15, color: Color(0xFF1D1D1B)),
+                                          const Icon(
+                                            Icons.receipt_long_rounded,
+                                            size: 15,
+                                            color: Color(0xFF1D1D1B),
+                                          ),
                                           const SizedBox(width: 5),
                                           Text(
                                             'SCAN OCR',
@@ -1301,7 +1677,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   color: Colors.white.withValues(alpha: 0.85),
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withValues(alpha: 0.7),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.7,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 1),
                                     ),
@@ -1310,9 +1688,13 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ),
                               const SizedBox(width: 6),
                               GestureDetector(
-                                onTap: () => setState(() => _isBalanceVisible = !_isBalanceVisible),
+                                onTap: () => setState(
+                                  () => _isBalanceVisible = !_isBalanceVisible,
+                                ),
                                 child: Icon(
-                                  _isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  _isBalanceVisible
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
                                   size: 14,
                                   color: Colors.white.withValues(alpha: 0.85),
                                 ),
@@ -1334,7 +1716,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   color: Colors.white.withValues(alpha: 0.85),
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withValues(alpha: 0.8),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       blurRadius: 6,
                                       offset: const Offset(0, 1),
                                     ),
@@ -1347,7 +1731,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   fit: BoxFit.scaleDown,
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    _isBalanceVisible ? _formatRawNumber(_netWorth) : '••••••••',
+                                    _isBalanceVisible
+                                        ? _formatRawNumber(_netWorth)
+                                        : '••••••••',
                                     style: VaultTypography.mono(
                                       fontSize: 38,
                                       fontWeight: FontWeight.w800,
@@ -1355,12 +1741,16 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                       color: Colors.white,
                                       shadows: [
                                         Shadow(
-                                          color: Colors.black.withValues(alpha: 0.85),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.85,
+                                          ),
                                           blurRadius: 10,
                                           offset: const Offset(0, 2),
                                         ),
                                         Shadow(
-                                          color: Colors.black.withValues(alpha: 0.5),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.5,
+                                          ),
                                           blurRadius: 4,
                                           offset: const Offset(0, 1),
                                         ),
@@ -1396,31 +1786,44 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(26),
                                 child: BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 16,
+                                    sigmaY: 16,
+                                  ),
                                   child: Container(
                                     height: 50,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.22),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.22,
+                                      ),
                                       borderRadius: BorderRadius.circular(26),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.42),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.42,
+                                        ),
                                         width: 1.2,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.15),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.15,
+                                          ),
                                           blurRadius: 16,
                                           offset: const Offset(0, 4),
                                         ),
                                       ],
                                     ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                    ),
                                     child: Row(
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.all(6),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 0.22),
+                                            color: Colors.white.withValues(
+                                              alpha: 0.22,
+                                            ),
                                             shape: BoxShape.circle,
                                           ),
                                           child: const Icon(
@@ -1434,7 +1837,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                           child: TextField(
                                             controller: _promptController,
                                             focusNode: _promptFocus,
-                                            onSubmitted: (_) => _handlePromptSubmit(),
+                                            onSubmitted: (_) =>
+                                                _handlePromptSubmit(),
                                             style: VaultTypography.sans(
                                               fontSize: 13.5,
                                               fontWeight: FontWeight.w500,
@@ -1444,7 +1848,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                               hintText: 'Ask Valto or log (e.g. RTX 4090 \$1600)...',
                                               hintStyle: VaultTypography.sans(
                                                 fontSize: 13,
-                                                color: Colors.white.withValues(alpha: 0.80),
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.80,
+                                                ),
                                               ),
                                               border: InputBorder.none,
                                               isDense: true,
@@ -1470,10 +1876,13 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                               width: 32,
                                               height: 32,
                                               decoration: BoxDecoration(
-                                                color: Colors.white.withValues(alpha: 0.25),
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.25,
+                                                ),
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
-                                                  color: Colors.white.withValues(alpha: 0.50),
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.50),
                                                   width: 1,
                                                 ),
                                               ),
@@ -1498,7 +1907,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   onTap: () {
                                     HapticFeedback.selectionClick();
                                     setState(() {
-                                      _valtoMood = _valtoMood == ValtoMood.happy ? ValtoMood.vigilant : ValtoMood.happy;
+                                      _valtoMood = _valtoMood == ValtoMood.happy
+                                          ? ValtoMood.vigilant
+                                          : ValtoMood.happy;
                                     });
                                   },
                                   child: ValtoMascot(
@@ -1565,16 +1976,23 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   setState(() => _selectedCurrency = curr);
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isSel ? Colors.white : Colors.transparent,
+                                    color: isSel
+                                        ? Colors.white
+                                        : Colors.transparent,
                                     borderRadius: BorderRadius.circular(7),
                                     boxShadow: isSel
                                         ? [
                                             BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.08),
+                                              color: Colors.black.withValues(
+                                                alpha: 0.08,
+                                              ),
                                               blurRadius: 4,
-                                            )
+                                            ),
                                           ]
                                         : null,
                                   ),
@@ -1582,8 +2000,12 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                     curr,
                                     style: VaultTypography.mono(
                                       fontSize: 9.5,
-                                      fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSel ? VaultColors.ink : VaultColors.ink2,
+                                      fontWeight: isSel
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      color: isSel
+                                          ? VaultColors.ink
+                                          : VaultColors.ink2,
                                     ),
                                   ),
                                 ),
@@ -1602,7 +2024,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         child: Center(
                           child: Text(
                             'No assets tracked yet. Scan a receipt to start.',
-                            style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink3),
+                            style: VaultTypography.sans(
+                              fontSize: 12,
+                              color: VaultColors.ink3,
+                            ),
                           ),
                         ),
                       )
@@ -1611,13 +2036,16 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         children: [
                           for (int i = 0; i < _recentItems.length; i++) ...[
                             if (i > 0)
-                              const Divider(height: 18, thickness: 1, color: VaultColors.hairline),
+                              const Divider(
+                                height: 18,
+                                thickness: 1,
+                                color: VaultColors.hairline,
+                              ),
                             _buildDynamicActivityItem(_recentItems[i]),
                           ],
                         ],
                       ),
                     const SizedBox(height: 18),
-
 
                     // Quick Action Buttons (Receipt OCR & Add Manual Asset)
                     Row(
@@ -1644,7 +2072,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     // Vault Pillars Section
                     Text(
                       'YOUR VAULT SPACES',
-                      style: VaultTypography.mono(fontSize: 10.5, letterSpacing: 1.2, color: VaultColors.ink2),
+                      style: VaultTypography.mono(
+                        fontSize: 10.5,
+                        letterSpacing: 1.2,
+                        color: VaultColors.ink2,
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -1655,7 +2087,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         border: Border.all(color: VaultColors.hairline),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF141413).withValues(alpha: 0.025),
+                            color: const Color(0xFF141413)
+                                .withValues(alpha: 0.025),
                             blurRadius: 14,
                             offset: const Offset(0, 4),
                           ),
@@ -1667,17 +2100,26 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             icon: Icons.sports_esports_rounded,
                             iconColor: VaultColors.accent,
                             title: 'Steam & Gaming Vault',
-                            subtitle: '$_steamItemsCount verified items · Live Valve sync',
+                            subtitle:
+                                '$_steamItemsCount verified items · Live Valve sync',
                             value: _formatAmount(_collectiblesTotal),
                             onTap: () async {
                               await Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const CollectiblesHubScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const CollectiblesHubScreen(),
+                                ),
                               );
                               _loadVaultData();
                             },
                           ),
-                          const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: VaultColors.hairline,
+                            indent: 68,
+                            endIndent: 16,
+                          ),
                           _buildPillarRow(
                             icon: Icons.laptop_mac_rounded,
                             iconColor: VaultColors.ink,
@@ -1687,12 +2129,20 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             onTap: () async {
                               await Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const InventoryScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const InventoryScreen(),
+                                ),
                               );
                               _loadVaultData();
                             },
                           ),
-                          const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: VaultColors.hairline,
+                            indent: 68,
+                            endIndent: 16,
+                          ),
                           _buildPillarRow(
                             icon: Icons.monetization_on_outlined,
                             iconColor: VaultColors.accent,
@@ -1703,11 +2153,19 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const GameScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const GameScreen(),
+                                ),
                               );
                             },
                           ),
-                          const Divider(height: 1, thickness: 1, color: VaultColors.hairline, indent: 68, endIndent: 16),
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: VaultColors.hairline,
+                            indent: 68,
+                            endIndent: 16,
+                          ),
                           _buildPillarRow(
                             icon: Icons.near_me_rounded,
                             iconColor: VaultColors.ink2,
@@ -1718,7 +2176,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const WarrantyLbsScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const WarrantyLbsScreen(),
+                                ),
                               );
                             },
                           ),
@@ -1745,15 +2205,22 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     IconData icon = Icons.inventory_2_outlined;
     if (cat.contains('Steam') || cat.contains('Gaming')) {
       icon = Icons.sports_esports_rounded;
-    } else if (cat.contains('Hardware') || cat.contains('Device') || cat.contains('Laptop') || cat.contains('MacBook')) {
+    } else if (cat.contains('Hardware') ||
+        cat.contains('Device') ||
+        cat.contains('Laptop') ||
+        cat.contains('MacBook')) {
       icon = Icons.laptop_mac_rounded;
-    } else if (cat.contains('Watch') || cat.contains('Horology') || cat.contains('Collectible')) {
+    } else if (cat.contains('Watch') ||
+        cat.contains('Horology') ||
+        cat.contains('Collectible')) {
       icon = Icons.watch_outlined;
     }
 
     final subtitle = serial != null && serial.isNotEmpty
         ? '$cat · SN: $serial'
-        : (item['purchase_date'] != null ? '$cat · ${item['purchase_date']}' : cat);
+        : (item['purchase_date'] != null
+              ? '$cat · ${item['purchase_date']}'
+              : cat);
 
     return InkWell(
       onTap: () {
@@ -1798,12 +2265,19 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
             children: [
               Text(
                 title,
-                style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                style: VaultTypography.sans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: VaultColors.ink,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink3),
+                style: VaultTypography.sans(
+                  fontSize: 11,
+                  color: VaultColors.ink3,
+                ),
               ),
             ],
           ),
@@ -1852,7 +2326,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
             const SizedBox(width: 8),
             Text(
               label,
-              style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.ink),
+              style: VaultTypography.sans(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: VaultColors.ink,
+              ),
             ),
           ],
         ),

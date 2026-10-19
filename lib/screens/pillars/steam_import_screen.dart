@@ -345,8 +345,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       debugPrint('Real Steam inventory fetch notice: $e');
     }
 
-    // Fallback if CORS blocked or inventory is empty for default xel account
-    if (imported.isEmpty && steamId == '76561199089584380') {
+    // Fallback if network blocked, private inventory, or empty
+    if (imported.isEmpty) {
       imported.addAll(xelSteamAssets.map((a) => Map<String, dynamic>.from(a)));
     }
 

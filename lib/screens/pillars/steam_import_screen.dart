@@ -979,206 +979,838 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     );
   }
 
-  Widget _buildAssetSearchBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: VaultColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VaultColors.hairline),
+  void _showSortBottomSheet() {
+    HapticFeedback.selectionClick();
+    const options = [
+      {'key': 'Value ↓', 'label': 'Highest Valuation', 'icon': Icons.arrow_downward_rounded},
+      {'key': 'Value ↑', 'label': 'Lowest Valuation', 'icon': Icons.arrow_upward_rounded},
+      {'key': 'Name A-Z', 'label': 'Alphabetical (A - Z)', 'icon': Icons.sort_by_alpha_rounded},
+      {'key': 'Game', 'label': 'Game Collection', 'icon': Icons.sports_esports_rounded},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: VaultColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
-      child: Row(
-        children: [
-          const Icon(Icons.search_rounded, size: 18, color: VaultColors.ink3),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: _searchCtrl,
-              style: VaultTypography.sans(
-                fontSize: 13.5,
-                color: VaultColors.ink,
-              ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: 'Search name, game, serial...',
-                hintStyle: VaultTypography.sans(
-                  fontSize: 13.5,
-                  color: VaultColors.ink3,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: VaultColors.hairline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
-              onChanged: (val) => setState(() => _searchQuery = val),
+                const SizedBox(height: 16),
+                Text(
+                  'SORT ASSETS',
+                  style: VaultTypography.mono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                    color: VaultColors.accent,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...options.map((opt) {
+                  final key = opt['key'] as String;
+                  final label = opt['label'] as String;
+                  final icon = opt['icon'] as IconData;
+                  final isSel = _sortOrder == key;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    decoration: BoxDecoration(
+                      color: isSel ? VaultColors.cardHover : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSel ? VaultColors.accent : Colors.transparent,
+                      ),
+                    ),
+                    child: ListTile(
+                      dense: true,
+                      leading: Icon(
+                        icon,
+                        size: 18,
+                        color: isSel ? VaultColors.accent : VaultColors.ink2,
+                      ),
+                      title: Text(
+                        label,
+                        style: VaultTypography.sans(
+                          fontSize: 13.5,
+                          fontWeight: isSel ? FontWeight.w600 : FontWeight.w500,
+                          color: isSel ? VaultColors.ink : VaultColors.body,
+                        ),
+                      ),
+                      trailing: isSel
+                          ? const Icon(
+                              Icons.check_rounded,
+                              size: 18,
+                              color: VaultColors.accent,
+                            )
+                          : null,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _sortOrder = key);
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  );
+                }),
+              ],
             ),
           ),
-          if (_searchQuery.isNotEmpty)
-            GestureDetector(
-              onTap: () {
-                _searchCtrl.clear();
-                setState(() => _searchQuery = '');
-              },
-              child: const Icon(
-                Icons.close_rounded,
-                size: 18,
-                color: VaultColors.ink3,
-              ),
-            ),
-        ],
+        );
+      },
+    );
+  }
+
+  void _showAccountOptionsSheet() {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: VaultColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: VaultColors.hairline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        vaultImageUrl(_detectedAvatar),
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.person_rounded,
+                          size: 24,
+                          color: VaultColors.ink2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _detectedPersona,
+                            style: VaultTypography.sans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: VaultColors.ink,
+                            ),
+                          ),
+                          Text(
+                            'SteamID64: $_currentSteamId',
+                            style: VaultTypography.mono(
+                              fontSize: 11,
+                              color: VaultColors.ink2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: VaultColors.hairline),
+                const SizedBox(height: 8),
+
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.sync_rounded, color: VaultColors.accent, size: 20),
+                  title: Text(
+                    'Re-sync Steam Portfolio',
+                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                  ),
+                  subtitle: Text(
+                    'Update market valuations & inventory',
+                    style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink2),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _syncSteam();
+                  },
+                ),
+
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.add_circle_outline_rounded, color: VaultColors.ink, size: 20),
+                  title: Text(
+                    'Add Item Manually',
+                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                  ),
+                  subtitle: Text(
+                    'Log CS2 skin or unlisted collectible',
+                    style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink2),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showAddCsItemDialog();
+                  },
+                ),
+
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.copy_rounded, color: VaultColors.ink, size: 20),
+                  title: Text(
+                    'Copy Steam Profile URL',
+                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                  ),
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: 'https://steamcommunity.com/profiles/$_currentSteamId/'));
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Steam URL copied to clipboard!', style: VaultTypography.sans(fontSize: 12)),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.link_off_rounded, color: VaultColors.neg, size: 20),
+                  title: Text(
+                    'Disconnect Account',
+                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.neg),
+                  ),
+                  subtitle: Text(
+                    'Remove cached portfolio from VAULTED',
+                    style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink2),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _disconnectSteam();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showItemDetailSheet(Map<String, dynamic> item) {
+    HapticFeedback.selectionClick();
+    final double valuation = (item['current_valuation'] as num?)?.toDouble() ?? 0.0;
+    final String rawCat = item['category'] as String? ?? '';
+    final String displayGame = rawCat.replaceFirst('Steam / ', '');
+    final bool isMarketable = (item['is_marketable'] == 1 || item['is_marketable'] == true);
+    final String serial = item['serial_number'] as String? ?? 'STEAM-ASSET';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: VaultColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: VaultColors.hairline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                Container(
+                  width: 86,
+                  height: 86,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: VaultColors.background,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: VaultColors.hairline),
+                  ),
+                  child: Image.network(
+                    vaultImageUrl(item['image_url'] as String?),
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.sports_esports_rounded,
+                      size: 36,
+                      color: VaultColors.ink2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                Text(
+                  item['name'] as String? ?? 'Steam Collectible',
+                  style: VaultTypography.sans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: VaultColors.ink,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  displayGame,
+                  style: VaultTypography.sans(
+                    fontSize: 12.5,
+                    color: VaultColors.accent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: VaultColors.badgeBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: VaultColors.accent.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    valuation > 0 ? '\$${valuation.toStringAsFixed(2)} USD' : 'Steam Points Item',
+                    style: VaultTypography.mono(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: VaultColors.accent,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: VaultColors.background,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: VaultColors.hairline),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildSpecRow('Market Status', isMarketable ? 'Tradable & Marketable' : 'Account-Bound'),
+                      const Divider(color: VaultColors.hairline, height: 16),
+                      _buildSpecRow('Serial / Asset ID', serial),
+                      const Divider(color: VaultColors.hairline, height: 16),
+                      _buildSpecRow('Verification', 'Valve Steam API Token'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: VaultColors.cardHover,
+                      foregroundColor: VaultColors.ink,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(
+                      'Close',
+                      style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSpecRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: VaultTypography.sans(fontSize: 11.5, color: VaultColors.ink2)),
+        Flexible(
+          child: Text(
+            value,
+            style: VaultTypography.mono(fontSize: 11.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchAndSortBar() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: VaultColors.card,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: VaultColors.hairline),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.search_rounded,
+                  size: 16,
+                  color: VaultColors.ink3,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _searchCtrl,
+                    style: VaultTypography.sans(
+                      fontSize: 13,
+                      color: VaultColors.ink,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: 'Search collection...',
+                      hintStyle: VaultTypography.sans(
+                        fontSize: 13,
+                        color: VaultColors.ink3,
+                      ),
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    onChanged: (val) => setState(() => _searchQuery = val),
+                  ),
+                ),
+                if (_searchQuery.isNotEmpty)
+                  GestureDetector(
+                    onTap: () {
+                      _searchCtrl.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 16,
+                      color: VaultColors.ink3,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: _showSortBottomSheet,
+          child: Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: VaultColors.card,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: VaultColors.hairline),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.sort_rounded,
+                  size: 15,
+                  color: VaultColors.accent,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _sortOrder,
+                  style: VaultTypography.mono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: VaultColors.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildItemCard(Map<String, dynamic> item) {
     final double valuation =
         (item['current_valuation'] as num?)?.toDouble() ?? 0.0;
-    final String hash =
-        item['blockchain_hash'] as String? ?? '0xsteamassetverified';
+    final String rawCat = item['category'] as String? ?? '';
+    String displayGame = rawCat.replaceFirst('Steam / ', '');
+    if (displayGame.contains(' Trading Card')) {
+      displayGame = '${displayGame.replaceFirst(' Trading Card', '')} • Card';
+    }
+
+    final bool isMarketable =
+        (item['is_marketable'] == 1 || item['is_marketable'] == true);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: VaultColors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: VaultColors.hairline),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showItemDetailSheet(item),
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    color: VaultColors.background,
+                    child: Image.network(
+                      vaultImageUrl(item['image_url'] as String?),
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.sports_esports_rounded,
+                        color: VaultColors.ink2,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item['name'] as String? ?? 'Steam Collectible',
+                        style: VaultTypography.sans(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: VaultColors.ink,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        displayGame.isNotEmpty ? displayGame : 'Steam Asset',
+                        style: VaultTypography.sans(
+                          fontSize: 11,
+                          color: VaultColors.ink2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      valuation > 0
+                          ? '\$${valuation.toStringAsFixed(2)}'
+                          : 'Points Item',
+                      style: VaultTypography.mono(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: valuation > 0
+                            ? VaultColors.ink
+                            : VaultColors.accent,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isMarketable
+                            ? VaultColors.posBg
+                            : VaultColors.cardHover,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        isMarketable ? 'MARKETABLE' : 'BOUND',
+                        style: VaultTypography.mono(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w700,
+                          color: isMarketable
+                              ? VaultColors.pos
+                              : VaultColors.ink2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPortfolioHeaderCard() {
+    if (!_isConnected) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: VaultColors.card,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: VaultColors.hairline),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: VaultColors.accent.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.sports_esports_rounded,
+                color: VaultColors.accent,
+                size: 26,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Connect Steam Inventory',
+              style: VaultTypography.sans(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: VaultColors.ink,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Bridge your Steam trading cards, CS2 skins, and collectibles directly into your VAULTED portfolio.',
+              style: VaultTypography.sans(
+                fontSize: 12,
+                color: VaultColors.ink2,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading ? null : () => _syncSteam(),
+                icon: const Icon(Icons.bolt_rounded, size: 18),
+                label: Text(
+                  '1-Tap Connect as @$_detectedPersona',
+                  style: VaultTypography.sans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: VaultColors.accent,
+                  foregroundColor: VaultColors.background,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final double totalVal = _syncedItems.fold(
+      0.0,
+      (sum, i) => sum + (i['current_valuation'] as num).toDouble(),
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: VaultColors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: VaultColors.hairline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  width: 58,
-                  height: 58,
-                  color: VaultColors.cardHover,
-                  child: Image.network(
-                    vaultImageUrl(item['image_url'] as String?),
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.sports_esports_rounded,
-                      color: VaultColors.ink2,
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      vaultImageUrl(_detectedAvatar),
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 44,
+                        height: 44,
+                        color: VaultColors.cardHover,
+                        child: const Icon(
+                          Icons.person_rounded,
+                          color: VaultColors.ink2,
+                          size: 20,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  Positioned(
+                    bottom: -2,
+                    right: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: VaultColors.card,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_circle_rounded,
+                        size: 13,
+                        color: VaultColors.pos,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item['name'] as String? ?? 'CS2 Skin',
+                      _detectedPersona,
                       style: VaultTypography.sans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
                         color: VaultColors.ink,
                       ),
-                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
-                      item['serial_number'] as String? ?? 'VALVE-ASSET',
+                      'ID: ${_currentSteamId.length > 10 ? '${_currentSteamId.substring(0, 6)}...${_currentSteamId.substring(_currentSteamId.length - 4)}' : _currentSteamId}',
                       style: VaultTypography.mono(
                         fontSize: 10.5,
                         color: VaultColors.ink2,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Text(
-                          valuation > 0
-                              ? '\$${valuation.toStringAsFixed(2)}'
-                              : 'Points Shop',
-                          style: VaultTypography.mono(
-                            fontSize: valuation > 0 ? 15 : 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: valuation > 0
-                                ? VaultColors.ink
-                                : VaultColors.accent,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 1.5,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                (item['is_marketable'] == 1 ||
-                                    item['is_marketable'] == true)
-                                ? VaultColors.posBg
-                                : VaultColors.cardHover,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            (item['is_marketable'] == 1 ||
-                                    item['is_marketable'] == true)
-                                ? 'SELLABLE'
-                                : 'ACCOUNT-BOUND',
-                            style: VaultTypography.mono(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  (item['is_marketable'] == 1 ||
-                                      item['is_marketable'] == true)
-                                  ? VaultColors.pos
-                                  : VaultColors.ink2,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'PORTFOLIO',
+                    style: VaultTypography.mono(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.8,
+                      color: VaultColors.ink2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '\$${totalVal.toStringAsFixed(2)}',
+                    style: VaultTypography.mono(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: VaultColors.accent,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: VaultColors.background,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: VaultColors.hairline),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.verified_user_rounded,
-                      size: 12,
-                      color: VaultColors.pos,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Polygon Hash: ${hash.length > 10 ? hash.substring(0, 10) : hash}...',
-                      style: VaultTypography.mono(
-                        fontSize: 9.5,
-                        color: VaultColors.ink2,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  (item['is_marketable'] == 1 || item['is_marketable'] == true)
-                      ? 'STEAM MARKETABLE'
-                      : 'POINTS SHOP',
-                  style: VaultTypography.mono(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        (item['is_marketable'] == 1 ||
-                            item['is_marketable'] == true)
-                        ? VaultColors.pos
-                        : VaultColors.accent,
+          Container(height: 0.8, color: VaultColors.hairline),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.inventory_2_outlined,
+                    size: 12,
+                    color: VaultColors.ink2,
                   ),
+                  const SizedBox(width: 5),
+                  Text(
+                    '${_syncedItems.length} Collectibles',
+                    style: VaultTypography.mono(
+                      fontSize: 10.5,
+                      color: VaultColors.ink,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                'Synced ${_formatLastSync()}',
+                style: VaultTypography.mono(
+                  fontSize: 10,
+                  color: VaultColors.ink2,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1192,551 +1824,295 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Breadcrumb Header
+            // Top Native App Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context, true),
-                    child: Row(
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: VaultColors.card,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 14,
+                        color: VaultColors.ink,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 13,
-                          color: VaultColors.ink2,
-                        ),
-                        const SizedBox(width: 6),
                         Text(
-                          'COLLECTIBLES',
+                          'Steam Vault',
                           style: VaultTypography.sans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.2,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                             color: VaultColors.ink,
+                          ),
+                        ),
+                        Text(
+                          _isDetecting
+                              ? 'Connecting to Steam...'
+                              : (_isConnected
+                                  ? '@$_detectedPersona • Synced'
+                                  : 'Digital Asset Bridge'),
+                          style: VaultTypography.mono(
+                            fontSize: 10.5,
+                            color: _isConnected
+                                ? VaultColors.pos
+                                : VaultColors.ink2,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: VaultColors.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: VaultColors.hairline),
-                    ),
-                    child: Text(
-                      'STEAM OPENID',
-                      style: VaultTypography.mono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1,
-                        color: VaultColors.accent,
+                  if (_isConnected) ...[
+                    GestureDetector(
+                      onTap: _isLoading ? null : () => _syncSteam(),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: VaultColors.card,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: VaultColors.hairline),
+                        ),
+                        alignment: Alignment.center,
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: VaultColors.accent,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.sync_rounded,
+                                size: 18,
+                                color: VaultColors.accent,
+                              ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _showAccountOptionsSheet,
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: VaultColors.card,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: VaultColors.hairline),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.more_horiz_rounded,
+                          size: 20,
+                          color: VaultColors.ink,
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    GestureDetector(
+                      onTap: _showOpenIdSheet,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: VaultColors.card,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: VaultColors.hairline),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.link_rounded,
+                              size: 14,
+                              color: VaultColors.accent,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'OPENID',
+                              style: VaultTypography.mono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: VaultColors.accent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
 
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: [
-                    // Consolidated Steam Portfolio & Profile Card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: VaultColors.card,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: _isConnected
-                              ? VaultColors.pos.withValues(alpha: 0.4)
-                              : VaultColors.hairline,
-                          width: _isConnected ? 1.2 : 1.0,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
+              child: RefreshIndicator(
+                onRefresh: () => _syncSteam(),
+                color: VaultColors.accent,
+                backgroundColor: VaultColors.card,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Consolidated Portfolio Card
+                      _buildPortfolioHeaderCard(),
+                      const SizedBox(height: 14),
+
+                      // Valve CS2 Privacy Warning Banner
+                      if (_hasCsPrivateWarning) ...[
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 14),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF261C14),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: VaultColors.warn.withValues(alpha: 0.5),
+                            ),
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Steam Avatar with verified badge
-                              Stack(
+                              Row(
                                 children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: Image.network(
-                                      vaultImageUrl(_detectedAvatar),
-                                      width: 54,
-                                      height: 54,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              Container(
-                                                width: 54,
-                                                height: 54,
-                                                color: VaultColors.cardHover,
-                                                child: const Icon(
-                                                  Icons.person_rounded,
-                                                  color: VaultColors.ink2,
-                                                ),
-                                              ),
-                                    ),
+                                  const Icon(
+                                    Icons.privacy_tip_rounded,
+                                    color: VaultColors.warn,
+                                    size: 16,
                                   ),
-                                  Positioned(
-                                    bottom: -1,
-                                    right: -1,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                        color: VaultColors.background,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        _isConnected
-                                            ? Icons.check_circle_rounded
-                                            : Icons.verified_rounded,
-                                        size: 15,
-                                        color: _isConnected
-                                            ? VaultColors.pos
-                                            : VaultColors.accent,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'VALVE CS2 PRIVACY RESTRICTION ($_csPrivateCount ITEMS)',
+                                      style: VaultTypography.mono(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.8,
+                                        color: VaultColors.warn,
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            _detectedPersona,
-                                            style: VaultTypography.sans(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: VaultColors.ink,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: _isConnected
-                                                ? VaultColors.posBg
-                                                : VaultColors.badgeBg,
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            _isDetecting
-                                                ? 'SEARCHING'
-                                                : (_isConnected
-                                                      ? 'SYNCED'
-                                                      : 'READY'),
-                                            style: VaultTypography.mono(
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.w600,
-                                              color: _isConnected
-                                                  ? VaultColors.pos
-                                                  : VaultColors.accent,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      'ID: ${_currentSteamId.length > 10 ? '${_currentSteamId.substring(0, 7)}...${_currentSteamId.substring(_currentSteamId.length - 4)}' : _currentSteamId}',
-                                      style: VaultTypography.mono(
-                                        fontSize: 11,
-                                        color: VaultColors.ink2,
-                                      ),
-                                    ),
-                                  ],
+                              const SizedBox(height: 8),
+                              Text(
+                                'Valve detected $_csPrivateCount CS2 items in this account, but hid skin names/cases. Set Steam Inventory to "Public", then tap sync icon.',
+                                style: VaultTypography.sans(
+                                  fontSize: 11.5,
+                                  height: 1.4,
+                                  color: VaultColors.ink,
                                 ),
                               ),
-                              if (_isConnected && _syncedItems.isNotEmpty) ...[
-                                const SizedBox(width: 8),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'PORTFOLIO',
-                                      style: VaultTypography.mono(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.8,
-                                        color: VaultColors.ink2,
-                                      ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 36,
+                                child: ElevatedButton.icon(
+                                  onPressed: _showAddCsItemDialog,
+                                  icon: const Icon(Icons.add_rounded, size: 15),
+                                  label: Text(
+                                    'Log My CS Skin / Case Manually',
+                                    style: VaultTypography.sans(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '\$${_syncedItems.fold(0.0, (sum, i) => sum + (i['current_valuation'] as num).toDouble()).toStringAsFixed(2)}',
-                                      style: VaultTypography.mono(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: VaultColors.pos,
-                                      ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: VaultColors.accent,
+                                    foregroundColor: VaultColors.background,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              ],
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-
-                          // Primary 1-Tap / Update Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 46,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : () => _syncSteam(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _isConnected
-                                    ? VaultColors.cardHover
-                                    : VaultColors.accent,
-                                foregroundColor: _isConnected
-                                    ? VaultColors.accent
-                                    : VaultColors.background,
-                                side: _isConnected
-                                    ? BorderSide(
-                                        color: VaultColors.accent.withValues(
-                                          alpha: 0.6,
-                                        ),
-                                        width: 1.2,
-                                      )
-                                    : null,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: VaultColors.accent,
-                                      ),
-                                    )
-                                  : Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          _isConnected
-                                              ? Icons.sync_rounded
-                                              : Icons.bolt_rounded,
-                                          size: 18,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          _isConnected
-                                              ? 'Update / Re-sync Steam Portfolio'
-                                              : '1-Tap Connect as @$_detectedPersona',
-                                          style: VaultTypography.sans(
-                                            fontSize: 13.5,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                          if (_isConnected) ...[
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'LAST SYNCED: ${_formatLastSync().toUpperCase()}',
-                                  style: VaultTypography.mono(
-                                    fontSize: 9.5,
-                                    letterSpacing: 0.8,
-                                    color: VaultColors.ink2,
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: _disconnectSteam,
-                                  child: Text(
-                                    'Disconnect Account',
-                                    style: VaultTypography.mono(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: VaultColors.neg.withValues(
-                                        alpha: 0.85,
-                                      ),
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Valve CS2 Privacy Warning Banner
-                    if (_hasCsPrivateWarning) ...[
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF261C14),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: VaultColors.warn.withValues(alpha: 0.5),
-                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.privacy_tip_rounded,
-                                  color: VaultColors.warn,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'VALVE CS2 PRIVACY RESTRICTION ($_csPrivateCount ITEMS DETECTED)',
-                                    style: VaultTypography.mono(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.8,
-                                      color: VaultColors.warn,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Valve detected $_csPrivateCount CS2 items in this account, but hid skin names/cases. To display automatically in VAULTED:\n'
-                              '1. Open Steam → Edit Profile → Privacy Settings\n'
-                              '2. Uncheck "Always keep Counter-Strike 2 inventory private"\n'
-                              '3. Set Inventory to "Public", then tap Update above.',
-                              style: VaultTypography.sans(
-                                fontSize: 11.5,
-                                height: 1.45,
-                                color: VaultColors.ink,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 38,
-                              child: ElevatedButton.icon(
-                                onPressed: _showAddCsItemDialog,
-                                icon: const Icon(Icons.add_rounded, size: 16),
-                                label: Text(
-                                  'Log My CS Skin / Case Manually',
-                                  style: VaultTypography.sans(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: VaultColors.accent,
-                                  foregroundColor: VaultColors.background,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
 
-                    // LIVE SYNCED INVENTORY SECTION
-                    if (_syncedItems.isNotEmpty) ...[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 2,
-                          vertical: 4,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.inventory_2_rounded,
-                                  size: 14,
-                                  color: VaultColors.accent,
-                                ),
-                                const SizedBox(width: 7),
-                                Text(
-                                  'SYNCED ASSETS (${_syncedItems.length})',
-                                  style: VaultTypography.mono(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 1.1,
-                                    color: VaultColors.ink2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            GestureDetector(
-                              onTap: _showAddCsItemDialog,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 9,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: VaultColors.cardHover,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: VaultColors.accent.withValues(
-                                      alpha: 0.35,
-                                    ),
-                                    width: 0.8,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.add_rounded,
-                                      size: 13,
-                                      color: VaultColors.accent,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Add Item',
-                                      style: VaultTypography.mono(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: VaultColors.accent,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      // LIVE SYNCED INVENTORY SECTION
+                      if (_syncedItems.isNotEmpty) ...[
+                        _buildSearchAndSortBar(),
+                        const SizedBox(height: 12),
 
-                      // Search bar aset Steam
-                      _buildAssetSearchBar(),
-                      const SizedBox(height: 12),
-
-                      // Interactive Sort Order Selector
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'SORT ASSETS',
-                            style: VaultTypography.mono(
-                              fontSize: 10,
-                              letterSpacing: 1.1,
-                              color: VaultColors.ink2,
-                            ),
-                          ),
-                          Row(
-                            children: ['Value ↓', 'Value ↑', 'Name A-Z', 'Game']
-                                .map((sortKey) {
-                                  final isSelected = _sortOrder == sortKey;
-                                  return GestureDetector(
-                                    onTap: () {
-                                      HapticFeedback.selectionClick();
-                                      setState(() => _sortOrder = sortKey);
-                                    },
-                                    child: Container(
-                                      margin: const EdgeInsets.only(left: 6),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? VaultColors.accent
-                                            : VaultColors.cardHover,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: isSelected
-                                              ? VaultColors.accent
-                                              : VaultColors.hairline,
-                                          width: 0.8,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        sortKey,
-                                        style: VaultTypography.mono(
-                                          fontSize: 9.5,
-                                          fontWeight: isSelected
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
-                                          color: isSelected
-                                              ? VaultColors.background
-                                              : VaultColors.ink2,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                })
-                                .toList(),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (_sortedSyncedItems.isEmpty)
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: Text(
-                              'No assets match "$_searchQuery".',
-                              style: VaultTypography.cardDescription,
-                              textAlign: TextAlign.center,
-                            ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 2,
+                            vertical: 4,
                           ),
-                        )
-                      else
-                        ..._sortedSyncedItems.map(
-                          (item) => _buildItemCard(item),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'COLLECTIBLES (${_sortedSyncedItems.length})',
+                                style: VaultTypography.mono(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.1,
+                                  color: VaultColors.ink2,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _showAddCsItemDialog,
+                                child: Text(
+                                  '+ Manual Add',
+                                  style: VaultTypography.mono(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: VaultColors.accent,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      const SizedBox(height: 10),
-                    ],
+                        const SizedBox(height: 8),
+
+                        if (_sortedSyncedItems.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Center(
+                              child: Text(
+                                'No assets match "$_searchQuery".',
+                                style: VaultTypography.cardDescription,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          )
+                        else
+                          ..._sortedSyncedItems.map(
+                            (item) => _buildItemCard(item),
+                          ),
+                        const SizedBox(height: 16),
+                      ],
 
                     // Alternative Sign-in Methods (only visible when disconnected)
                     if (!_isConnected) ...[
@@ -1855,9 +2231,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ),
+  );
   }
 }

@@ -30,6 +30,8 @@ class _LoginScreenState extends State<LoginScreen>
   late Animation<double> _shadowAnim;
 
   bool _isLoading = false;
+  bool _obscureSignInPassword = true;
+  bool _obscureSignUpPassword = true;
   String? _signInError;
   String? _signUpError;
 
@@ -85,6 +87,22 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
 
+    if (user.length < 3) {
+      HapticFeedback.heavyImpact();
+      setModalState(() {
+        _signInError = 'Username must be at least 3 characters.';
+      });
+      return;
+    }
+
+    if (pass.length < 6) {
+      HapticFeedback.heavyImpact();
+      setModalState(() {
+        _signInError = 'Password must be at least 6 characters.';
+      });
+      return;
+    }
+
     setModalState(() {
       _isLoading = true;
       _signInError = null;
@@ -124,7 +142,31 @@ class _LoginScreenState extends State<LoginScreen>
     if (user.isEmpty || pass.isEmpty) {
       HapticFeedback.heavyImpact();
       setModalState(() {
-        _signUpError = 'Please enter both username and password.';
+        _signUpError = 'Please fill in both username and password.';
+      });
+      return;
+    }
+
+    if (user.length < 3) {
+      HapticFeedback.heavyImpact();
+      setModalState(() {
+        _signUpError = 'Username must be at least 3 characters long.';
+      });
+      return;
+    }
+
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(user)) {
+      HapticFeedback.heavyImpact();
+      setModalState(() {
+        _signUpError = 'Username can only contain letters, numbers, and underscores.';
+      });
+      return;
+    }
+
+    if (pass.length < 6) {
+      HapticFeedback.heavyImpact();
+      setModalState(() {
+        _signUpError = 'Password must be at least 6 characters long.';
       });
       return;
     }
@@ -244,7 +286,13 @@ class _LoginScreenState extends State<LoginScreen>
                     const SizedBox(height: 20),
 
                     // Full Name Input
-                    Text('FULL NAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('FULL NAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                        Text('Optional', style: VaultTypography.mono(fontSize: 9.5, color: VaultColors.ink2)),
+                      ],
+                    ),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _signUpFullNameController,
@@ -253,6 +301,7 @@ class _LoginScreenState extends State<LoginScreen>
                         if (_signUpError != null) setSheetState(() => _signUpError = null);
                       },
                       decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.badge_outlined, size: 18, color: VaultColors.ink2),
                         hintText: 'e.g. Azzaky Raihan',
                         hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
                         filled: true,
@@ -266,12 +315,22 @@ class _LoginScreenState extends State<LoginScreen>
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: VaultColors.hairline),
                         ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.accent, width: 1.5),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 14),
 
                     // Username Input
-                    Text('DESIRED USERNAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('DESIRED USERNAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                        Text('min. 3 chars (a-z, 0-9, _)', style: VaultTypography.mono(fontSize: 9.5, color: VaultColors.accent)),
+                      ],
+                    ),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _signUpUsernameController,
@@ -280,7 +339,8 @@ class _LoginScreenState extends State<LoginScreen>
                         if (_signUpError != null) setSheetState(() => _signUpError = null);
                       },
                       decoration: InputDecoration(
-                        hintText: 'e.g. azzaky',
+                        prefixIcon: const Icon(Icons.alternate_email_rounded, size: 18, color: VaultColors.ink2),
+                        hintText: 'e.g. azzaky (min. 3 characters)',
                         hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
                         filled: true,
                         fillColor: VaultColors.background,
@@ -292,23 +352,42 @@ class _LoginScreenState extends State<LoginScreen>
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: VaultColors.hairline),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.accent, width: 1.5),
                         ),
                       ),
                     ),
                     const SizedBox(height: 14),
 
                     // Password Input
-                    Text('MASTER PASSWORD / PIN', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('MASTER PASSWORD / PIN', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                        Text('min. 6 characters', style: VaultTypography.mono(fontSize: 9.5, color: VaultColors.accent)),
+                      ],
+                    ),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _signUpPasswordController,
-                      obscureText: true,
+                      obscureText: _obscureSignUpPassword,
                       style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
                       onChanged: (_) {
                         if (_signUpError != null) setSheetState(() => _signUpError = null);
                       },
                       decoration: InputDecoration(
-                        hintText: 'Minimum 6 characters',
+                        prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: VaultColors.ink2),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureSignUpPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            size: 18,
+                            color: VaultColors.ink2,
+                          ),
+                          onPressed: () => setSheetState(() => _obscureSignUpPassword = !_obscureSignUpPassword),
+                        ),
+                        hintText: 'Create password (min. 6 chars)',
                         hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
                         filled: true,
                         fillColor: VaultColors.background,
@@ -320,6 +399,10 @@ class _LoginScreenState extends State<LoginScreen>
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: VaultColors.hairline),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.accent, width: 1.5),
                         ),
                       ),
                     ),
@@ -447,7 +530,13 @@ class _LoginScreenState extends State<LoginScreen>
                     const SizedBox(height: 18),
 
                     // Username
-                    Text('USERNAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('USERNAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                        Text('min. 3 chars', style: VaultTypography.mono(fontSize: 9.5, color: VaultColors.ink2)),
+                      ],
+                    ),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _signInUsernameController,
@@ -456,6 +545,9 @@ class _LoginScreenState extends State<LoginScreen>
                         if (_signInError != null) setSheetState(() => _signInError = null);
                       },
                       decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.alternate_email_rounded, size: 18, color: VaultColors.ink2),
+                        hintText: 'Enter your username (e.g. azzaky)',
+                        hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
                         filled: true,
                         fillColor: VaultColors.background,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -467,21 +559,42 @@ class _LoginScreenState extends State<LoginScreen>
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: VaultColors.hairline),
                         ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.accent, width: 1.5),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
 
                     // Password
-                    Text('PASSWORD', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('PASSWORD', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                        Text('min. 6 chars', style: VaultTypography.mono(fontSize: 9.5, color: VaultColors.ink2)),
+                      ],
+                    ),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _signInPasswordController,
-                      obscureText: true,
+                      obscureText: _obscureSignInPassword,
                       style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
                       onChanged: (_) {
                         if (_signInError != null) setSheetState(() => _signInError = null);
                       },
                       decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: VaultColors.ink2),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureSignInPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            size: 18,
+                            color: VaultColors.ink2,
+                          ),
+                          onPressed: () => setSheetState(() => _obscureSignInPassword = !_obscureSignInPassword),
+                        ),
+                        hintText: 'Enter your password (min. 6 chars)',
+                        hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
                         filled: true,
                         fillColor: VaultColors.background,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -492,6 +605,10 @@ class _LoginScreenState extends State<LoginScreen>
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: VaultColors.hairline),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.accent, width: 1.5),
                         ),
                       ),
                     ),

@@ -195,7 +195,7 @@ class DatabaseHelper {
   Future<bool> registerUser(String username, String rawPassword, {String? fullName}) async {
     final cleanUser = username.trim().toLowerCase();
     final cleanPass = rawPassword.trim();
-    if (cleanUser.isEmpty || cleanPass.isEmpty) return false;
+    if (cleanUser.length < 3 || cleanPass.length < 6) return false;
 
     final hash = sha256.convert(utf8.encode(cleanPass)).toString();
     final displayName = (fullName?.trim().isNotEmpty == true) ? fullName!.trim() : username.trim();

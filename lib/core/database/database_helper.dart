@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../data/real_steam_assets.dart';
 import '../security/auth_service.dart';
+import '../services/supabase_service.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -326,18 +327,23 @@ class DatabaseHelper {
 
     if (kIsWeb) {
       _webItems.add(clean);
+      SupabaseService.instance.pushSingleItemOnline(clean);
       return _webItems.length;
     }
     try {
       final db = await database;
       if (db == null) {
         _webItems.add(clean);
+        SupabaseService.instance.pushSingleItemOnline(clean);
         return _webItems.length;
       }
-      return await db.insert('items', clean);
+      final id = await db.insert('items', clean);
+      SupabaseService.instance.pushSingleItemOnline(clean);
+      return id;
     } catch (e) {
       debugPrint('[DatabaseHelper] insertItem fallback: $e');
       _webItems.add(clean);
+      SupabaseService.instance.pushSingleItemOnline(clean);
       return _webItems.length;
     }
   }

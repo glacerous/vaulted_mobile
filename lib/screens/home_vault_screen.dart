@@ -128,6 +128,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
         _steamItemsCount = steamCount;
         _recentItems = items.take(4).toList();
       });
+      // Automatic background sync to Supabase PostgreSQL
+      SupabaseService.instance.autoSyncInBackground();
     }
   }
 

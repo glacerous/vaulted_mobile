@@ -292,4 +292,77 @@ CREATE POLICY "Allow all for demo" ON vault_items
       };
     }
   }
+
+  bool _isAutoSyncing = false;
+
+  /// Silently keeps local SQLite and Supabase PostgreSQL in sync in the background
+  Future<void> autoSyncInBackground() async {
+    if (!VaultConfig.hasSupabase || _isAutoSyncing) return;
+    _isAutoSyncing = true;
+    try {
+      final activeUser = AuthService.instance.activeSessionUser ?? 'azzaky';
+      final localItems = await DatabaseHelper.instance.getItems(activeUser);
+
+      final endpoint = Uri.parse(
+        '${VaultConfig.supabaseUrl}/rest/v1/vault_items?user_id=eq.$activeUser&select=*',
+      );
+      final response = await http
+          .get(endpoint, headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> cloudItems = jsonDecode(response.body);
+
+        // If cloud is empty but local has items, automatically push local items to cloud
+        if (cloudItems.isEmpty && localItems.isNotEmpty) {
+          await syncToCloud();
+        } else if (cloudItems.isNotEmpty && localItems.isEmpty) {
+          // If local is empty but cloud has items (e.g. logged in on new device), automatically pull
+          await restoreFromCloud();
+        } else if (localItems.length > cloudItems.length) {
+          // Sync any new items added locally
+          await syncToCloud();
+        }
+      }
+    } catch (e) {
+      debugPrint('[SupabaseService] autoSyncInBackground notice: $e');
+    } finally {
+      _isAutoSyncing = false;
+    }
+  }
+
+  /// Push a single item to Supabase PostgreSQL immediately in the background
+  Future<void> pushSingleItemOnline(Map<String, dynamic> item) async {
+    if (!VaultConfig.hasSupabase) return;
+    try {
+      final activeUser = AuthService.instance.activeSessionUser ?? 'azzaky';
+      final endpoint = Uri.parse('${VaultConfig.supabaseUrl}/rest/v1/vault_items');
+      final payload = [
+        {
+          'user_id': (item['user_id'] as String?)?.isNotEmpty == true
+              ? item['user_id']
+              : activeUser,
+          'name': item['name'],
+          'category': item['category'],
+          'purchase_price': item['purchase_price'],
+          'current_valuation': item['current_valuation'],
+          'purchase_date': item['purchase_date'],
+          'warranty_expiry_date': item['warranty_expiry_date'],
+          'serial_number': item['serial_number'] ?? 'SN-${DateTime.now().millisecondsSinceEpoch}',
+          'blockchain_hash': item['blockchain_hash'],
+          'image_url': item['image_url'],
+          'is_collectible': item['is_collectible'] ?? 0,
+        }
+      ];
+      await http
+          .post(
+            endpoint,
+            headers: _headers(),
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 6));
+    } catch (e) {
+      debugPrint('[SupabaseService] pushSingleItemOnline notice: $e');
+    }
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/security/auth_service.dart';
@@ -30,7 +31,11 @@ class ProfileScreen extends StatelessWidget {
                         color: VaultColors.neg.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.logout_rounded, color: VaultColors.neg, size: 22),
+                      child: const Icon(
+                        Icons.logout_rounded,
+                        color: VaultColors.neg,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 14),
                     Column(
@@ -46,7 +51,10 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         Text(
                           'Mengakhiri sesi akses Vaulted',
-                          style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2),
+                          style: VaultTypography.mono(
+                            fontSize: 10,
+                            color: VaultColors.ink2,
+                          ),
                         ),
                       ],
                     ),
@@ -55,7 +63,11 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'Apakah Anda yakin ingin keluar dari akun Vaulted? Sesi otentikasi lokal Anda akan diakhiri.',
-                  style: VaultTypography.sans(fontSize: 12.5, height: 1.5, color: VaultColors.ink2),
+                  style: VaultTypography.sans(
+                    fontSize: 12.5,
+                    height: 1.5,
+                    color: VaultColors.ink2,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -66,11 +78,17 @@ class ProfileScreen extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: const BorderSide(color: VaultColors.hairline),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: Text(
                           'Batal',
-                          style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.ink2),
+                          style: VaultTypography.sans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: VaultColors.ink2,
+                          ),
                         ),
                       ),
                     ),
@@ -83,19 +101,31 @@ class ProfileScreen extends StatelessWidget {
                           if (!context.mounted) return;
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
                             (route) => false,
                           );
                         },
-                        icon: const Icon(Icons.logout_rounded, size: 16, color: Colors.white),
+                        icon: const Icon(
+                          Icons.logout_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
                         label: Text(
                           'Keluar',
-                          style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+                          style: VaultTypography.sans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: VaultColors.neg,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
@@ -184,7 +214,7 @@ class ProfileScreen extends StatelessWidget {
                 name: 'Pindo Dinarman Situngkir',
                 nim: '124240010',
                 initials: 'PS',
-                imagePath: null,
+                imagePath: 'assets/images/pindo.jpeg',
                 role: 'ANGGOTA TIM',
               ),
               const SizedBox(height: 14),
@@ -213,7 +243,11 @@ class ProfileScreen extends StatelessWidget {
                 height: 48,
                 child: OutlinedButton.icon(
                   onPressed: () => _showLogoutConfirmation(context),
-                  icon: const Icon(Icons.logout_rounded, size: 16, color: VaultColors.neg),
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    size: 16,
+                    color: VaultColors.neg,
+                  ),
                   label: Text(
                     'Log Out of Vault',
                     style: VaultTypography.sans(
@@ -224,7 +258,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: VaultColors.hairline),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -304,7 +340,10 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: VaultColors.badgeBg,
                     borderRadius: BorderRadius.circular(6),

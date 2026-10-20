@@ -5,33 +5,8 @@ import '../core/constants/typography.dart';
 import '../core/security/auth_service.dart';
 import 'login_screen.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  String _currentUser = 'azzaky';
-  String _currentFullName = 'Azzaky Raihan';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
-  Future<void> _loadUserData() async {
-    final user = await AuthService.instance.getCurrentUser();
-    final name = await AuthService.instance.getCurrentFullName();
-    if (mounted) {
-      setState(() {
-        _currentUser = user;
-        _currentFullName = name;
-      });
-    }
-  }
 
   void _showLogoutConfirmation(BuildContext context) {
     showModalBottomSheet(
@@ -176,48 +151,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. BRAND HEADER
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'VAULTED',
-                    style: VaultTypography.mono(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.5,
-                      color: VaultColors.ink,
-                    ),
-                  ),
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: VaultColors.cardHover,
-                      border: Border.all(color: VaultColors.hairline, width: 1),
-                      image: _currentUser.toLowerCase() == 'azzaky'
-                          ? const DecorationImage(
-                              image: AssetImage('assets/images/azzaky.png'),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: _currentUser.toLowerCase() == 'azzaky'
-                        ? null
-                        : Center(
-                            child: Text(
-                              _currentFullName.isNotEmpty
-                                  ? _currentFullName[0].toUpperCase()
-                                  : 'U',
-                              style: VaultTypography.mono(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: VaultColors.accent,
-                              ),
-                            ),
-                          ),
-                  ),
-                ],
+              Text(
+                'VAULTED',
+                style: VaultTypography.mono(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
+                  color: VaultColors.ink,
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -278,101 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 28),
 
-              // 4. ACTIVE VAULT SESSION BADGE
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: VaultColors.hairline),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: VaultColors.accent.withValues(alpha: 0.12),
-                        border: Border.all(color: VaultColors.accent, width: 1.2),
-                        image: _currentUser.toLowerCase() == 'azzaky'
-                            ? const DecorationImage(
-                                image: AssetImage('assets/images/azzaky.png'),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: _currentUser.toLowerCase() == 'azzaky'
-                          ? null
-                          : Center(
-                              child: Text(
-                                _currentFullName.isNotEmpty
-                                    ? _currentFullName[0].toUpperCase()
-                                    : 'U',
-                                style: VaultTypography.mono(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: VaultColors.accent,
-                                ),
-                              ),
-                            ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  _currentFullName,
-                                  style: VaultTypography.sans(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: VaultColors.ink,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: VaultColors.pos.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  'ACTIVE',
-                                  style: VaultTypography.mono(
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: VaultColors.pos,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            '@$_currentUser • Secure Isolated Vault',
-                            style: VaultTypography.mono(
-                              fontSize: 11,
-                              color: VaultColors.ink2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 5. LOGOUT BUTTON
+              // 4. LOGOUT BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 48,

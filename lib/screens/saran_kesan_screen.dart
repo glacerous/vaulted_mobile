@@ -38,27 +38,20 @@ class SaranKesanScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: VaultColors.hairline),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.school_outlined, size: 14, color: VaultColors.accent),
-                        const SizedBox(width: 5),
-                        Text(
-                          'PAM 2026',
-                          style: VaultTypography.mono(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: VaultColors.accent,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'PAM 2026',
+                      style: VaultTypography.mono(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: VaultColors.accent,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
 
-              // SECTION TAG
+              // SECTION TITLE
               Text(
                 'EVALUASI AKADEMIK',
                 style: VaultTypography.mono(
@@ -77,9 +70,9 @@ class SaranKesanScreen extends StatelessWidget {
                   color: VaultColors.ink,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
-                'Pemrograman Aplikasi Mobile · Sistem Informasi UPNYK',
+                'Pemrograman Aplikasi Mobile • Sistem Informasi UPNYK',
                 style: VaultTypography.sans(
                   fontSize: 12.5,
                   color: VaultColors.ink2,
@@ -101,54 +94,47 @@ class SaranKesanScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: VaultColors.accent.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 18,
+                        Text(
+                          '01',
+                          style: VaultTypography.mono(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
                             color: VaultColors.accent,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Kesan Pembelajaran',
-                              style: VaultTypography.sans(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w700,
-                                color: VaultColors.ink,
-                              ),
-                            ),
-                            Text(
-                              'Pengalaman Praktis & Eksplorasi Mobile',
-                              style: VaultTypography.mono(
-                                fontSize: 10,
-                                color: VaultColors.ink2,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 8),
+                        Text(
+                          '/',
+                          style: VaultTypography.mono(
+                            fontSize: 12,
+                            color: VaultColors.hairline,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'KESAN PEMBELAJARAN',
+                          style: VaultTypography.mono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                            color: VaultColors.ink,
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     Text(
                       'Mata kuliah Pemrograman Aplikasi Mobile memberikan pemahaman yang sangat mendalam dan aplikatif mengenai ekosistem aplikasi modern. Praktik langsung pembuatan aplikasi dengan integrasi AI (Google Gemini LLM), Web3 / Blockchain sederhana, sensor hardware (Accelerometer & Gyroscope), serta Location-Based Services (LBS) sangat menantang dan memacu kreativitas kami dalam menghasilkan arsitektur mobile berkualitas industri.',
                       style: VaultTypography.sans(
                         fontSize: 12.5,
                         height: 1.55,
-                        color: VaultColors.ink.withValues(alpha: 0.9),
+                        color: VaultColors.body,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
               // CARD SARAN
               Container(
@@ -164,58 +150,52 @@ class SaranKesanScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: VaultColors.pos.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.lightbulb_outline_rounded,
-                            size: 18,
-                            color: VaultColors.pos,
+                        Text(
+                          '02',
+                          style: VaultTypography.mono(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: VaultColors.accent,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Saran Pengembangan',
-                              style: VaultTypography.sans(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w700,
-                                color: VaultColors.ink,
-                              ),
-                            ),
-                            Text(
-                              'Untuk Masa Depan Kurikulum',
-                              style: VaultTypography.mono(
-                                fontSize: 10,
-                                color: VaultColors.ink2,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 8),
+                        Text(
+                          '/',
+                          style: VaultTypography.mono(
+                            fontSize: 12,
+                            color: VaultColors.hairline,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'SARAN PENGEMBANGAN',
+                          style: VaultTypography.mono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                            color: VaultColors.ink,
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     Text(
                       'Semoga studi kasus integrasi arsitektur cloud modern (seperti Supabase / BaaS), manajemen state skala besar (BLoC / Riverpod), serta optimasi performa dan CI/CD deployment mobile dapat terus diperkaya dalam silabus, sehingga mahasiswa semakin siap memenuhi standar tinggi di industri rekayasa perangkat lunak internasional.',
                       style: VaultTypography.sans(
                         fontSize: 12.5,
                         height: 1.55,
-                        color: VaultColors.ink.withValues(alpha: 0.9),
+                        color: VaultColors.body,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
               // KELOMPOK PENGEMBANG
               Container(
-                padding: const EdgeInsets.all(16),
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: VaultColors.card,
                   borderRadius: BorderRadius.circular(16),
@@ -233,9 +213,11 @@ class SaranKesanScreen extends StatelessWidget {
                         color: VaultColors.accent,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     _buildMemberRow('124240010', 'Pindo Dinarman Situngkir'),
+                    const Divider(color: VaultColors.hairline, height: 16),
                     _buildMemberRow('124240018', 'Azzaky Raihan'),
+                    const Divider(color: VaultColors.hairline, height: 16),
                     _buildMemberRow('124240031', 'Ariel Saputra'),
                   ],
                 ),
@@ -249,15 +231,25 @@ class SaranKesanScreen extends StatelessWidget {
   }
 
   Widget _buildMemberRow(String nim, String name) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(name, style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink)),
-          Text(nim, style: VaultTypography.mono(fontSize: 11, color: VaultColors.ink2)),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          name,
+          style: VaultTypography.sans(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: VaultColors.ink,
+          ),
+        ),
+        Text(
+          nim,
+          style: VaultTypography.mono(
+            fontSize: 11.5,
+            color: VaultColors.ink2,
+          ),
+        ),
+      ],
     );
   }
 }

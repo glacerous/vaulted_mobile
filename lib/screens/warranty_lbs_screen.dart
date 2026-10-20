@@ -22,7 +22,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
   late final PageController _pageController;
 
   Position? _userPosition;
-  bool _isLocating = true;
   String _locationName = 'Locating GPS...';
 
   int _selectedCenterIndex = 0;
@@ -181,8 +180,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
   }
 
   Future<void> _autoLocateUser() async {
-    setState(() => _isLocating = true);
-
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
@@ -215,7 +212,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
 
       setState(() {
         _userPosition = pos;
-        _isLocating = false;
         _locationName = 'GPS Locked (Sleman Regency)';
       });
 
@@ -232,7 +228,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
   void _fallbackToDefault() {
     if (!mounted) return;
     setState(() {
-      _isLocating = false;
       _locationName = 'Depok, Sleman (Default GPS)';
     });
     _sortAndFilter();
@@ -256,6 +251,29 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
       final lat = (item['lat'] as num).toDouble();
       final lng = (item['lng'] as num).toDouble();
       _mapController.move(LatLng(lat, lng), 15.2);
+    }
+  }
+
+  IconData _brandIconData(String? brand) {
+    switch (brand?.toLowerCase()) {
+      case 'apple':
+        return Icons.apple;
+      case 'asus':
+        return Icons.laptop_chromebook_rounded;
+      case 'samsung':
+        return Icons.smartphone_rounded;
+      case 'xiaomi':
+        return Icons.phone_android_rounded;
+      case 'lenovo':
+        return Icons.laptop_mac_rounded;
+      case 'sony':
+        return Icons.camera_alt_rounded;
+      case 'hp':
+        return Icons.laptop_rounded;
+      case 'oppo':
+        return Icons.devices_rounded;
+      default:
+        return Icons.build_rounded;
     }
   }
 
@@ -356,13 +374,16 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                     final lng = (item['lng'] as num).toDouble();
                     final brand = item['brand'] as String? ?? '';
                     final bColor = _brandColor(brand);
+                    final pinWidth = isSelected ? 40.0 : 32.0;
+                    final pinHeight = isSelected ? 50.0 : 42.0;
 
                     return Marker(
                       point: LatLng(lat, lng),
-                      width: isSelected ? 48 : 38,
-                      height: isSelected ? 48 : 38,
-                      alignment: Alignment.center,
+                      width: pinWidth,
+                      height: pinHeight,
+                      alignment: Alignment.bottomCenter,
                       child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
                         onTap: () {
                           HapticFeedback.selectionClick();
                           setState(() => _selectedCenterIndex = idx);
@@ -373,28 +394,26 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                             curve: Curves.easeOutCubic,
                           );
                         },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          decoration: BoxDecoration(
+                        child: CustomPaint(
+                          painter: _TeardropPinPainter(
                             color: isSelected ? VaultColors.accent : Colors.white,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isSelected ? const Color(0xFF131312) : bColor,
-                              width: isSelected ? 2.5 : 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: isSelected ? 0.35 : 0.15),
-                                blurRadius: isSelected ? 8 : 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            strokeColor: isSelected ? const Color(0xFF141413) : bColor,
+                            strokeWidth: isSelected ? 2.2 : 1.8,
+                            isSelected: isSelected,
                           ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            Icons.storefront_rounded,
-                            size: isSelected ? 24 : 18,
-                            color: isSelected ? const Color(0xFF131312) : bColor,
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: SizedBox(
+                              width: pinWidth,
+                              height: pinWidth,
+                              child: Center(
+                                child: Icon(
+                                  _brandIconData(brand),
+                                  size: isSelected ? 20 : 15,
+                                  color: isSelected ? const Color(0xFF141413) : bColor,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -439,15 +458,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                               child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: VaultColors.ink),
                             ),
                           ),
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _isLocating ? VaultColors.accentWarm : VaultColors.pos,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -816,5 +826,78 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
         ],
       ),
     );
+  }
+}
+
+/// Precision custom vector painter for Apple Maps-style teardrop needle pins.
+class _TeardropPinPainter extends CustomPainter {
+  final Color color;
+  final Color strokeColor;
+  final double strokeWidth;
+  final bool isSelected;
+
+  const _TeardropPinPainter({
+    required this.color,
+    required this.strokeColor,
+    this.strokeWidth = 1.8,
+    this.isSelected = false,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final r = w / 2;
+    final tip = Offset(w / 2, h);
+
+    final d = h - r;
+    if (d <= r) return;
+    final sinA = r / d;
+    final cosA = sqrt(1.0 - (sinA * sinA));
+
+    final leftTangent = Offset(w / 2 - r * cosA, r + r * sinA);
+    final rightTangent = Offset(w / 2 + r * cosA, r + r * sinA);
+
+    final path = Path()
+      ..moveTo(tip.dx, tip.dy)
+      ..lineTo(leftTangent.dx, leftTangent.dy)
+      ..arcToPoint(
+        rightTangent,
+        radius: Radius.circular(r),
+        largeArc: true,
+        clockwise: true,
+      )
+      ..close();
+
+    // Drop shadow
+    canvas.drawShadow(
+      path,
+      Colors.black.withValues(alpha: isSelected ? 0.35 : 0.22),
+      isSelected ? 6.0 : 3.0,
+      false,
+    );
+
+    // Fill
+    final fillPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(path, fillPaint);
+
+    // Stroke
+    final strokePaint = Paint()
+      ..color = strokeColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(path, strokePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _TeardropPinPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeColor != strokeColor ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.isSelected != isSelected;
   }
 }

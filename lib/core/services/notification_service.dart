@@ -28,6 +28,10 @@ class NotificationService {
 
       try {
         await _notificationsPlugin.initialize(settings);
+        final androidImpl = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        if (androidImpl != null) {
+          await androidImpl.requestNotificationsPermission();
+        }
         _isInitialized = true;
       } catch (e) {
         debugPrint('NotificationService init error: $e');

@@ -23,7 +23,9 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
   StreamSubscription? _accelerometerSubscription;
+  StreamSubscription? _gyroscopeSubscription;
   DateTime _lastShakeTime = DateTime.now();
+  DateTime _lastGyroTime = DateTime.now();
 
   // Slide Requirement:
   // "Terdapat menu buttom navigation: menu profil (ada gambar) dan
@@ -38,12 +40,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void initState() {
     super.initState();
+    _initSensors();
+  }
+
+  void _initSensors() {
+    if (kIsWeb) return;
     _initShakeSensor();
+    _initGyroscopeSensor();
   }
 
   // Sensor 1: Accelerometer Shake Detection (Slide 1 Requirement)
   void _initShakeSensor() {
-    if (kIsWeb) return;
     _accelerometerSubscription = accelerometerEventStream().listen((AccelerometerEvent event) {
       final gX = event.x;
       final gY = event.y;
@@ -61,7 +68,34 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               context,
               icon: Icons.security_rounded,
               iconColor: VaultColors.accent,
-              message: 'Accelerometer Sensor: Shake detected! Stealth mode active.',
+              message: 'Accelerometer: Shake detected (${gForce.toStringAsFixed(1)} m/s²)! Stealth lock.',
+            );
+          }
+        }
+      }
+    });
+  }
+
+  // Sensor 2: Gyroscope Rotational Tilt Detection (Slide 1 Requirement)
+  void _initGyroscopeSensor() {
+    _gyroscopeSubscription = gyroscopeEventStream().listen((GyroscopeEvent event) {
+      final rotX = event.x;
+      final rotY = event.y;
+      final rotZ = event.z;
+      final angularVelocity = sqrt(rotX * rotX + rotY * rotY + rotZ * rotZ);
+
+      // Threshold for rapid rotation / flip (> 5.0 rad/s)
+      if (angularVelocity > 5.0) {
+        final now = DateTime.now();
+        if (now.difference(_lastGyroTime).inSeconds > 3) {
+          _lastGyroTime = now;
+          HapticFeedback.selectionClick();
+          if (mounted) {
+            VaultToast.show(
+              context,
+              icon: Icons.screen_rotation_rounded,
+              iconColor: VaultColors.accent,
+              message: 'Gyroscope: Tilt motion detected (${angularVelocity.toStringAsFixed(1)} rad/s)!',
             );
           }
         }
@@ -72,6 +106,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void dispose() {
     _accelerometerSubscription?.cancel();
+    _gyroscopeSubscription?.cancel();
     super.dispose();
   }
 

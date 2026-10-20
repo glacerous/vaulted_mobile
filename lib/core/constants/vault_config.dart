@@ -77,6 +77,28 @@ class VaultConfig {
     return _defaultExchangeRateUrl;
   }
 
+  /// Supabase Cloud PostgreSQL Endpoint
+  static String get supabaseUrl {
+    final url = _getEnvVal('SUPABASE_URL');
+    if (url != null && url.isNotEmpty) {
+      return url.trim();
+    }
+    return '';
+  }
+
+  /// Supabase Anonymous Public Key
+  static String get supabaseAnonKey {
+    final key = _getEnvVal('SUPABASE_ANON_KEY');
+    if (key != null && key.isNotEmpty) {
+      return key.trim();
+    }
+    return '';
+  }
+
+  /// Whether Supabase credentials have been configured
+  static bool get hasSupabase =>
+      supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+
   /// Check whether Gemini AI service has a configured key
   static bool get hasGeminiKey => geminiApiKey.isNotEmpty;
 

@@ -237,6 +237,14 @@ class DatabaseHelper {
       final db = await database;
       if (db == null) return List.from(_webItems);
       var items = await db.query('items', orderBy: 'id DESC');
+
+      // Heal accidental bogus entries from previous broken parser (e.g. "masukkan laptop victus")
+      try {
+        await db.delete(
+          'items',
+          where: "name LIKE 'masukkan %' OR name LIKE 'tambahkan %' OR (name LIKE '%laptop victus%' AND current_valuation < 0.1)",
+        );
+      } catch (_) {}
       if (!items.any((i) => i['category'].toString().startsWith('Steam'))) {
         for (var asset in xelSteamAssets) {
           await db.insert('items', _sanitizeItemForDb(asset));

@@ -194,13 +194,17 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
       if (!mounted) return;
 
       if (result.isAction) {
-        if (result.actionType == 'hardware') {
+        if (result.actionType == 'hardware' ||
+            result.actionType == 'expense' ||
+            result.amount > 0) {
           final usdAmount = result.currency == 'IDR'
               ? result.amount / 15850.0
               : result.amount;
           await DatabaseHelper.instance.insertItem({
             'name': result.title,
-            'category': 'Hardware / ${result.category}',
+            'category': result.category.contains('/')
+                ? result.category
+                : 'Hardware / ${result.category}',
             'purchase_price': usdAmount,
             'current_valuation': usdAmount * 0.9,
             'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),

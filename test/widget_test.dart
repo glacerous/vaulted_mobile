@@ -48,4 +48,13 @@ void main() {
     expect(result.actionType, 'query');
     expect(result.speechText.isNotEmpty, isTrue);
   });
+
+  test('ValtoAiService parses Indonesian compound item and price accurately', () async {
+    final result = await ValtoAiService.instance.processInput('masukkan laptop victus 15 dengan harga 12 juta');
+    expect(result.actionType, 'hardware');
+    expect(result.title, 'Laptop Victus 15');
+    expect(result.amount, 12000000.0);
+    expect(result.currency, 'IDR');
+    expect(result.isAction, isTrue);
+  });
 }

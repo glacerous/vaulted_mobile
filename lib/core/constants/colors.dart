@@ -15,7 +15,15 @@ class VaultColors {
   static const Color ink3 = Color(0xFFA6A49B);       // Muted captions & placeholders
   static const Color body = Color(0xFF52504B);       // Body copy text
 
-  // Accents & Badges (Alpine Dawn Warm Gold & Sun Amber)
+  // =========================================================================
+  // 💡 DOSEN LIVE CHALLENGE: THEME & BRAND ACCENT COLOR
+  // Jika dosen meminta mengubah warna aksen/tema (misal jadi Emerald atau Sapphire):
+  // Ubah hex value `accent` di bawah:
+  // - Gold bawaan: Color(0xFFC0A85C)
+  // - Emerald Green: Color(0xFF059669)
+  // - Sapphire Blue: Color(0xFF2563EB)
+  // - Rose Titanium: Color(0xFFE11D48)
+  // =========================================================================
   static const Color accent = Color(0xFFC0A85C);     // Signature Alpine Warm Gold
   static const Color accentWarm = Color(0xFFD97706); // Warm amber secondary
   static const Color badgeBg = Color(0xFFFEF3C7);    // Soft warm gold badge pill

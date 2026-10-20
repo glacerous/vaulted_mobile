@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
-import '../core/constants/vault_config.dart';
 import '../core/database/database_helper.dart';
 import '../core/security/auth_service.dart';
 import '../core/services/valto_ai_service.dart';
@@ -63,7 +62,11 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     },
   ];
 
-  // Live exchange rates (Base USD)
+  // =========================================================================
+  // 💡 DOSEN LIVE CHALLENGE: KURS MATA UANG (Live Exchange Rates)
+  // Tambah / ubah kurs mata uang di sini jika dosen menantang saat presentasi:
+  // (Contoh tambah: 'SGD': 1.35, 'MYR': 4.45)
+  // =========================================================================
   final Map<String, double> _exchangeRates = {
     'USD': 1.0,
     'IDR': 15850.0,
@@ -133,6 +136,10 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     }
   }
 
+  // =========================================================================
+  // 💡 DOSEN LIVE CHALLENGE: RUMUS TOTAL VALUASI NET WORTH
+  // Total Aset = Nilai Hardware Inventory + Nilai Koleksi Steam
+  // =========================================================================
   double get _netWorth => _inventoryTotal + _collectiblesTotal;
 
   String _formatAmount(double usdAmount) {
@@ -2099,7 +2106,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                       ),
                     const SizedBox(height: 18),
 
-                    // Quick Action Buttons (Receipt OCR, Add Manual Asset, and Supabase Cloud Sync)
+                    // Quick Action Buttons (Receipt OCR & Add Asset)
                     Row(
                       children: [
                         Expanded(
@@ -2109,20 +2116,12 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             onTap: _showAiScannerModal,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: _buildActionTile(
                             icon: Icons.add_circle_outline_rounded,
                             label: 'Add Asset',
                             onTap: _showManualAddAssetModal,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildActionTile(
-                            icon: Icons.cloud_sync_rounded,
-                            label: 'Cloud Sync',
-                            onTap: _showCloudSyncModal,
                           ),
                         ),
                       ],
@@ -2500,285 +2499,6 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
           ],
         ),
       ),
-    );
-  }
-
-  void _showCloudSyncModal() {
-    HapticFeedback.mediumImpact();
-    bool isSyncing = false;
-    bool isRestoring = false;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: VaultColors.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (modalCtx, modalSetState) {
-            final hasSupabase = VaultConfig.hasSupabase;
-            final lastSync = SupabaseService.instance.lastSyncTime;
-            final lastSyncFormatted = lastSync != null
-                ? DateFormat('HH:mm:ss · dd MMM').format(lastSync)
-                : 'Belum pernah';
-
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 24,
-                  bottom: MediaQuery.of(modalCtx).viewInsets.bottom + 24,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: VaultColors.accent.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.cloud_sync_rounded,
-                                color: VaultColors.accent,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'CLOUD DATABASE SYNC',
-                                  style: VaultTypography.mono(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 1.2,
-                                    color: VaultColors.accent,
-                                  ),
-                                ),
-                                Text(
-                                  'Supabase PostgreSQL',
-                                  style: VaultTypography.sans(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: VaultColors.ink,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded, color: VaultColors.ink2),
-                          onPressed: () => Navigator.pop(modalCtx),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-
-                    // Info box
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: VaultColors.background,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: VaultColors.hairline),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildSyncInfoRow('Engine Cloud', 'PostgreSQL 15 (Supabase)'),
-                          const Divider(color: VaultColors.hairline, height: 16),
-                          _buildSyncInfoRow('Database Lokal', 'SQLite (Offline-First)'),
-                          const Divider(color: VaultColors.hairline, height: 16),
-                          _buildSyncInfoRow('Target Table', 'public.vault_items'),
-                          const Divider(color: VaultColors.hairline, height: 16),
-                          _buildSyncInfoRow(
-                            'Status Koneksi',
-                            hasSupabase ? 'Terhubung (Live REST)' : 'Mode Simulasi (Belum .env)',
-                          ),
-                          const Divider(color: VaultColors.hairline, height: 16),
-                          _buildSyncInfoRow('Terakhir Sync', lastSyncFormatted),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-
-                    // Buttons
-                    Row(
-                      children: [
-                        // Sync to Cloud
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: (isSyncing || isRestoring)
-                                ? null
-                                : () async {
-                                    modalSetState(() => isSyncing = true);
-                                    final res = await SupabaseService.instance.syncToCloud();
-                                    modalSetState(() => isSyncing = false);
-                                    if (mounted) {
-                                      VaultToast.show(
-                                        context,
-                                        icon: res['success'] == true
-                                            ? Icons.cloud_done_rounded
-                                            : Icons.cloud_off_rounded,
-                                        iconColor: res['success'] == true
-                                            ? VaultColors.pos
-                                            : VaultColors.neg,
-                                        message: res['message'] as String,
-                                      );
-                                    }
-                                  },
-                            icon: isSyncing
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.cloud_upload_outlined,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                            label: Text(
-                              isSyncing ? 'Syncing...' : 'Sync to Cloud',
-                              style: VaultTypography.sans(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: VaultColors.primaryButton,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-
-                        // Restore from Cloud
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: (isSyncing || isRestoring)
-                                ? null
-                                : () async {
-                                    modalSetState(() => isRestoring = true);
-                                    final res = await SupabaseService.instance.restoreFromCloud();
-                                    modalSetState(() => isRestoring = false);
-                                    await _loadVaultData();
-                                    if (mounted) {
-                                      VaultToast.show(
-                                        context,
-                                        icon: res['success'] == true
-                                            ? Icons.cloud_download_rounded
-                                            : Icons.cloud_off_rounded,
-                                        iconColor: res['success'] == true
-                                            ? VaultColors.pos
-                                            : VaultColors.neg,
-                                        message: res['message'] as String,
-                                      );
-                                    }
-                                  },
-                            icon: isRestoring
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: VaultColors.ink,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.cloud_download_outlined,
-                                    size: 16,
-                                    color: VaultColors.ink,
-                                  ),
-                            label: Text(
-                              isRestoring ? 'Pulling...' : 'Pull Cloud',
-                              style: VaultTypography.sans(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: VaultColors.ink,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: VaultColors.hairline),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Copy SQL Table Schema button
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: () {
-                          Clipboard.setData(
-                            const ClipboardData(text: SupabaseService.sqlTableSchema),
-                          );
-                          VaultToast.show(
-                            context,
-                            icon: Icons.copy_rounded,
-                            iconColor: VaultColors.accent,
-                            message: 'SQL Schema copied! Paste in Supabase SQL Editor.',
-                          );
-                        },
-                        icon: const Icon(Icons.code_rounded, size: 14, color: VaultColors.accent),
-                        label: Text(
-                          'Salin Skrip Tabel SQL PostgreSQL',
-                          style: VaultTypography.mono(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                            color: VaultColors.accent,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildSyncInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: VaultTypography.mono(fontSize: 10, letterSpacing: 0.8, color: VaultColors.ink2),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          value,
-          style: VaultTypography.mono(fontSize: 11, fontWeight: FontWeight.w600, color: VaultColors.ink),
-        ),
-      ],
     );
   }
 }

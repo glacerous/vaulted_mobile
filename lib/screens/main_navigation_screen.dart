@@ -21,6 +21,14 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
+  // =========================================================================
+  // 💡 DOSEN LIVE CHALLENGE: SENSOR & NAVIGATION SETTINGS
+  // Ubah nilai di bawah ini jika dosen meminta modifikasi live saat demo:
+  // =========================================================================
+  static const double shakeSensitivity = 18.0;     // Ambang batas getaran (goyangan) m/s²
+  static const double gyroTiltSensitivity = 5.0;    // Ambang batas rotasi gyroscope rad/s
+  static const int sensorCooldownSeconds = 2;       // Jeda waktu antar deteksi (detik)
+
   int _currentIndex = 0;
   StreamSubscription? _accelerometerSubscription;
   StreamSubscription? _gyroscopeSubscription;
@@ -58,10 +66,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
       final gForce = sqrt(gX * gX + gY * gY + gZ * gZ);
 
-      // Threshold for device shake (> 18 m/s^2)
-      if (gForce > 18.0) {
+      if (gForce > shakeSensitivity) {
         final now = DateTime.now();
-        if (now.difference(_lastShakeTime).inSeconds > 2) {
+        if (now.difference(_lastShakeTime).inSeconds > sensorCooldownSeconds) {
           _lastShakeTime = now;
           if (mounted) {
             VaultToast.show(
@@ -84,10 +91,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       final rotZ = event.z;
       final angularVelocity = sqrt(rotX * rotX + rotY * rotY + rotZ * rotZ);
 
-      // Threshold for rapid rotation / flip (> 5.0 rad/s)
-      if (angularVelocity > 5.0) {
+      if (angularVelocity > gyroTiltSensitivity) {
         final now = DateTime.now();
-        if (now.difference(_lastGyroTime).inSeconds > 3) {
+        if (now.difference(_lastGyroTime).inSeconds > sensorCooldownSeconds) {
           _lastGyroTime = now;
           HapticFeedback.selectionClick();
           if (mounted) {

@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../data/real_steam_assets.dart';
+import '../security/auth_service.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -20,15 +21,21 @@ class DatabaseHelper {
   };
   static Database? _database;
 
-  // Web fallback in-memory cache
+  // Web fallback in-memory cache seeded for demo user 'azzaky'
   final List<Map<String, dynamic>> _webItems = [
-    ...xelSteamAssets,
+    for (var asset in xelSteamAssets) ...[
+      {
+        ...asset,
+        'user_id': 'azzaky',
+      },
+    ],
   ];
 
   DatabaseHelper._init();
 
   static const Set<String> _validItemColumns = {
     'id',
+    'user_id',
     'name',
     'category',
     'purchase_price',
@@ -233,58 +240,78 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getItems() async {
+  Future<List<Map<String, dynamic>>> getItems([String? username]) async {
+    final targetUser = (username != null && username.isNotEmpty)
+        ? username.trim().toLowerCase()
+        : (AuthService.instance.activeSessionUser?.toLowerCase() ?? 'azzaky');
+
     if (kIsWeb) {
-      return List.from(_webItems);
+      return _webItems.where((i) {
+        final u = (i['user_id'] as String?)?.toLowerCase() ?? 'azzaky';
+        return u == targetUser;
+      }).toList();
     }
     try {
       final db = await database;
-      if (db == null) return List.from(_webItems);
-      var items = await db.query('items', orderBy: 'id DESC');
-
-      // Heal accidental bogus entries from previous broken parser (e.g. "masukkan laptop victus")
-      try {
-        await db.delete(
-          'items',
-          where: "name LIKE 'masukkan %' OR name LIKE 'tambahkan %' OR (name LIKE '%laptop victus%' AND current_valuation < 0.1)",
-        );
-        // Correct corrupted Hp Xiaomi 17 entry from previous regex bug
-        await db.rawUpdate(
-          "UPDATE items SET name = 'Hp Xiaomi 17', purchase_price = 18999000.0 / 15850.0, current_valuation = 18999000.0 / 15850.0 WHERE name LIKE '%Xiaomi 17%' AND (current_valuation < 100 OR name LIKE '%,000%')",
-        );
-        // Heal entries where 10% auto-depreciation was mistakenly applied upon initial entry
-        await db.rawUpdate(
-          "UPDATE items SET current_valuation = purchase_price WHERE purchase_price > 0 AND NOT category LIKE 'Steam%'",
-        );
-      } catch (_) {}
-      if (!items.any((i) => i['category'].toString().startsWith('Steam'))) {
-        for (var asset in xelSteamAssets) {
-          await db.insert('items', _sanitizeItemForDb(asset));
-        }
-        items = await db.query('items', orderBy: 'id DESC');
+      if (db == null) {
+        return _webItems.where((i) {
+          final u = (i['user_id'] as String?)?.toLowerCase() ?? 'azzaky';
+          return u == targetUser;
+        }).toList();
       }
+
+      // Ensure user_id column exists
+      try {
+        await db.execute("ALTER TABLE items ADD COLUMN user_id TEXT NOT NULL DEFAULT 'azzaky'");
+      } catch (_) {}
+
+      // Seed initial Steam items for azzaky demo if empty
+      final allItemsCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM items')) ?? 0;
+      if (allItemsCount == 0) {
+        for (var asset in xelSteamAssets) {
+          final clean = _sanitizeItemForDb(asset);
+          clean['user_id'] = 'azzaky';
+          await db.insert('items', clean);
+        }
+      }
+
+      final items = await db.query(
+        'items',
+        where: 'LOWER(user_id) = ? OR (user_id IS NULL AND ? = ?)',
+        whereArgs: [targetUser, targetUser, 'azzaky'],
+        orderBy: 'id DESC',
+      );
       return items;
     } catch (e) {
       debugPrint('[DatabaseHelper] getItems fallback: $e');
-      return List.from(_webItems);
+      return _webItems.where((i) {
+        final u = (i['user_id'] as String?)?.toLowerCase() ?? 'azzaky';
+        return u == targetUser;
+      }).toList();
     }
   }
 
   Future<int> insertItem(Map<String, dynamic> item) async {
+    final mutableItem = Map<String, dynamic>.from(item);
+    if (!mutableItem.containsKey('user_id') || mutableItem['user_id'] == null) {
+      mutableItem['user_id'] = AuthService.instance.activeSessionUser ?? 'azzaky';
+    }
+    final clean = _sanitizeItemForDb(mutableItem);
+
     if (kIsWeb) {
-      _webItems.add(item);
+      _webItems.add(clean);
       return _webItems.length;
     }
     try {
       final db = await database;
       if (db == null) {
-        _webItems.add(item);
+        _webItems.add(clean);
         return _webItems.length;
       }
-      return await db.insert('items', _sanitizeItemForDb(item));
+      return await db.insert('items', clean);
     } catch (e) {
       debugPrint('[DatabaseHelper] insertItem fallback: $e');
-      _webItems.add(item);
+      _webItems.add(clean);
       return _webItems.length;
     }
   }

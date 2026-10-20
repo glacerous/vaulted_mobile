@@ -137,17 +137,43 @@ class AuthService {
     }
   }
 
+  String? get activeSessionUser => _activeSessionUser;
+  String? get activeFullName => _activeFullName;
+
   Future<String> getCurrentUser() async {
-    if (_activeSessionUser != null) return _activeSessionUser!;
+    if (_activeSessionUser != null && _activeSessionUser!.isNotEmpty) {
+      return _activeSessionUser!;
+    }
     if (kIsWeb) return 'azzaky';
     try {
       final user = await _storage
           .read(key: _sessionKey)
           .timeout(const Duration(seconds: 2), onTimeout: () => null);
-      return user ?? 'azzaky';
+      if (user != null && user.isNotEmpty) {
+        _activeSessionUser = user;
+        return user;
+      }
+      return 'azzaky';
     } catch (_) {
       return 'azzaky';
     }
+  }
+
+  Future<String> getCurrentFullName() async {
+    if (_activeFullName != null && _activeFullName!.isNotEmpty) {
+      return _activeFullName!;
+    }
+    if (kIsWeb) return _activeSessionUser ?? 'Azzaky Raihan';
+    try {
+      final name = await _storage
+          .read(key: _userNameKey)
+          .timeout(const Duration(seconds: 2), onTimeout: () => null);
+      if (name != null && name.isNotEmpty) {
+        _activeFullName = name;
+        return name;
+      }
+    } catch (_) {}
+    return _activeSessionUser ?? 'Azzaky Raihan';
   }
 
   Future<void> logout() async {

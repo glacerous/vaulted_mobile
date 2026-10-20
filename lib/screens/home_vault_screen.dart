@@ -10,6 +10,7 @@ import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/constants/vault_config.dart';
 import '../core/database/database_helper.dart';
+import '../core/security/auth_service.dart';
 import '../core/services/valto_ai_service.dart';
 import '../core/services/gemini_service.dart';
 import '../core/services/supabase_service.dart';
@@ -41,6 +42,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   int _steamItemsCount = 0;
   String _selectedCurrency = 'IDR';
   List<Map<String, dynamic>> _recentItems = [];
+  String _currentFullName = 'Azzaky Raihan';
 
   bool _isAiProcessing = false;
   ValtoMood _valtoMood = ValtoMood.vigilant;
@@ -99,7 +101,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   }
 
   Future<void> _loadVaultData() async {
-    final items = await DatabaseHelper.instance.getItems();
+    final user = await AuthService.instance.getCurrentUser();
+    final fullName = await AuthService.instance.getCurrentFullName();
+    final items = await DatabaseHelper.instance.getItems(user);
     double inv = 0.0;
     double col = 0.0;
     int steamCount = 0;
@@ -118,6 +122,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
 
     if (mounted) {
       setState(() {
+        _currentFullName = fullName;
         _inventoryTotal = inv;
         _collectiblesTotal = col;
         _steamItemsCount = steamCount;
@@ -1665,7 +1670,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
 
                           // GREETING LINE
                           Text(
-                            '${_getGreeting()}, azzaky.',
+                            '${_getGreeting()}, $_currentFullName.',
                             style: VaultTypography.sans(
                               fontSize: 17,
                               fontWeight: FontWeight.w700,

@@ -244,6 +244,10 @@ class DatabaseHelper {
           'items',
           where: "name LIKE 'masukkan %' OR name LIKE 'tambahkan %' OR (name LIKE '%laptop victus%' AND current_valuation < 0.1)",
         );
+        // Correct corrupted Hp Xiaomi 17 entry from previous regex bug
+        await db.rawUpdate(
+          "UPDATE items SET name = 'Hp Xiaomi 17', purchase_price = 18999000.0 / 15850.0, current_valuation = 18999000.0 / 15850.0 WHERE name LIKE '%Xiaomi 17%' AND (current_valuation < 100 OR name LIKE '%,000%')",
+        );
         // Heal entries where 10% auto-depreciation was mistakenly applied upon initial entry
         await db.rawUpdate(
           "UPDATE items SET current_valuation = purchase_price WHERE purchase_price > 0 AND NOT category LIKE 'Steam%'",

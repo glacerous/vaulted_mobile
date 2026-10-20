@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import '../constants/vault_config.dart';
 import '../database/database_helper.dart';
 
@@ -135,8 +136,8 @@ Analyze the user's message.
 Determine if they are ASKING A QUESTION (query/assistant) OR WANTING TO RECORD/LOG AN ASSET OR EXPENSE (action).
 
 IMPORTANT RULES:
-1. Title Cleaning: Strip leading command words ("masukkan", "tambahkan", "tambah", "catat", "simpan", "input", "beli", "log", "add", "insert", "record"). Do NOT remove model numbers that belong to the product (e.g. "masukkan laptop victus 15 dengan harga 12 juta" -> title MUST be "Laptop Victus 15", "iPhone 15 Pro" -> "iPhone 15 Pro", "RTX 4090" -> "RTX 4090").
-2. Price Parsing: Identify the actual price, NOT product model numbers. Handle terms like "12 juta" -> 12000000, "12jt" -> 12000000, "35k" -> 35000, "2.5 jt" -> 2500000, "\$1600" -> 1600.
+1. Title Cleaning: Strip leading command words ("masukkan", "tambahkan", "tambah", "catat", "simpan", "input", "beli", "log", "add", "insert", "record") and price connectors ("dengan harga", "seharga", "harga"). Strip the price completely from the title (e.g. "masukkan hp Xiaomi 17 dengan harga 18,999,000" -> title MUST be "Hp Xiaomi 17", never leave trailing zeros or commas like ",000" or ".000"). Do NOT remove model numbers that belong to the product (e.g. "Laptop Victus 15", "Xiaomi 17", "iPhone 15 Pro", "RTX 4090").
+2. Price Parsing: Identify the actual price, NOT product model numbers. Handle Indonesian formatted prices with thousands separators like "18,999,000" or "18.999.000" -> 18999000 (NEVER treat commas in IDR prices as decimals!). Handle units like "12 juta" -> 12000000, "12jt" -> 12000000, "35k" -> 35000, "2.5 jt" -> 2500000, "\$1600" -> 1600.
 3. Language: Respond in the EXACT same language as the user (e.g. Indonesian if the user writes in Indonesian). If Indonesian, use a polite luxury tone: "Berhasil mencatat aset '[Title]' senilai [Formatted Price] ke dalam Vault Anda."
 
 Return ONLY valid JSON with no markdown formatting:
@@ -238,6 +239,52 @@ Return ONLY valid JSON with no markdown formatting:
         lower.contains('servis');
   }
 
+  static double _parsePriceString(String numStr, String? unit, String currency) {
+    numStr = numStr.trim();
+    if (unit != null && unit.isNotEmpty) {
+      final normalized = numStr.replaceAll(',', '.');
+      double val = double.tryParse(normalized) ?? 0.0;
+      final u = unit.toLowerCase();
+      if (u == 'k' || u == 'rb' || u == 'ribu') {
+        val *= 1000;
+      } else if (u == 'jt' || u == 'juta' || u == 'm') {
+        val *= 1000000;
+      } else if (u == 'miliar' || u == 'b') {
+        val *= 1000000000;
+      }
+      return val;
+    }
+
+    if (currency == 'IDR') {
+      // Indonesian Rupiah: all commas and periods in price digits are thousands separators
+      // e.g. "18,999,000" -> 18999000, "18.999.000" -> 18999000, "50.000" -> 50000
+      final digitsOnly = numStr.replaceAll(RegExp(r'[^0-9]'), '');
+      return double.tryParse(digitsOnly) ?? 0.0;
+    } else {
+      // USD / Foreign currency
+      if (numStr.contains(',') && numStr.contains('.')) {
+        if (numStr.lastIndexOf('.') > numStr.lastIndexOf(',')) {
+          numStr = numStr.replaceAll(',', '');
+        } else {
+          numStr = numStr.replaceAll('.', '').replaceAll(',', '.');
+        }
+      } else if (numStr.contains(',')) {
+        final parts = numStr.split(',');
+        if (parts.last.length == 3) {
+          numStr = numStr.replaceAll(',', '');
+        } else {
+          numStr = numStr.replaceAll(',', '.');
+        }
+      } else if (numStr.contains('.')) {
+        final parts = numStr.split('.');
+        if (parts.last.length == 3) {
+          numStr = numStr.replaceAll('.', '');
+        }
+      }
+      return double.tryParse(numStr) ?? 0.0;
+    }
+  }
+
   ValtoAgentResult _parseOffline(
     String text,
     int totalItems,
@@ -249,58 +296,61 @@ Return ONLY valid JSON with no markdown formatting:
       r'\b(masukkan|tambah|tambahkan|catat|simpan|beli|harga|juta|jt|ribu|rb|cari|tau|garansi|berapa|saldo|nilai|apa|ap|koleksi|servis|ini|itu|dong|bisa|kah|ya|sih|tolong)\b',
     ).hasMatch(lower);
 
-    // 1. Extract Price & Currency (Prevent confusing model numbers like "Victus 15" with price)
+    // 1. Extract Price & Currency (Prevent confusing model numbers like "Victus 15" or "Xiaomi 17" with price)
     double amount = 0.0;
     String currency = (lower.contains('usd') || lower.contains('\$')) ? 'USD' : 'IDR';
     String matchedPriceSubstring = '';
 
+    // Robust pattern for numbers with thousands separators or decimals:
+    // Matches e.g. 18,999,000 | 18.999.000 | 1,600 | 18.5 | 18,5 | 18999000 | 500
+    const numPattern = r'(?:\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)';
+
     // Priority A: USD patterns like "$1600", "$ 1,600", "1600 usd"
-    final usdMatch = RegExp(r'(?:\$|usd\s*)\s*(\d+[\.,]?\d*)|\b(\d+[\.,]?\d*)\s*usd\b', caseSensitive: false).firstMatch(lower);
+    final usdMatch = RegExp(
+      r'(?:\$|usd\s*)\s*(' + numPattern + r')|\b(' + numPattern + r')\s*usd\b',
+      caseSensitive: false,
+    ).firstMatch(lower);
+
     if (usdMatch != null) {
       matchedPriceSubstring = usdMatch.group(0)!;
-      final numPart = (usdMatch.group(1) ?? usdMatch.group(2))!.replaceAll(',', '');
-      amount = double.tryParse(numPart) ?? 0.0;
+      final rawNum = (usdMatch.group(1) ?? usdMatch.group(2))!;
+      amount = _parsePriceString(rawNum, null, 'USD');
       currency = 'USD';
     } else {
-      // Priority B: Explicit price connectors like "dengan harga 12 juta", "harga: 12 jt", "seharga 35k", "rp 12.000.000"
+      // Priority B: Explicit price connectors like "dengan harga 18,999,000", "harga: 12 jt", "seharga 35k", "rp 18.999.000"
       final explicitPriceMatch = RegExp(
-        r'(?:dengan\s+harga|seharga|harga|price|cost|for|rp\.?|idr)\s*[:=]?\s*(\d+[\.,]?\d*)\s*(k|rb|ribu|jt|juta|miliar|m|b)?\b',
+        r'(?:dengan\s+harga|seharga|harga|price|cost|for|rp\.?|idr)\s*[:=]?\s*(' + numPattern + r')\s*(k|rb|ribu|jt|juta|miliar|m|b)?\b',
         caseSensitive: false,
       ).firstMatch(lower);
 
       if (explicitPriceMatch != null) {
         matchedPriceSubstring = explicitPriceMatch.group(0)!;
-        final rawNum = explicitPriceMatch.group(1)!.replaceAll('.', '').replaceAll(',', '.');
-        double numVal = double.tryParse(rawNum) ?? 0.0;
+        final rawNum = explicitPriceMatch.group(1)!;
         final unit = explicitPriceMatch.group(2)?.toLowerCase();
-        if (unit == 'k' || unit == 'rb' || unit == 'ribu') {
-          numVal *= 1000;
-        } else if (unit == 'jt' || unit == 'juta' || unit == 'm') {
-          numVal *= 1000000;
-        } else if (unit == 'miliar' || unit == 'b') {
-          numVal *= 1000000000;
-        }
-        amount = numVal;
+        amount = _parsePriceString(rawNum, unit, currency);
       } else {
-        // Priority C: Standalone number with currency units like "12 juta", "12jt", "35k", "35rb"
+        // Priority C: Standalone number with currency units like "12 juta", "12jt", "35k", "35rb", "18.5 jt"
         final unitMatch = RegExp(
-          r'\b(\d+[\.,]?\d*)\s*(k|rb|ribu|jt|juta|miliar)\b',
+          r'\b(' + numPattern + r')\s*(k|rb|ribu|jt|juta|miliar)\b',
           caseSensitive: false,
         ).firstMatch(lower);
 
         if (unitMatch != null) {
           matchedPriceSubstring = unitMatch.group(0)!;
-          final rawNum = unitMatch.group(1)!.replaceAll(',', '.');
-          double numVal = double.tryParse(rawNum) ?? 0.0;
+          final rawNum = unitMatch.group(1)!;
           final unit = unitMatch.group(2)!.toLowerCase();
-          if (unit == 'k' || unit == 'rb' || unit == 'ribu') {
-            numVal *= 1000;
-          } else if (unit == 'jt' || unit == 'juta') {
-            numVal *= 1000000;
-          } else if (unit == 'miliar') {
-            numVal *= 1000000000;
+          amount = _parsePriceString(rawNum, unit, currency);
+        } else {
+          // Priority D: Standalone number formatted with thousands separators (e.g. "masukkan hp xiaomi 17 18,999,000")
+          final thousandsMatch = RegExp(
+            r'\b(\d{1,3}(?:[.,]\d{3})+)\b',
+            caseSensitive: false,
+          ).firstMatch(lower);
+
+          if (thousandsMatch != null) {
+            matchedPriceSubstring = thousandsMatch.group(0)!;
+            amount = _parsePriceString(thousandsMatch.group(1)!, null, currency);
           }
-          amount = numVal;
         }
       }
     }
@@ -348,8 +398,8 @@ Return ONLY valid JSON with no markdown formatting:
       cleanTitle = cleanTitle.replaceAll(RegExp(RegExp.escape(matchedSnSubstring), caseSensitive: false), '');
     }
 
-    // Strip trailing connectors left behind like "dengan harga", "seharga", "harga"
-    cleanTitle = cleanTitle.replaceAll(RegExp(r'\b(dengan\s+harga|seharga|harga|price|cost|for|at)\b', caseSensitive: false), '');
+    // Strip trailing connectors left behind like "dengan harga", "dengan", "seharga", "harga"
+    cleanTitle = cleanTitle.replaceAll(RegExp(r'\b(dengan\s+harga|dengan|seharga|harga|price|cost|for|at)\b', caseSensitive: false), '');
 
     // Strip leading command action verbs
     cleanTitle = cleanTitle.replaceAll(
@@ -357,8 +407,8 @@ Return ONLY valid JSON with no markdown formatting:
       '',
     );
 
-    // Clean whitespace and boundary punctuation
-    cleanTitle = cleanTitle.replaceAll(RegExp(r'^[:\s\-]+|[:\s\-]+$'), '').replaceAll(RegExp(r'\s{2,}'), ' ').trim();
+    // Clean whitespace and boundary punctuation (including trailing/leading commas and periods)
+    cleanTitle = cleanTitle.replaceAll(RegExp(r'^[:\s\-,\.]+|[:\s\-,\.]+$'), '').replaceAll(RegExp(r'\s{2,}'), ' ').trim();
 
     // Capitalize words
     if (cleanTitle.isNotEmpty) {
@@ -390,13 +440,17 @@ Return ONLY valid JSON with no markdown formatting:
     if (isAction) {
       String formattedAmount;
       if (currency == 'USD') {
-        formattedAmount = '\$${amount.toStringAsFixed(0)}';
+        formattedAmount = '\$${NumberFormat('#,###').format(amount.toInt())}';
       } else {
-        if (amount >= 1000000) {
-          final jt = (amount / 1000000);
-          formattedAmount = 'Rp ${jt % 1 == 0 ? jt.toInt() : jt.toStringAsFixed(1)} Juta';
+        if (amount >= 1000000 && amount % 1000000 == 0) {
+          final jt = (amount / 1000000).toInt();
+          formattedAmount = 'Rp $jt Juta';
+        } else if (amount >= 1000000 && amount % 100000 == 0) {
+          final jt = (amount / 1000000).toStringAsFixed(1);
+          formattedAmount = 'Rp $jt Juta';
         } else {
-          formattedAmount = 'Rp ${amount.toStringAsFixed(0)}';
+          final formatted = NumberFormat('#,###').format(amount.toInt());
+          formattedAmount = 'Rp $formatted';
         }
       }
 

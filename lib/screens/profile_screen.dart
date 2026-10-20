@@ -7,6 +7,108 @@ import 'login_screen.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  void _showLogoutConfirmation(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: VaultColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: VaultColors.neg.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.logout_rounded, color: VaultColors.neg, size: 22),
+                    ),
+                    const SizedBox(width: 14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Konfirmasi Log Out',
+                          style: VaultTypography.sans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: VaultColors.ink,
+                          ),
+                        ),
+                        Text(
+                          'Mengakhiri sesi akses Vaulted',
+                          style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Apakah Anda yakin ingin keluar dari akun Vaulted? Sesi otentikasi lokal Anda akan diakhiri.',
+                  style: VaultTypography.sans(fontSize: 12.5, height: 1.5, color: VaultColors.ink2),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: VaultColors.hairline),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          'Batal',
+                          style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.ink2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          await AuthService.instance.logout();
+                          if (!context.mounted) return;
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            (route) => false,
+                          );
+                        },
+                        icon: const Icon(Icons.logout_rounded, size: 16, color: Colors.white),
+                        label: Text(
+                          'Keluar',
+                          style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: VaultColors.neg,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,7 +120,7 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. BRAND HEADER (Matching HomeVaultScreen)
+              // 1. BRAND HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -38,14 +140,9 @@ class ProfileScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: VaultColors.card,
                       border: Border.all(color: VaultColors.hairline, width: 1),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'A',
-                      style: VaultTypography.sans(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: VaultColors.ink,
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/azzaky.png'),
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
@@ -53,8 +150,9 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
+              // 2. SECTION TITLE
               Text(
-                'ACCOUNT & SYSTEM',
+                'KELOMPOK PENGEMBANG',
                 style: VaultTypography.mono(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -64,156 +162,73 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'User Profile & Course Info',
+                'Profil Anggota Tim',
                 style: VaultTypography.sans(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: VaultColors.ink,
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Profile Card with Picture (Slide 1 Requirement: menu profil ada gambar)
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: VaultColors.hairline),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: VaultColors.cardHover,
-                        border: Border.all(color: VaultColors.accent, width: 2),
-                        image: const DecorationImage(
-                          image: NetworkImage(
-                            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-                          ),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Azzaky Raihan', style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 2),
-                          Text('124240018 · Sistem Informasi', style: VaultTypography.mono(fontSize: 11, color: VaultColors.ink2)),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: VaultColors.badgeBg,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'VAULT MASTER PRO',
-                              style: VaultTypography.mono(fontSize: 9, fontWeight: FontWeight.w600, color: VaultColors.accent),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Team Info
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: VaultColors.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Kelompok Pengembang (SI UPNYK)', style: VaultTypography.sectionTitle),
-                    const SizedBox(height: 10),
-                    _buildMemberRow('124240010', 'Pindo Dinarman Situngkir'),
-                    _buildMemberRow('124240018', 'Azzaky Raihan'),
-                    _buildMemberRow('124240031', 'Ariel Saputra'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // SECTION: Saran dan Kesan MK Pemrograman Aplikasi Mobile (Slide 1 Requirement)
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: VaultColors.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.school_outlined, size: 18, color: VaultColors.accent),
-                        const SizedBox(width: 8),
-                        Text('Saran & Kesan Mata Kuliah', style: VaultTypography.sectionTitle),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Kesan:',
-                      style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w600, color: VaultColors.accent),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Mata kuliah Pemrograman Aplikasi Mobile memberikan wawasan yang sangat aplikatif mengenai ekosistem aplikasi modern. Praktik langsung pembuatan aplikasi dengan integrasi AI, Web3, sensor hardware, dan LBS sangat menantang dan memacu kreativitas mahasiswa.',
-                      style: VaultTypography.cardDescription,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Saran:',
-                      style: VaultTypography.sans(fontSize: 12.5, fontWeight: FontWeight.w600, color: VaultColors.accent),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Semoga studi kasus integrasi arsitektur cloud, manajemen state, dan optimasi performa mobile dapat terus diperbanyak sehingga mahasiswa semakin siap menghadapi standar industri profesional.',
-                      style: VaultTypography.cardDescription,
-                    ),
-                  ],
+              const SizedBox(height: 4),
+              Text(
+                'Pemrograman Aplikasi Mobile • Sistem Informasi UPNYK',
+                style: VaultTypography.sans(
+                  fontSize: 12.5,
+                  color: VaultColors.ink2,
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Logout Button (Slide 1 Requirement: menu logout)
+              // 3. MEMBER CARDS (Pindo, Azzaky, Ariel)
+              _buildMemberCard(
+                name: 'Pindo Dinarman Situngkir',
+                nim: '124240010',
+                initials: 'PS',
+                imagePath: null,
+                role: 'ANGGOTA TIM',
+              ),
+              const SizedBox(height: 14),
+
+              _buildMemberCard(
+                name: 'Azzaky Raihan',
+                nim: '124240018',
+                initials: 'AR',
+                imagePath: 'assets/images/azzaky.png',
+                role: 'ANGGOTA TIM',
+              ),
+              const SizedBox(height: 14),
+
+              _buildMemberCard(
+                name: 'Ariel Saputra',
+                nim: '124240031',
+                initials: 'AS',
+                imagePath: null,
+                role: 'ANGGOTA TIM',
+              ),
+              const SizedBox(height: 28),
+
+              // 4. LOGOUT BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: OutlinedButton.icon(
-                  onPressed: () async {
-                    await AuthService.instance.logout();
-                    if (context.mounted) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        (route) => false,
-                      );
-                    }
-                  },
+                  onPressed: () => _showLogoutConfirmation(context),
                   icon: const Icon(Icons.logout_rounded, size: 16, color: VaultColors.neg),
-                  label: Text('Log Out of Vault', style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.neg)),
+                  label: Text(
+                    'Log Out of Vault',
+                    style: VaultTypography.sans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.neg,
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: VaultColors.hairline),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -221,14 +236,91 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMemberRow(String nim, String name) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _buildMemberCard({
+    required String name,
+    required String nim,
+    required String initials,
+    required String? imagePath,
+    required String role,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: VaultColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: VaultColors.hairline),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(name, style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink)),
-          Text(nim, style: VaultTypography.mono(fontSize: 11, color: VaultColors.ink2)),
+          // Avatar with photo or initials
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: VaultColors.cardHover,
+              border: Border.all(color: VaultColors.accent, width: 1.5),
+              image: imagePath != null
+                  ? DecorationImage(
+                      image: AssetImage(imagePath),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            alignment: Alignment.center,
+            child: imagePath == null
+                ? Text(
+                    initials,
+                    style: VaultTypography.mono(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: VaultColors.accent,
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 16),
+
+          // Member Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: VaultTypography.sans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: VaultColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '$nim · Sistem Informasi',
+                  style: VaultTypography.mono(
+                    fontSize: 11,
+                    color: VaultColors.ink2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: VaultColors.badgeBg,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    role,
+                    style: VaultTypography.mono(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.accent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -761,10 +761,7 @@ class _ServiceCenterMapModal extends StatefulWidget {
   final Map<String, dynamic> center;
   final Position? userPosition;
 
-  const _ServiceCenterMapModal({
-    required this.center,
-    this.userPosition,
-  });
+  const _ServiceCenterMapModal({required this.center, this.userPosition});
 
   @override
   State<_ServiceCenterMapModal> createState() => _ServiceCenterMapModalState();
@@ -817,12 +814,12 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
     final dist = widget.userPosition == null
         ? null
         : Geolocator.distanceBetween(
-              widget.userPosition!.latitude,
-              widget.userPosition!.longitude,
-              _centerLat,
-              _centerLng,
-            ) /
-            1000.0;
+                widget.userPosition!.latitude,
+                widget.userPosition!.longitude,
+                _centerLat,
+                _centerLng,
+              ) /
+              1000.0;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.84,
@@ -994,8 +991,9 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
                                       height: 26,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Colors.blueAccent
-                                            .withValues(alpha: 0.25),
+                                        color: Colors.blueAccent.withValues(
+                                          alpha: 0.25,
+                                        ),
                                       ),
                                     ),
                                     Container(
@@ -1018,10 +1016,13 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
                             Marker(
                               point: LatLng(_centerLat, _centerLng),
                               width: 140,
-                              height: 72,
-                              alignment: Alignment.bottomCenter,
+                              height: 64,
+                              // topCenter = seluruh marker berada DI ATAS titik, jadi
+                              // ujung bawah pin tepat di koordinat lokasi (tidak bergeser saat zoom).
+                              alignment: Alignment.topCenter,
                               child: Column(
-                                mainAxisSize: MainAxisSize.min,
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -1037,8 +1038,9 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.6),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.6,
+                                          ),
                                           blurRadius: 6,
                                           offset: const Offset(0, 2),
                                         ),
@@ -1054,16 +1056,21 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
                                     ),
                                   ),
                                   const SizedBox(height: 2),
-                                  const Icon(
-                                    Icons.location_on_rounded,
-                                    color: VaultColors.accent,
-                                    size: 38,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black,
-                                        blurRadius: 8,
-                                      ),
-                                    ],
+                                  // Glyph pin punya padding bawah (~3px), digeser agar ujung
+                                  // pin persis menyentuh koordinat.
+                                  Transform.translate(
+                                    offset: const Offset(0, 3.2),
+                                    child: const Icon(
+                                      Icons.location_on_rounded,
+                                      color: VaultColors.accent,
+                                      size: 38,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black,
+                                          blurRadius: 8,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1122,9 +1129,7 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
                         decoration: BoxDecoration(
                           color: VaultColors.background.withValues(alpha: 0.85),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: VaultColors.hairline,
-                          ),
+                          border: Border.all(color: VaultColors.hairline),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,

@@ -14,8 +14,8 @@ import '../../core/database/database_helper.dart';
 import '../../core/services/gemini_service.dart';
 import '../../core/services/blockchain_service.dart';
 import '../../core/services/notification_service.dart';
-import '../../core/utils/image_utils.dart';
 import '../../core/widgets/valto_mascot.dart';
+import '../../core/widgets/vault_thumbnail.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -547,29 +547,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  Widget _buildPresetChip(
-    String label,
-    String sampleText,
-    TextEditingController ctrl,
-  ) {
-    return InkWell(
-      onTap: () => ctrl.text = sampleText,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: VaultColors.cardHover,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: VaultColors.hairline),
-        ),
-        child: Text(
-          label,
-          style: VaultTypography.mono(fontSize: 11, color: VaultColors.ink),
-        ),
-      ),
-    );
-  }
-
   void _showAddItemModal({
     String? initialName,
     String? initialCategory,
@@ -675,7 +652,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         'serial_number': serial.isNotEmpty
                             ? serial
                             : 'SN-${DateTime.now().millisecondsSinceEpoch}',
-                        'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
+                        'image_url': null,
                         'is_collectible': 0,
                         'blockchain_hash': hash,
                       });
@@ -1072,21 +1049,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Container(
+                                  VaultThumbnail(
+                                    imageUrl: item['image_url'] as String?,
+                                    category: item['category'] as String?,
+                                    name: item['name'] as String?,
                                     width: 44,
                                     height: 44,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8),
-                                      color: VaultColors.cardHover,
-                                      image: DecorationImage(
-                                        image: NetworkImage(
-                                          vaultImageUrl(
-                                            item['image_url'] as String?,
-                                          ),
-                                        ),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
+                                    borderRadius: 8,
                                   ),
                                   const SizedBox(width: 14),
                                   Expanded(

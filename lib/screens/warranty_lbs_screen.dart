@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:latlong2/latlong.dart';
+import 'package:latlong2/latlong.dart' hide Path;
 
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
@@ -809,6 +809,40 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
     }
   }
 
+  void _copyToClipboard(String text, String successMessage) {
+    HapticFeedback.mediumImpact();
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: VaultColors.card,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: VaultColors.hairline),
+        ),
+        content: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_rounded,
+              color: VaultColors.pos,
+              size: 16,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                successMessage,
+                style: VaultTypography.mono(
+                  fontSize: 11,
+                  color: VaultColors.ink,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dist = widget.userPosition == null
@@ -822,7 +856,7 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
               1000.0;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.84,
+      height: MediaQuery.of(context).size.height * 0.88,
       decoration: const BoxDecoration(
         color: VaultColors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -832,327 +866,373 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
           right: BorderSide(color: VaultColors.hairline, width: 1.2),
         ),
       ),
-      child: Column(
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          // Drag handle pill
-          Container(
-            margin: const EdgeInsets.only(top: 10, bottom: 8),
-            width: 38,
-            height: 4,
-            decoration: BoxDecoration(
-              color: VaultColors.ink2.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
+          // 1. CARTO DARK MATTER LUXURY MAP (Full Bleed)
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: LatLng(_centerLat, _centerLng),
+              initialZoom: 16.0,
+              minZoom: 4.0,
+              maxZoom: 19.0,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all,
+              ),
             ),
-          ),
-
-          // Header Info
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+            children: [
+              TileLayer(
+                urlTemplate:
+                    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                subdomains: const ['a', 'b', 'c', 'd'],
+                userAgentPackageName: 'com.vaulted.vaulted',
+              ),
+              MarkerLayer(
+                markers: [
+                  // User GPS Marker
+                  if (widget.userPosition != null)
+                    Marker(
+                      point: LatLng(
+                        widget.userPosition!.latitude,
+                        widget.userPosition!.longitude,
+                      ),
+                      width: 44,
+                      height: 44,
+                      alignment: Alignment.center,
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
+                            width: 32,
+                            height: 32,
                             decoration: BoxDecoration(
-                              color: VaultColors.badgeBg,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              widget.center['brand'] as String,
-                              style: VaultTypography.mono(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: VaultColors.accent,
-                              ),
+                              shape: BoxShape.circle,
+                              color: Colors.blueAccent.withValues(alpha: 0.22),
                             ),
                           ),
-                          if (dist != null) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
+                          Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.blueAccent,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 2,
                               ),
-                              decoration: BoxDecoration(
-                                color: VaultColors.posBg,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '${dist.toStringAsFixed(1)} km away',
-                                style: VaultTypography.mono(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: VaultColors.pos,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                  blurRadius: 4,
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        widget.center['name'] as String,
-                        style: VaultTypography.sans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: VaultColors.ink,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.center['address'] as String,
-                        style: VaultTypography.sans(
-                          fontSize: 11,
-                          color: VaultColors.ink2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: VaultColors.card,
-                      border: Border.all(color: VaultColors.hairline),
                     ),
-                    child: const Icon(
-                      Icons.close_rounded,
-                      size: 18,
-                      color: VaultColors.ink2,
+
+                  // Service Center Needle Pin (Anchored mathematically at the needle tip)
+                  Marker(
+                    point: LatLng(_centerLat, _centerLng),
+                    width: 44,
+                    height: 50,
+                    alignment: Alignment.topCenter,
+                    child: CustomPaint(
+                      size: const Size(44, 50),
+                      painter: const _LuxuryPinPainter(
+                        pinColor: VaultColors.accent,
+                        centerColor: VaultColors.card,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
 
-          const SizedBox(height: 8),
-
-          // Map Area
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: Stack(
-                  children: [
-                    FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        initialCenter: LatLng(_centerLat, _centerLng),
-                        initialZoom: 16.0,
-                        minZoom: 4.0,
-                        maxZoom: 19.0,
-                        interactionOptions: const InteractionOptions(
-                          flags: InteractiveFlag.all,
-                        ),
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate:
-                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                          userAgentPackageName: 'com.vaulted.vaulted',
-                        ),
-                        MarkerLayer(
-                          markers: [
-                            // User Location Marker (if available)
-                            if (widget.userPosition != null)
-                              Marker(
-                                point: LatLng(
-                                  widget.userPosition!.latitude,
-                                  widget.userPosition!.longitude,
-                                ),
-                                width: 50,
-                                height: 50,
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Container(
-                                      width: 26,
-                                      height: 26,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.blueAccent.withValues(
-                                          alpha: 0.25,
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      width: 14,
-                                      height: 14,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.blueAccent,
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                            // Service Center Marker
-                            Marker(
-                              point: LatLng(_centerLat, _centerLng),
-                              width: 140,
-                              height: 64,
-                              // topCenter = seluruh marker berada DI ATAS titik, jadi
-                              // ujung bawah pin tepat di koordinat lokasi (tidak bergeser saat zoom).
-                              alignment: Alignment.topCenter,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: VaultColors.background,
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                        color: VaultColors.accent,
-                                        width: 1,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.6,
-                                          ),
-                                          blurRadius: 6,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      widget.center['brand'] as String,
-                                      style: VaultTypography.mono(
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: VaultColors.accent,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  // Glyph pin punya padding bawah (~3px), digeser agar ujung
-                                  // pin persis menyentuh koordinat.
-                                  Transform.translate(
-                                    offset: const Offset(0, 3.2),
-                                    child: const Icon(
-                                      Icons.location_on_rounded,
-                                      color: VaultColors.accent,
-                                      size: 38,
-                                      shadows: [
-                                        Shadow(
-                                          color: Colors.black,
-                                          blurRadius: 8,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+          // 2. TOP FLOATING APP BAR
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    VaultColors.background.withValues(alpha: 0.95),
+                    VaultColors.background.withValues(alpha: 0.7),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag pill
+                  Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: VaultColors.ink2.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-
-                    // Floating Map Controls (Zoom In, Zoom Out, Recenter)
-                    Positioned(
-                      top: 14,
-                      right: 14,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildMapControlBtn(
-                            icon: Icons.add_rounded,
-                            tooltip: 'Zoom In',
-                            onTap: _zoomIn,
-                          ),
-                          const SizedBox(height: 6),
-                          _buildMapControlBtn(
-                            icon: Icons.remove_rounded,
-                            tooltip: 'Zoom Out',
-                            onTap: _zoomOut,
-                          ),
-                          const SizedBox(height: 10),
-                          _buildMapControlBtn(
-                            icon: Icons.store_rounded,
-                            tooltip: 'Focus Service Center',
-                            highlight: true,
-                            onTap: _recenterCenter,
-                          ),
-                          if (widget.userPosition != null) ...[
-                            const SizedBox(height: 6),
-                            _buildMapControlBtn(
-                              icon: Icons.my_location_rounded,
-                              tooltip: 'My Location',
-                              onTap: _recenterUser,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-
-                    // Bottom pill: Drag & Zoom hint
-                    Positioned(
-                      bottom: 12,
-                      left: 14,
-                      child: Container(
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
-                          vertical: 5,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: VaultColors.background.withValues(alpha: 0.85),
-                          borderRadius: BorderRadius.circular(20),
+                          color: VaultColors.card.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: VaultColors.hairline),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.pinch_rounded,
+                              Icons.verified_rounded,
                               size: 13,
                               color: VaultColors.accent,
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Pinch to zoom · Pan to explore',
+                              '${widget.center['brand']?.toString().toUpperCase()} AUTHORIZED',
                               style: VaultTypography.mono(
-                                fontSize: 9.5,
-                                color: VaultColors.ink,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.9,
+                                color: VaultColors.accent,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: VaultColors.card.withValues(alpha: 0.9),
+                            border: Border.all(color: VaultColors.hairline),
+                          ),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            size: 18,
+                            color: VaultColors.ink2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // 3. FLOATING MAP ZOOM & FOCUS CONTROLS
+          Positioned(
+            top: 72,
+            right: 14,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMapControlBtn(
+                  icon: Icons.add_rounded,
+                  tooltip: 'Zoom In',
+                  onTap: _zoomIn,
                 ),
+                const SizedBox(height: 6),
+                _buildMapControlBtn(
+                  icon: Icons.remove_rounded,
+                  tooltip: 'Zoom Out',
+                  onTap: _zoomOut,
+                ),
+                const SizedBox(height: 10),
+                _buildMapControlBtn(
+                  icon: Icons.storefront_rounded,
+                  tooltip: 'Focus Service Center',
+                  highlight: true,
+                  onTap: _recenterCenter,
+                ),
+                if (widget.userPosition != null) ...[
+                  const SizedBox(height: 6),
+                  _buildMapControlBtn(
+                    icon: Icons.my_location_rounded,
+                    tooltip: 'My GPS Location',
+                    onTap: _recenterUser,
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // 4. FLOATING THUMB DOCK (Bottom 35% Reachable Card)
+          Positioned(
+            left: 14,
+            right: 14,
+            bottom: 16,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: VaultColors.card.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: VaultColors.hairline,
+                  width: 1.1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: VaultColors.badgeBg,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          widget.center['brand'] as String,
+                          style: VaultTypography.mono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: VaultColors.accent,
+                          ),
+                        ),
+                      ),
+                      if (dist != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: VaultColors.posBg,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${dist.toStringAsFixed(1)} km away',
+                            style: VaultTypography.mono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: VaultColors.pos,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.center['name'] as String,
+                    style: VaultTypography.sans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.ink,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.center['address'] as String,
+                    style: VaultTypography.sans(
+                      fontSize: 11.5,
+                      color: VaultColors.ink2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(color: VaultColors.hairline, height: 1),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _copyToClipboard(
+                            widget.center['address'] as String,
+                            'Address copied to clipboard',
+                          ),
+                          icon: const Icon(
+                            Icons.copy_rounded,
+                            size: 14,
+                            color: VaultColors.accent,
+                          ),
+                          label: Text(
+                            'Copy Address',
+                            style: VaultTypography.sans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: VaultColors.ink,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: VaultColors.hairline),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _copyToClipboard(
+                            '$_centerLat, $_centerLng',
+                            'GPS coordinates copied to clipboard',
+                          ),
+                          icon: const Icon(
+                            Icons.navigation_rounded,
+                            size: 15,
+                          ),
+                          label: Text(
+                            'Get GPS Fix',
+                            style: VaultTypography.sans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: VaultColors.accent,
+                            foregroundColor: VaultColors.background,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -1179,7 +1259,7 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: VaultColors.background.withValues(alpha: 0.88),
+            color: VaultColors.background.withValues(alpha: 0.90),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: highlight ? VaultColors.accent : VaultColors.hairline,
@@ -1201,4 +1281,85 @@ class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
       ),
     );
   }
+}
+
+/// Custom painter that creates a mathematically exact luxury teardrop needle pin.
+///
+/// Anchored at bottom-center (cx, size.height), ensuring 0.0px drift across all
+/// map zoom levels (4.0 to 19.0).
+class _LuxuryPinPainter extends CustomPainter {
+  final Color pinColor;
+  final Color centerColor;
+
+  const _LuxuryPinPainter({
+    required this.pinColor,
+    required this.centerColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double cx = size.width / 2;
+    final double topRadius = size.width / 2 - 3;
+    final double bottomTipY = size.height;
+
+    // 1. Ground contact shadow
+    final groundPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.4)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(cx, bottomTipY - 1),
+        width: 14,
+        height: 5,
+      ),
+      groundPaint,
+    );
+
+    // 2. Precision teardrop needle path terminating at bottom-center tip
+    final path = Path();
+    path.moveTo(cx, bottomTipY);
+    path.cubicTo(
+      cx - 2,
+      bottomTipY - 14,
+      cx - topRadius,
+      topRadius + 8,
+      cx - topRadius,
+      topRadius + 2,
+    );
+    path.arcToPoint(
+      Offset(cx + topRadius, topRadius + 2),
+      radius: Radius.circular(topRadius),
+      clockwise: true,
+    );
+    path.cubicTo(
+      cx + topRadius,
+      topRadius + 8,
+      cx + 2,
+      bottomTipY - 14,
+      cx,
+      bottomTipY,
+    );
+    path.close();
+
+    // 3. Gold outer body
+    final bodyPaint = Paint()
+      ..color = pinColor
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(path, bodyPaint);
+
+    // 4. Titanium inner disc
+    final innerPaint = Paint()
+      ..color = centerColor
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(cx, topRadius + 2), topRadius - 4, innerPaint);
+
+    // 5. Gold center pip
+    final dotPaint = Paint()
+      ..color = pinColor
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(cx, topRadius + 2), 4.5, dotPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LuxuryPinPainter oldDelegate) => false;
 }

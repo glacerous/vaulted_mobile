@@ -380,36 +380,38 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
           _csPrivateCount = csCount;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: VaultColors.card,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            content: Row(
-              children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  color: VaultColors.pos,
-                  size: 20,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    steamOnly.isNotEmpty
-                        ? 'Steam collection synced! ${steamOnly.length} items verified (\$${totalVal.toStringAsFixed(2)}).'
-                        : 'No public Steam items found. Switched to fallback assets.',
-                    style: VaultTypography.sans(
-                      fontSize: 12.5,
-                      color: VaultColors.ink,
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: VaultColors.card,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              content: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: VaultColors.pos,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      steamOnly.isNotEmpty
+                          ? 'Steam collection synced! ${steamOnly.length} items verified (\$${totalVal.toStringAsFixed(2)}).'
+                          : 'No public Steam items found. Switched to fallback assets.',
+                      style: VaultTypography.sans(
+                        fontSize: 12.5,
+                        color: VaultColors.ink,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     }
   }
@@ -1251,49 +1253,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
-                    // Golden Steam Icon
-                    Container(
-                      width: 68,
-                      height: 68,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: VaultColors.badgeBg,
-                        border: Border.all(
-                          color: VaultColors.accent.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.sports_esports_rounded,
-                        color: VaultColors.accent,
-                        size: 34,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    Text(
-                      '1-Tap Steam Connection',
-                      style: VaultTypography.sans(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.3,
-                        color: VaultColors.ink,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-
-                    Text(
-                      'Sync high-liquidity CS2, Dota 2, and TF2 collectibles seamlessly. Valued live off the Community Market.',
-                      style: VaultTypography.sans(
-                        fontSize: 13,
-                        height: 1.45,
-                        color: VaultColors.body,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // 1-Tap Account Card
+                    // Consolidated Steam Portfolio & Profile Card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(18),
@@ -1302,13 +1262,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: _isConnected
-                              ? VaultColors.pos.withValues(alpha: 0.5)
+                              ? VaultColors.pos.withValues(alpha: 0.4)
                               : VaultColors.hairline,
-                          width: _isConnected ? 1.5 : 1.0,
+                          width: _isConnected ? 1.2 : 1.0,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
+                            color: Colors.black.withValues(alpha: 0.35),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -1374,7 +1334,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                           child: Text(
                                             _detectedPersona,
                                             style: VaultTypography.sans(
-                                              fontSize: 17,
+                                              fontSize: 16,
                                               fontWeight: FontWeight.w600,
                                               color: VaultColors.ink,
                                             ),
@@ -1423,14 +1383,40 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                   ],
                                 ),
                               ),
+                              if (_isConnected && _syncedItems.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'PORTFOLIO',
+                                      style: VaultTypography.mono(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.8,
+                                        color: VaultColors.ink2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '\$${_syncedItems.fold(0.0, (sum, i) => sum + (i['current_valuation'] as num).toDouble()).toStringAsFixed(2)}',
+                                      style: VaultTypography.mono(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: VaultColors.pos,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 16),
 
                           // Primary 1-Tap / Update Button
                           SizedBox(
                             width: double.infinity,
-                            height: 48,
+                            height: 46,
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : () => _syncSteam(),
                               style: ElevatedButton.styleFrom(
@@ -1475,10 +1461,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                         const SizedBox(width: 8),
                                         Text(
                                           _isConnected
-                                              ? 'Update / Re-sync Steam Inventory'
+                                              ? 'Update / Re-sync Steam Portfolio'
                                               : '1-Tap Connect as @$_detectedPersona',
                                           style: VaultTypography.sans(
-                                            fontSize: 14,
+                                            fontSize: 13.5,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -1494,7 +1480,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                 Text(
                                   'LAST SYNCED: ${_formatLastSync().toUpperCase()}',
                                   style: VaultTypography.mono(
-                                    fontSize: 10,
+                                    fontSize: 9.5,
                                     letterSpacing: 0.8,
                                     color: VaultColors.ink2,
                                   ),
@@ -1599,50 +1585,12 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       ),
                     ],
 
-                    // Quick CS2 Skin Logging Button (Always accessible)
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: OutlinedButton.icon(
-                        onPressed: _showAddCsItemDialog,
-                        icon: const Icon(
-                          Icons.add_circle_outline_rounded,
-                          size: 16,
-                          color: VaultColors.accent,
-                        ),
-                        label: Text(
-                          'Log CS2 Skin, Knife or Case Manually',
-                          style: VaultTypography.sans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: VaultColors.accent,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: BorderSide(
-                            color: VaultColors.accent.withValues(alpha: 0.35),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          backgroundColor: VaultColors.card,
-                        ),
-                      ),
-                    ),
-
                     // LIVE SYNCED INVENTORY SECTION
                     if (_syncedItems.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Container(
+                      Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: VaultColors.cardHover,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: VaultColors.hairline),
+                          horizontal: 2,
+                          vertical: 4,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1654,30 +1602,60 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                   size: 14,
                                   color: VaultColors.accent,
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 7),
                                 Text(
                                   'SYNCED ASSETS (${_syncedItems.length})',
                                   style: VaultTypography.mono(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 1.1,
-                                    color: VaultColors.accent,
+                                    color: VaultColors.ink2,
                                   ),
                                 ),
                               ],
                             ),
-                            Text(
-                              '\$${_syncedItems.fold(0.0, (sum, i) => sum + (i['current_valuation'] as num).toDouble()).toStringAsFixed(2)}',
-                              style: VaultTypography.mono(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: VaultColors.pos,
+                            GestureDetector(
+                              onTap: _showAddCsItemDialog,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: VaultColors.cardHover,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: VaultColors.accent.withValues(
+                                      alpha: 0.35,
+                                    ),
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.add_rounded,
+                                      size: 13,
+                                      color: VaultColors.accent,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Add Item',
+                                      style: VaultTypography.mono(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: VaultColors.accent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
 
                       // Search bar aset Steam
                       _buildAssetSearchBar(),
@@ -1760,115 +1738,118 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       const SizedBox(height: 10),
                     ],
 
-                    // Sign in with Steam OpenID Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 46,
-                      child: OutlinedButton.icon(
-                        onPressed: _showOpenIdSheet,
-                        icon: const Icon(
-                          Icons.language_rounded,
-                          size: 17,
-                          color: VaultColors.ink2,
-                        ),
-                        label: Text(
-                          'Sign In via Steam OpenID Portal',
-                          style: VaultTypography.sans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: VaultColors.ink,
+                    // Alternative Sign-in Methods (only visible when disconnected)
+                    if (!_isConnected) ...[
+                      // Sign in with Steam OpenID Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: OutlinedButton.icon(
+                          onPressed: _showOpenIdSheet,
+                          icon: const Icon(
+                            Icons.language_rounded,
+                            size: 17,
+                            color: VaultColors.ink2,
                           ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: VaultColors.hairline),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                          label: Text(
+                            'Sign In via Steam OpenID Portal',
+                            style: VaultTypography.sans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: VaultColors.ink,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: VaultColors.hairline),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    // Expandable Manual Link Option
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() => _showManualInput = !_showManualInput);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _showManualInput
-                                  ? 'Hide custom profile link'
-                                  : 'Or paste another Steam profile link',
-                              style: VaultTypography.mono(
-                                fontSize: 11,
+                      // Expandable Manual Link Option
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _showManualInput = !_showManualInput);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _showManualInput
+                                    ? 'Hide custom profile link'
+                                    : 'Or paste another Steam profile link',
+                                style: VaultTypography.mono(
+                                  fontSize: 11,
+                                  color: VaultColors.ink2,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                _showManualInput
+                                    ? Icons.keyboard_arrow_up_rounded
+                                    : Icons.keyboard_arrow_down_rounded,
+                                size: 16,
                                 color: VaultColors.ink2,
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              _showManualInput
-                                  ? Icons.keyboard_arrow_up_rounded
-                                  : Icons.keyboard_arrow_down_rounded,
-                              size: 16,
-                              color: VaultColors.ink2,
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
 
-                    if (_showManualInput) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        decoration: BoxDecoration(
-                          color: VaultColors.card,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: VaultColors.hairline),
-                        ),
-                        child: TextField(
-                          controller: _urlController,
-                          style: VaultTypography.mono(
-                            fontSize: 12,
-                            color: VaultColors.ink,
+                      if (_showManualInput) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: VaultColors.card,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: VaultColors.hairline),
                           ),
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            hintText: 'https://steamcommunity.com/profiles/...',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 38,
-                        child: ElevatedButton.icon(
-                          onPressed: _isLoading ? null : _importCustomUrl,
-                          icon: const Icon(Icons.sync_rounded, size: 16),
-                          label: Text(
-                            'Sync Custom Profile',
-                            style: VaultTypography.sans(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w500,
+                          child: TextField(
+                            controller: _urlController,
+                            style: VaultTypography.mono(
+                              fontSize: 12,
+                              color: VaultColors.ink,
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: VaultColors.cardHover,
-                            foregroundColor: VaultColors.accent,
-                            side: BorderSide(
-                              color: VaultColors.accent.withValues(alpha: 0.5),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'https://steamcommunity.com/profiles/...',
                             ),
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          height: 38,
+                          child: ElevatedButton.icon(
+                            onPressed: _isLoading ? null : _importCustomUrl,
+                            icon: const Icon(Icons.sync_rounded, size: 16),
+                            label: Text(
+                              'Sync Custom Profile',
+                              style: VaultTypography.sans(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: VaultColors.cardHover,
+                              foregroundColor: VaultColors.accent,
+                              side: BorderSide(
+                                color: VaultColors.accent.withValues(alpha: 0.5),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ],
                 ),

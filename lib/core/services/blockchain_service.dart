@@ -63,8 +63,8 @@ class BlockchainService {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('POLYGON AMOY TESTNET', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.2, color: VaultColors.pos)),
-                          Text('Tamper-Proof Proof of Ownership', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w600)),
+                          Text('VAULTED CRYPTOGRAPHIC PASSPORT', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.2, color: VaultColors.pos)),
+                          Text('SHA-256 Proof of Ownership', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ],
@@ -137,7 +137,7 @@ class BlockchainService {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'On-chain signature matched! Asset authenticity 100% verified on Polygon.',
+                                'Cryptographic digest verified! SHA-256 asset passport signature matches Polygon ERC-721 standard.',
                                 style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
                               ),
                             ),

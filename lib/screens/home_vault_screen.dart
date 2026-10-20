@@ -214,7 +214,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
             'serial_number':
                 result.serialNumber ??
                 'SN-${DateTime.now().millisecondsSinceEpoch}',
-            'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
+            'image_url': null,
             'is_collectible': 0,
             'blockchain_hash':
                 '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
@@ -1017,7 +1017,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                           'serial_number': serial.isNotEmpty
                               ? serial
                               : 'SN-${DateTime.now().millisecondsSinceEpoch}',
-                          'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
+                          'image_url': null,
                           'is_collectible': 0,
                           'blockchain_hash':
                               '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
@@ -1064,6 +1064,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   void _showAiScannerModal() {
     final textController = TextEditingController();
     Uint8List? selectedImageBytes;
+    String? selectedImagePath;
     bool isProcessing = false;
     final picker = ImagePicker();
 
@@ -1175,6 +1176,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               onTap: () {
                                 setModalState(() {
                                   selectedImageBytes = null;
+                                  selectedImagePath = null;
                                 });
                               },
                               child: Container(
@@ -1213,6 +1215,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                         final bytes = await photo.readAsBytes();
                                         setModalState(() {
                                           selectedImageBytes = bytes;
+                                          selectedImagePath = photo.path;
                                         });
                                       }
                                     } catch (e) {
@@ -1264,6 +1267,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                         final bytes = await image.readAsBytes();
                                         setModalState(() {
                                           selectedImageBytes = bytes;
+                                          selectedImagePath = image.path;
                                         });
                                       }
                                     } catch (e) {
@@ -1384,7 +1388,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                         ),
                                       ),
                                   'serial_number': result.serialNumber,
-                                  'image_url': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200',
+                                  'image_url': selectedImagePath,
                                   'is_collectible': 0,
                                   'blockchain_hash':
                                       '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',

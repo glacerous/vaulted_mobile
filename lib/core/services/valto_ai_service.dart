@@ -155,7 +155,7 @@ Return ONLY valid JSON with no markdown formatting:
 }
 ''';
 
-      for (final model in ['gemini-2.5-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest']) {
+      for (final model in ['gemini-3.8-flash', 'gemini-flash-latest']) {
         try {
           final uri = Uri.parse(
             'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
@@ -178,7 +178,7 @@ Return ONLY valid JSON with no markdown formatting:
                 'responseMimeType': 'application/json',
               },
             }),
-          ).timeout(const Duration(seconds: 8));
+          ).timeout(const Duration(seconds: 12));
 
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);

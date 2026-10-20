@@ -8,6 +8,16 @@ import '../data/real_steam_assets.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
+
+  static final Map<String, Map<String, dynamic>> _webUsers = {
+    'azzaky': {
+      'id': 1,
+      'username': 'azzaky',
+      'password_hash': '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9',
+      'full_name': 'Azzaky Raihan',
+      'created_at': '2026-01-01T00:00:00Z',
+    },
+  };
   static Database? _database;
 
   // Web fallback in-memory cache
@@ -128,14 +138,12 @@ class DatabaseHelper {
   Future<Map<String, dynamic>?> authenticateUser(String username, String rawPassword) async {
     final cleanUser = username.trim().toLowerCase();
     final cleanPass = rawPassword.trim();
+    final hash = sha256.convert(utf8.encode(cleanPass)).toString();
 
     if (kIsWeb) {
-      if (cleanUser == 'azzaky' && cleanPass == 'admin123') {
-        return {
-          'id': 1,
-          'username': 'azzaky',
-          'full_name': 'Azzaky Raihan',
-        };
+      final user = _webUsers[cleanUser];
+      if (user != null && user['password_hash'] == hash) {
+        return user;
       }
       return null;
     }
@@ -143,13 +151,12 @@ class DatabaseHelper {
     try {
       final db = await database;
       if (db == null) {
-        if (cleanUser == 'azzaky' && cleanPass == 'admin123') {
-          return {'id': 1, 'username': 'azzaky', 'full_name': 'Azzaky Raihan'};
+        final user = _webUsers[cleanUser];
+        if (user != null && user['password_hash'] == hash) {
+          return user;
         }
         return null;
       }
-
-      final hash = sha256.convert(utf8.encode(cleanPass)).toString();
 
       // Check if user table has any user, seed default demo user if empty
       final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM users')) ?? 0;
@@ -171,60 +178,57 @@ class DatabaseHelper {
       if (results.isNotEmpty) {
         return results.first;
       }
-
-      // Safety fallback for demo user 'azzaky' / 'admin123'
-      if (cleanUser == 'azzaky' && cleanPass == 'admin123') {
-        try {
-          final initialHash = sha256.convert(utf8.encode('admin123')).toString();
-          await db.insert(
-            'users',
-            {
-              'username': 'azzaky',
-              'password_hash': initialHash,
-              'full_name': 'Azzaky Raihan',
-              'created_at': DateTime.now().toIso8601String(),
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
-        } catch (_) {}
-        return {
-          'id': 1,
-          'username': 'azzaky',
-          'full_name': 'Azzaky Raihan',
-        };
-      }
     } catch (e) {
       debugPrint('[DatabaseHelper] Authentication notice: $e');
-      if (cleanUser == 'azzaky' && cleanPass == 'admin123') {
-        return {
-          'id': 1,
-          'username': 'azzaky',
-          'full_name': 'Azzaky Raihan',
-        };
-      }
     }
 
     return null;
   }
 
   Future<bool> registerUser(String username, String rawPassword, {String? fullName}) async {
-    if (kIsWeb) {
-      return true;
-    }
-    final db = await database;
-    if (db == null) return false;
     final cleanUser = username.trim().toLowerCase();
     final cleanPass = rawPassword.trim();
+    if (cleanUser.isEmpty || cleanPass.isEmpty) return false;
+
     final hash = sha256.convert(utf8.encode(cleanPass)).toString();
+    final displayName = (fullName?.trim().isNotEmpty == true) ? fullName!.trim() : username.trim();
+
+    if (kIsWeb) {
+      if (_webUsers.containsKey(cleanUser)) {
+        return false; // Username already taken
+      }
+      _webUsers[cleanUser] = {
+        'id': _webUsers.length + 1,
+        'username': cleanUser,
+        'password_hash': hash,
+        'full_name': displayName,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+      return true;
+    }
+
+    final db = await database;
+    if (db == null) return false;
+
     try {
+      final existing = await db.query(
+        'users',
+        where: 'LOWER(username) = ?',
+        whereArgs: [cleanUser],
+      );
+      if (existing.isNotEmpty) {
+        return false; // Username already taken
+      }
+
       await db.insert('users', {
         'username': cleanUser,
         'password_hash': hash,
-        'full_name': (fullName?.trim().isNotEmpty == true) ? fullName!.trim() : username.trim(),
+        'full_name': displayName,
         'created_at': DateTime.now().toIso8601String(),
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      });
       return true;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[DatabaseHelper] Register user error: $e');
       return false;
     }
   }

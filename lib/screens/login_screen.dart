@@ -18,9 +18,10 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
-  final TextEditingController _signInUsernameController = TextEditingController(text: 'azzaky');
-  final TextEditingController _signInPasswordController = TextEditingController(text: 'admin123');
+  final TextEditingController _signInUsernameController = TextEditingController();
+  final TextEditingController _signInPasswordController = TextEditingController();
 
+  final TextEditingController _signUpFullNameController = TextEditingController();
   final TextEditingController _signUpUsernameController = TextEditingController();
   final TextEditingController _signUpPasswordController = TextEditingController();
 
@@ -52,6 +53,7 @@ class _LoginScreenState extends State<LoginScreen>
     _levitateController.dispose();
     _signInUsernameController.dispose();
     _signInPasswordController.dispose();
+    _signUpFullNameController.dispose();
     _signUpUsernameController.dispose();
     _signUpPasswordController.dispose();
     super.dispose();
@@ -107,6 +109,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _handleSignUp(StateSetter setModalState) async {
+    final name = _signUpFullNameController.text.trim();
     final user = _signUpUsernameController.text.trim();
     final pass = _signUpPasswordController.text.trim();
 
@@ -119,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          backgroundColor: const Color(0xFF141413),
+          backgroundColor: VaultColors.toastBg,
         ),
       );
       return;
@@ -127,7 +130,11 @@ class _LoginScreenState extends State<LoginScreen>
 
     setModalState(() => _isLoading = true);
     try {
-      final success = await AuthService.instance.register(user, pass);
+      final success = await AuthService.instance.register(
+        user,
+        pass,
+        fullName: name.isNotEmpty ? name : user,
+      );
 
       if (!mounted) return;
 
@@ -138,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Could not create vault. Please try another username.',
+              'Username already registered. Please try another.',
               style: VaultTypography.sans(fontSize: 12, color: Colors.white),
             ),
             behavior: SnackBarBehavior.floating,
@@ -233,6 +240,30 @@ class _LoginScreenState extends State<LoginScreen>
                       style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink2),
                     ),
                     const SizedBox(height: 20),
+
+                    // Full Name Input
+                    Text('FULL NAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _signUpFullNameController,
+                      style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. Azzaky Raihan',
+                        hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
+                        filled: true,
+                        fillColor: VaultColors.background,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.hairline),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: VaultColors.hairline),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
 
                     // Username Input
                     Text('DESIRED USERNAME', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1, color: VaultColors.ink2)),
@@ -416,7 +447,28 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setSheetState(() {
+                            _signInUsernameController.text = 'azzaky';
+                            _signInPasswordController.text = 'admin123';
+                          });
+                        },
+                        child: Text(
+                          '⚡ Quick fill demo account',
+                          style: VaultTypography.mono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: VaultColors.accent,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
 
                     // Unlock Button
                     SizedBox(

@@ -88,21 +88,30 @@ class AuthService {
       );
 
       if (success) {
-        _activeSessionUser = 'azzaky';
-        _activeFullName = 'Azzaky Raihan';
+        String lastUser = 'azzaky';
+        String lastName = 'Azzaky Raihan';
         try {
           final existing = await _storage
               .read(key: _sessionKey)
               .timeout(const Duration(seconds: 2), onTimeout: () => null);
-          if (existing == null || existing.isEmpty) {
+          final existingName = await _storage
+              .read(key: _userNameKey)
+              .timeout(const Duration(seconds: 2), onTimeout: () => null);
+          if (existing != null && existing.isNotEmpty) {
+            lastUser = existing;
+            lastName = existingName ?? existing;
+          } else {
             await _storage
-                .write(key: _sessionKey, value: 'azzaky')
+                .write(key: _sessionKey, value: lastUser)
                 .timeout(const Duration(seconds: 2));
             await _storage
-                .write(key: _userNameKey, value: 'Azzaky Raihan')
+                .write(key: _userNameKey, value: lastName)
                 .timeout(const Duration(seconds: 2));
           }
         } catch (_) {}
+        _activeSessionUser = lastUser;
+        _activeFullName = lastName;
+        return true;
       }
       return success;
     } catch (e) {

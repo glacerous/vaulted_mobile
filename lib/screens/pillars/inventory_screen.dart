@@ -756,9 +756,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
         title: Text('Hardware & Devices', style: VaultTypography.sectionTitle),
         actions: [
           IconButton(
-            tooltip: 'AI Invoice Scanner (Gemini)',
+            tooltip: 'Invoice OCR Scanner',
             icon: const Icon(
-              Icons.auto_awesome_rounded,
+              Icons.receipt_long_rounded,
               color: VaultColors.accent,
               size: 22,
             ),

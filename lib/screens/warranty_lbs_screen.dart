@@ -397,7 +397,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                         child: CustomPaint(
                           painter: _TeardropPinPainter(
                             color: isSelected ? VaultColors.accent : Colors.white,
-                            strokeColor: isSelected ? const Color(0xFF141413) : bColor,
+                            strokeColor: isSelected ? VaultColors.ink : bColor,
                             strokeWidth: isSelected ? 2.2 : 1.8,
                             isSelected: isSelected,
                           ),
@@ -410,7 +410,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                 child: Icon(
                                   _brandIconData(brand),
                                   size: isSelected ? 20 : 15,
-                                  color: isSelected ? const Color(0xFF141413) : bColor,
+                                  color: isSelected ? VaultColors.ink : bColor,
                                 ),
                               ),
                             ),
@@ -510,10 +510,10 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                             decoration: BoxDecoration(
-                              color: isSel ? const Color(0xFF141413) : Colors.white.withValues(alpha: 0.94),
+                              color: isSel ? VaultColors.primaryButton : Colors.white.withValues(alpha: 0.94),
                               borderRadius: BorderRadius.circular(17),
                               border: Border.all(
-                                color: isSel ? const Color(0xFF141413) : VaultColors.hairline,
+                                color: isSel ? VaultColors.primaryButton : VaultColors.hairline,
                               ),
                               boxShadow: [
                                 BoxShadow(
@@ -779,7 +779,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                               style: VaultTypography.sans(fontSize: 12),
                                             ),
                                             duration: const Duration(seconds: 2),
-                                            backgroundColor: const Color(0xFF141413),
+                                            backgroundColor: VaultColors.toastBg,
                                           ),
                                         );
                                       },
@@ -808,7 +808,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                         style: VaultTypography.sans(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.white),
                                       ),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF141413),
+                                        backgroundColor: VaultColors.primaryButton,
                                         padding: const EdgeInsets.symmetric(vertical: 8),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                       ),

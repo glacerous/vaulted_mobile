@@ -1,6 +1,6 @@
 # VAULTED — Mobile Architecture & Ergonomics Guidelines
 
-This repository is **VAULTED**, an ultra-luxury mobile asset vault built in Flutter with a Vantis Vault dark titanium aesthetic (`#131312`, `#1D1D1B`, `#8E8D8A`, `#C0A85C`).
+This repository is **VAULTED**, an ultra-luxury mobile asset vault built in Flutter with a clean luxury porcelain and alpine warm gold aesthetic (`#FAF9F6`, `#FFFFFF`, `#141413`, `#C0A85C`).
 
 Every AI assistant working in this codebase **MUST STRICTLY COMPLY** with the following rules:
 
@@ -15,12 +15,13 @@ Every AI assistant working in this codebase **MUST STRICTLY COMPLY** with the fo
 ---
 
 ## 2. Design System & Tokens
-- **Canvas / Background**: `VaultColors.background` (`0xFF131312`)
-- **Card Surface**: `VaultColors.card` (`0xFF1D1D1B`)
-- **Hairline Borders**: `VaultColors.hairline` (`0xFF2A2A28`)
+- **Canvas / Background**: `VaultColors.background` (`0xFFFAF9F6`, warm porcelain canvas)
+- **Card Surface**: `VaultColors.card` (`0xFFFFFFFF`, crisp white)
+- **Hairline Borders**: `VaultColors.hairline` (`0xFFEBE8E0`, feather-light divider)
 - **Signature Accent**: `VaultColors.accent` (`0xFFC0A85C`, warm luxury gold)
-- **Primary Ink**: `VaultColors.ink` (`0xFFF2F2EF`)
-- **Secondary Ink**: `VaultColors.ink2` (`0xFF8F8F8A`)
+- **Primary Ink**: `VaultColors.ink` (`0xFF141413`, deep rich black)
+- **Secondary Ink**: `VaultColors.ink2` (`0xFF73716A`, graphite)
+- **Primary Button**: `VaultColors.primaryButton` (`0xFF141413` with white text)
 - **Typography**: Clean monospace for numbers/codes/telemetry (`VaultTypography.mono`), refined sans-serif for titles/labels (`VaultTypography.sans`).
 
 ---

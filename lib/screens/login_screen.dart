@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            backgroundColor: const Color(0xFF141413),
+            backgroundColor: VaultColors.toastBg,
           ),
         );
       }
@@ -143,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            backgroundColor: const Color(0xFF141413),
+            backgroundColor: VaultColors.toastBg,
           ),
         );
       }
@@ -172,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            backgroundColor: const Color(0xFF141413),
+            backgroundColor: VaultColors.toastBg,
           ),
         );
       }
@@ -290,7 +290,7 @@ class _LoginScreenState extends State<LoginScreen>
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : () => _handleSignUp(setSheetState),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF141413),
+                          backgroundColor: VaultColors.primaryButton,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
@@ -425,7 +425,7 @@ class _LoginScreenState extends State<LoginScreen>
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : () => _handleSignIn(setSheetState),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF141413),
+                          backgroundColor: VaultColors.primaryButton,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
@@ -584,7 +584,7 @@ class _LoginScreenState extends State<LoginScreen>
                                         borderRadius: BorderRadius.circular(50),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFF141413).withValues(alpha: 0.16),
+                                            color: VaultColors.ink.withValues(alpha: 0.16),
                                             blurRadius: 18,
                                             spreadRadius: 2,
                                           ),
@@ -621,10 +621,10 @@ class _LoginScreenState extends State<LoginScreen>
                         child: ElevatedButton(
                           onPressed: _showSignUpSheet,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF141413), // Obsidian Jet
+                            backgroundColor: VaultColors.primaryButton,
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            shadowColor: const Color(0xFF141413).withValues(alpha: 0.20),
+                            shadowColor: VaultColors.primaryButton.withValues(alpha: 0.20),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(27),
                             ),

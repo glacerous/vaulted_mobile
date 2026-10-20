@@ -11,13 +11,14 @@ void main() async {
 
   await VaultConfig.initialize();
 
-  // Dark navigation bar & status bar overlay matching Vantis Vault
+  // Crisp dark status bar & navigation bar overlay on warm porcelain canvas
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
       systemNavigationBarColor: VaultColors.background,
-      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
 

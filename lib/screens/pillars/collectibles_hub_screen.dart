@@ -88,45 +88,51 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Top Breadcrumb Header (Screenshot 1: < VAULT      COLLECTIBLES)
+            // Top Native App Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context, true),
-                    child: Row(
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: VaultColors.card,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 14,
+                        color: VaultColors.ink,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.arrow_back_ios_new_rounded, size: 13, color: VaultColors.ink2),
-                        const SizedBox(width: 6),
                         Text(
-                          'VAULT',
+                          'Collectibles Hub',
                           style: VaultTypography.sans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.2,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
                             color: VaultColors.ink,
                           ),
                         ),
+                        Text(
+                          'Digital Assets & Gaming Items',
+                          style: VaultTypography.mono(
+                            fontSize: 10.5,
+                            color: VaultColors.ink2,
+                          ),
+                        ),
                       ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: VaultColors.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: VaultColors.hairline),
-                    ),
-                    child: Text(
-                      'COLLECTIBLES',
-                      style: VaultTypography.mono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1,
-                        color: VaultColors.ink2,
-                      ),
                     ),
                   ),
                 ],
@@ -168,8 +174,8 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
           color: VaultColors.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: hasItems ? VaultColors.pos.withValues(alpha: 0.4) : VaultColors.hairline,
-            width: hasItems ? 1.2 : 1.0,
+            color: VaultColors.hairline,
+            width: 1.0,
           ),
         ),
         child: Column(

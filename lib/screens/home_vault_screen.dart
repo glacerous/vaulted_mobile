@@ -1040,7 +1040,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF141413),
+                        backgroundColor: VaultColors.primaryButton,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -1454,7 +1454,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF141413),
+                        backgroundColor: VaultColors.primaryButton,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -1477,7 +1477,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     final now = DateTime.now();
 
     return Scaffold(
-      backgroundColor: Colors.white, // Pure white matching the sheet so no contrast sliver can ever appear
+      backgroundColor: VaultColors.background,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -1605,7 +1605,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                       style: VaultTypography.mono(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF1D1D1B),
+                                        color: VaultColors.ink,
                                       ),
                                     ),
                                   ),
@@ -1639,7 +1639,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                           const Icon(
                                             Icons.receipt_long_rounded,
                                             size: 15,
-                                            color: Color(0xFF1D1D1B),
+                                            color: VaultColors.ink,
                                           ),
                                           const SizedBox(width: 5),
                                           Text(
@@ -1648,7 +1648,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                               fontSize: 9.5,
                                               fontWeight: FontWeight.w700,
                                               letterSpacing: 0.8,
-                                              color: const Color(0xFF1D1D1B),
+                                              color: VaultColors.ink,
                                             ),
                                           ),
                                         ],
@@ -2130,7 +2130,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                         border: Border.all(color: VaultColors.hairline),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF141413)
+                            color: VaultColors.ink
                                 .withValues(alpha: 0.025),
                             blurRadius: 14,
                             offset: const Offset(0, 4),
@@ -2381,7 +2381,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
           border: Border.all(color: VaultColors.hairline),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF141413).withValues(alpha: 0.02),
+              color: VaultColors.ink.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),

@@ -154,7 +154,7 @@ class _GameScreenState extends State<GameScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF141413).withValues(alpha: 0.03),
+                          color: VaultColors.ink.withValues(alpha: 0.03),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),

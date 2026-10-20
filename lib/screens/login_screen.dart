@@ -447,28 +447,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setSheetState(() {
-                            _signInUsernameController.text = 'azzaky';
-                            _signInPasswordController.text = 'admin123';
-                          });
-                        },
-                        child: Text(
-                          '⚡ Quick fill demo account',
-                          style: VaultTypography.mono(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: VaultColors.accent,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
 
                     // Unlock Button
                     SizedBox(

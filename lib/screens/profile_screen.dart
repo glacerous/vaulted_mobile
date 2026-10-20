@@ -212,7 +212,7 @@ class ProfileScreen extends StatelessWidget {
               // 3. MEMBER CARDS (Pindo, Azzaky, Ariel)
               _buildMemberCard(
                 name: 'Pindo Dinarman Situngkir',
-                nim: '124240010',
+                nim: '124240031',
                 initials: 'PS',
                 imagePath: 'assets/images/pindo.jpeg',
                 role: 'ANGGOTA TIM',
@@ -230,7 +230,7 @@ class ProfileScreen extends StatelessWidget {
 
               _buildMemberCard(
                 name: 'Ariel Saputra',
-                nim: '124240031',
+                nim: '124240010',
                 initials: 'AS',
                 imagePath: null,
                 role: 'ANGGOTA TIM',

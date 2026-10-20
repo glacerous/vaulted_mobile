@@ -1,12 +1,7 @@
-import 'dart:async';
-import 'dart:math';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 
 import '../../core/constants/colors.dart';
 import '../../core/constants/typography.dart';
@@ -34,13 +29,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _query = '';
 
-  // Sensor 2: Gyroscope (kartu item miring mengikuti rotasi HP)
-  static const double _maxTilt = 0.35; // radian
-  StreamSubscription<GyroscopeEvent>? _gyroSub;
-  final ValueNotifier<Offset> _tilt = ValueNotifier(Offset.zero);
-  DateTime? _lastGyroTime;
-  bool _gyroActive = false;
-
   final currencyFormatter = NumberFormat.currency(
     locale: 'en_US',
     symbol: '\$',
@@ -51,49 +39,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void initState() {
     super.initState();
     _loadItems();
-    _initGyroscope();
-  }
-
-  void _initGyroscope() {
-    if (kIsWeb) return; // sensor hanya tersedia di perangkat asli
-    try {
-      _gyroSub =
-          gyroscopeEventStream(
-            samplingPeriod: SensorInterval.gameInterval,
-          ).listen(
-            (GyroscopeEvent e) {
-              final now = DateTime.now();
-              final dt = _lastGyroTime == null
-                  ? 0.02
-                  : (now.difference(_lastGyroTime!).inMicroseconds / 1000000.0)
-                        .clamp(0.001, 0.1)
-                        .toDouble();
-              _lastGyroTime = now;
-
-              // Integrasi kecepatan sudut (rad/s) jadi sudut miring, lalu perlahan kembali ke 0
-              final decay = exp(-3.0 * dt);
-              final tx = ((_tilt.value.dx + e.y * dt) * decay)
-                  .clamp(-_maxTilt, _maxTilt)
-                  .toDouble();
-              final ty = ((_tilt.value.dy + e.x * dt) * decay)
-                  .clamp(-_maxTilt, _maxTilt)
-                  .toDouble();
-              _tilt.value = Offset(tx, ty);
-
-              if (!_gyroActive && mounted) setState(() => _gyroActive = true);
-            },
-            onError: (_) {},
-            cancelOnError: false,
-          );
-    } catch (_) {
-      // Perangkat tanpa gyroscope: efek tilt dilewati
-    }
   }
 
   @override
   void dispose() {
-    _gyroSub?.cancel();
-    _tilt.dispose();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -110,17 +59,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
     // InventoryScreen is dedicated purely to physical Hardware, Tech & Devices.
     // Steam collectibles are managed in the Steam & Gaming Vault.
     final hardwareOnly = _allItems
-        .where((i) => !i['category'].toString().startsWith('Steam') && i['is_collectible'] == 0)
+        .where(
+          (i) =>
+              !i['category'].toString().startsWith('Steam') &&
+              i['is_collectible'] == 0,
+        )
         .toList();
 
     List<Map<String, dynamic>> list;
     if (_selectedFilter == 'Protected' || _selectedFilter == 'With Warranty') {
       list = hardwareOnly
-          .where((i) => i['warranty_expiry_date'] != null && i['warranty_expiry_date'].toString().isNotEmpty)
+          .where(
+            (i) =>
+                i['warranty_expiry_date'] != null &&
+                i['warranty_expiry_date'].toString().isNotEmpty,
+          )
           .toList();
-    } else if (_selectedFilter == 'Apple' || _selectedFilter == 'Sony' || _selectedFilter == 'Samsung') {
+    } else if (_selectedFilter == 'Apple' ||
+        _selectedFilter == 'Sony' ||
+        _selectedFilter == 'Samsung') {
       list = hardwareOnly
-          .where((i) => (i['name'] ?? '').toString().toLowerCase().contains(_selectedFilter.toLowerCase()))
+          .where(
+            (i) => (i['name'] ?? '').toString().toLowerCase().contains(
+              _selectedFilter.toLowerCase(),
+            ),
+          )
           .toList();
     } else {
       list = List.from(hardwareOnly);
@@ -459,7 +422,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     behavior: SnackBarBehavior.floating,
                                     content: Text(
                                       'Please take a photo or enter receipt text first.',
-                                      style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink),
+                                      style: VaultTypography.sans(
+                                        fontSize: 12.5,
+                                        color: VaultColors.ink,
+                                      ),
                                     ),
                                   ),
                                 );
@@ -497,7 +463,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       behavior: SnackBarBehavior.floating,
                                       content: Text(
                                         'Error processing receipt: $e',
-                                        style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink),
+                                        style: VaultTypography.sans(
+                                          fontSize: 12.5,
+                                          color: VaultColors.ink,
+                                        ),
                                       ),
                                     ),
                                   );
@@ -804,8 +773,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 style: VaultTypography.cardDescription,
               ),
               const SizedBox(height: 14),
-              _buildGyroStatus(),
-              const SizedBox(height: 12),
               _buildSearchBar(),
               const SizedBox(height: 12),
               // Category filter pills for hardware only
@@ -816,17 +783,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   children: [
                     _buildFilterChip(
                       'All Hardware',
-                      _allItems.where((i) => !i['category'].toString().startsWith('Steam') && i['is_collectible'] == 0).length,
+                      _allItems
+                          .where(
+                            (i) =>
+                                !i['category'].toString().startsWith('Steam') &&
+                                i['is_collectible'] == 0,
+                          )
+                          .length,
                     ),
                     const SizedBox(width: 8),
                     _buildFilterChip(
                       'With Warranty',
                       _allItems
-                          .where((i) =>
-                              !i['category'].toString().startsWith('Steam') &&
-                              i['is_collectible'] == 0 &&
-                              i['warranty_expiry_date'] != null &&
-                              i['warranty_expiry_date'].toString().isNotEmpty)
+                          .where(
+                            (i) =>
+                                !i['category'].toString().startsWith('Steam') &&
+                                i['is_collectible'] == 0 &&
+                                i['warranty_expiry_date'] != null &&
+                                i['warranty_expiry_date'].toString().isNotEmpty,
+                          )
                           .length,
                     ),
                   ],
@@ -1211,19 +1186,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         ),
                       );
 
-                      // Kartu miring 3D mengikuti gyroscope
-                      return ValueListenableBuilder<Offset>(
-                        valueListenable: _tilt,
-                        builder: (context, t, child) => Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.identity()
-                            ..setEntry(3, 2, 0.0012)
-                            ..rotateX(-t.dy * 0.6)
-                            ..rotateY(t.dx * 0.6),
-                          child: child,
-                        ),
-                        child: card,
-                      );
+                      return card;
                     },
                   ),
                 ),
@@ -1276,50 +1239,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 color: VaultColors.ink3,
               ),
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGyroStatus() {
-    final String label;
-    if (_gyroActive) {
-      label = 'GYROSCOPE ACTIVE · tilt your phone to inspect cards';
-    } else if (kIsWeb) {
-      label = 'GYROSCOPE N/A ON WEB · run on a real device';
-    } else {
-      label = 'GYROSCOPE WAITING FOR SENSOR...';
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: VaultColors.badgeBg,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.screen_rotation_rounded,
-            size: 14,
-            color: _gyroActive ? VaultColors.pos : VaultColors.ink3,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: ValueListenableBuilder<Offset>(
-              valueListenable: _tilt,
-              builder: (context, t, _) => Text(
-                _gyroActive
-                    ? '$label\nx: ${t.dy.toStringAsFixed(2)}  y: ${t.dx.toStringAsFixed(2)} rad'
-                    : label,
-                style: VaultTypography.mono(
-                  fontSize: 9.5,
-                  color: VaultColors.ink2,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

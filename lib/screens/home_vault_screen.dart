@@ -16,6 +16,7 @@ import 'pillars/inventory_screen.dart';
 import 'pillars/collectibles_hub_screen.dart';
 import 'warranty_lbs_screen.dart';
 import 'game_screen.dart';
+import 'vault_converter_screen.dart';
 
 class HomeVaultScreen extends StatefulWidget {
   const HomeVaultScreen({super.key});
@@ -206,7 +207,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                 ? result.category
                 : 'Hardware / ${result.category}',
             'purchase_price': usdAmount,
-            'current_valuation': usdAmount * 0.9,
+            'current_valuation': usdAmount,
             'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
             'warranty_expiry_date': result.warrantyMonths != null
                 ? DateFormat('yyyy-MM-dd').format(
@@ -1009,7 +1010,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                           'name': name,
                           'category': 'Hardware / $selectedCategory',
                           'purchase_price': price,
-                          'current_valuation': price * 0.95,
+                          'current_valuation': price,
                           'purchase_date': DateFormat('yyyy-MM-dd')
                               .format(DateTime.now()),
                           'warranty_expiry_date': DateFormat('yyyy-MM-dd')
@@ -1379,8 +1380,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   'name': result.itemName,
                                   'category': 'Hardware / ${result.category}',
                                   'purchase_price': result.purchasePrice,
-                                  'current_valuation':
-                                      result.purchasePrice * 0.95,
+                                  'current_valuation': result.purchasePrice,
                                   'purchase_date': DateFormat('yyyy-MM-dd')
                                       .format(DateTime.now()),
                                   'warranty_expiry_date':
@@ -1974,57 +1974,87 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             color: VaultColors.ink2,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: VaultColors.cardHover,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
-                              final isSel = _selectedCurrency == curr;
-                              return GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  setState(() => _selectedCurrency = curr);
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isSel
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(7),
-                                    boxShadow: isSel
-                                        ? [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.08,
-                                              ),
-                                              blurRadius: 4,
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Text(
-                                    curr,
-                                    style: VaultTypography.mono(
-                                      fontSize: 9.5,
-                                      fontWeight: isSel
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      color: isSel
-                                          ? VaultColors.ink
-                                          : VaultColors.ink2,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: VaultColors.cardHover,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                children: ['IDR', 'USD', 'EUR', 'JPY'].map((curr) {
+                                  final isSel = _selectedCurrency == curr;
+                                  return GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() => _selectedCurrency = curr);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 7,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isSel
+                                            ? Colors.white
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(7),
+                                        boxShadow: isSel
+                                            ? [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(
+                                                    alpha: 0.08,
+                                                  ),
+                                                  blurRadius: 4,
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: Text(
+                                        curr,
+                                        style: VaultTypography.mono(
+                                          fontSize: 9.5,
+                                          fontWeight: isSel
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: isSel
+                                              ? VaultColors.ink
+                                              : VaultColors.ink2,
+                                        ),
+                                      ),
                                     ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const VaultConverterScreen(),
                                   ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  color: VaultColors.cardHover,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: VaultColors.hairline),
                                 ),
-                              );
-                            }).toList(),
-                          ),
+                                child: const Icon(
+                                  Icons.calculate_outlined,
+                                  size: 15,
+                                  color: VaultColors.accent,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -2195,6 +2225,29 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               );
                             },
                           ),
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: VaultColors.hairline,
+                            indent: 68,
+                            endIndent: 16,
+                          ),
+                          _buildPillarRow(
+                            icon: Icons.currency_exchange_rounded,
+                            iconColor: VaultColors.accent,
+                            title: 'Currency & Timezone Exchange',
+                            subtitle: 'Interactive conversion for 4 currencies & 4 global zones',
+                            value: 'Convert',
+                            isAction: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const VaultConverterScreen(),
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -2213,7 +2266,9 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     final cat = item['category']?.toString() ?? '';
     final name = item['name']?.toString() ?? 'Asset';
     final serial = item['serial_number']?.toString();
-    final valuation = (item['current_valuation'] as num?)?.toDouble() ?? 0.0;
+    final purchase = (item['purchase_price'] as num?)?.toDouble() ?? 0.0;
+    final valuation = (item['current_valuation'] as num?)?.toDouble() ?? purchase;
+    final displayAmount = purchase > 0 ? purchase : valuation;
 
     IconData icon = Icons.inventory_2_outlined;
     if (cat.contains('Steam') || cat.contains('Gaming')) {
@@ -2247,7 +2302,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
         icon: icon,
         title: name,
         subtitle: subtitle,
-        amount: '+ ${_formatAmount(valuation)}',
+        amount: '+ ${_formatAmount(displayAmount)}',
         isExpense: false,
       ),
     );

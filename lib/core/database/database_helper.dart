@@ -244,6 +244,10 @@ class DatabaseHelper {
           'items',
           where: "name LIKE 'masukkan %' OR name LIKE 'tambahkan %' OR (name LIKE '%laptop victus%' AND current_valuation < 0.1)",
         );
+        // Heal entries where 10% auto-depreciation was mistakenly applied upon initial entry
+        await db.rawUpdate(
+          "UPDATE items SET current_valuation = purchase_price WHERE purchase_price > 0 AND NOT category LIKE 'Steam%'",
+        );
       } catch (_) {}
       if (!items.any((i) => i['category'].toString().startsWith('Steam'))) {
         for (var asset in xelSteamAssets) {

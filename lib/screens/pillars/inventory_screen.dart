@@ -638,7 +638,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         'name': name,
                         'category': categoryCtrl.text,
                         'purchase_price': price,
-                        'current_valuation': price * 0.9,
+                        'current_valuation': price,
                         'purchase_date': DateFormat('yyyy-MM-dd')
                             .format(DateTime.now()),
                         'warranty_expiry_date': DateFormat('yyyy-MM-dd').format(

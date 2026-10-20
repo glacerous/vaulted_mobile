@@ -1,8 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
@@ -364,6 +367,19 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
     }
   }
 
+  void _showCenterMap(Map<String, dynamic> center) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black87,
+      builder: (ctx) => _ServiceCenterMapModal(
+        center: center,
+        userPosition: _currentPosition,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -589,19 +605,260 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
               ..._serviceCenters.map((center) {
                 final dist = _distanceOf(center);
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: VaultColors.card,
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      _showCenterMap(center);
+                    },
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: VaultColors.hairline),
+                    splashColor: VaultColors.accent.withValues(alpha: 0.1),
+                    highlightColor: VaultColors.accent.withValues(alpha: 0.05),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: VaultColors.card,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: VaultColors.badgeBg,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  center['brand'] as String,
+                                  style: VaultTypography.mono(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: VaultColors.accent,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: VaultColors.posBg,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '${dist.toStringAsFixed(1)} km away',
+                                  style: VaultTypography.mono(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: VaultColors.pos,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            center['name'] as String,
+                            style: VaultTypography.sans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            center['address'] as String,
+                            style: VaultTypography.sans(
+                              fontSize: 11.5,
+                              color: VaultColors.ink2,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.storefront_outlined,
+                                size: 14,
+                                color: VaultColors.pos,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  center['status'] as String,
+                                  style: VaultTypography.sans(
+                                    fontSize: 11,
+                                    color: VaultColors.pos,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Visual cue to indicate clickable map view
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: VaultColors.background,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: VaultColors.hairline,
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.map_outlined,
+                                  size: 13,
+                                  color: VaultColors.accent,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Tap to view map location',
+                                  style: VaultTypography.mono(
+                                    fontSize: 10.5,
+                                    color: VaultColors.accent,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const Spacer(),
+                                const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 11,
+                                  color: VaultColors.ink2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ServiceCenterMapModal extends StatefulWidget {
+  final Map<String, dynamic> center;
+  final Position? userPosition;
+
+  const _ServiceCenterMapModal({
+    required this.center,
+    this.userPosition,
+  });
+
+  @override
+  State<_ServiceCenterMapModal> createState() => _ServiceCenterMapModalState();
+}
+
+class _ServiceCenterMapModalState extends State<_ServiceCenterMapModal> {
+  late final MapController _mapController;
+  late final double _centerLat;
+  late final double _centerLng;
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+    _centerLat = (widget.center['lat'] as num).toDouble();
+    _centerLng = (widget.center['lng'] as num).toDouble();
+  }
+
+  void _zoomIn() {
+    final currentZoom = _mapController.camera.zoom;
+    _mapController.move(
+      _mapController.camera.center,
+      (currentZoom + 1).clamp(3.0, 19.0),
+    );
+  }
+
+  void _zoomOut() {
+    final currentZoom = _mapController.camera.zoom;
+    _mapController.move(
+      _mapController.camera.center,
+      (currentZoom - 1).clamp(3.0, 19.0),
+    );
+  }
+
+  void _recenterCenter() {
+    _mapController.move(LatLng(_centerLat, _centerLng), 16.0);
+  }
+
+  void _recenterUser() {
+    if (widget.userPosition != null) {
+      _mapController.move(
+        LatLng(widget.userPosition!.latitude, widget.userPosition!.longitude),
+        16.0,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dist = widget.userPosition == null
+        ? null
+        : Geolocator.distanceBetween(
+              widget.userPosition!.latitude,
+              widget.userPosition!.longitude,
+              _centerLat,
+              _centerLng,
+            ) /
+            1000.0;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.84,
+      decoration: const BoxDecoration(
+        color: VaultColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          top: BorderSide(color: VaultColors.hairline, width: 1.2),
+          left: BorderSide(color: VaultColors.hairline, width: 1.2),
+          right: BorderSide(color: VaultColors.hairline, width: 1.2),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Drag handle pill
+          Container(
+            margin: const EdgeInsets.only(top: 10, bottom: 8),
+            width: 38,
+            height: 4,
+            decoration: BoxDecoration(
+              color: VaultColors.ink2.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          // Header Info
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -613,7 +870,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              center['brand'] as String,
+                              widget.center['brand'] as String,
                               style: VaultTypography.mono(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
@@ -621,67 +878,319 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                               ),
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: VaultColors.posBg,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '${dist.toStringAsFixed(1)} km away',
-                              style: VaultTypography.mono(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: VaultColors.pos,
+                          if (dist != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: VaultColors.posBg,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '${dist.toStringAsFixed(1)} km away',
+                                style: VaultTypography.mono(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: VaultColors.pos,
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       Text(
-                        center['name'] as String,
+                        widget.center['name'] as String,
                         style: VaultTypography.sans(
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
+                          color: VaultColors.ink,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        center['address'] as String,
+                        widget.center['address'] as String,
                         style: VaultTypography.sans(
-                          fontSize: 11.5,
+                          fontSize: 11,
                           color: VaultColors.ink2,
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.storefront_outlined,
-                            size: 14,
-                            color: VaultColors.pos,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              center['status'] as String,
-                              style: VaultTypography.sans(
-                                fontSize: 11,
-                                color: VaultColors.pos,
-                              ),
-                            ),
-                          ),
-                        ],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                );
-              }),
+                ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: VaultColors.card,
+                      border: Border.all(color: VaultColors.hairline),
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: VaultColors.ink2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Map Area
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Stack(
+                  children: [
+                    FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
+                        initialCenter: LatLng(_centerLat, _centerLng),
+                        initialZoom: 16.0,
+                        minZoom: 4.0,
+                        maxZoom: 19.0,
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.all,
+                        ),
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.vaulted.vaulted',
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            // User Location Marker (if available)
+                            if (widget.userPosition != null)
+                              Marker(
+                                point: LatLng(
+                                  widget.userPosition!.latitude,
+                                  widget.userPosition!.longitude,
+                                ),
+                                width: 50,
+                                height: 50,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Container(
+                                      width: 26,
+                                      height: 26,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.blueAccent
+                                            .withValues(alpha: 0.25),
+                                      ),
+                                    ),
+                                    Container(
+                                      width: 14,
+                                      height: 14,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.blueAccent,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            // Service Center Marker
+                            Marker(
+                              point: LatLng(_centerLat, _centerLng),
+                              width: 140,
+                              height: 72,
+                              alignment: Alignment.bottomCenter,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: VaultColors.background,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: VaultColors.accent,
+                                        width: 1,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.6),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      widget.center['brand'] as String,
+                                      style: VaultTypography.mono(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: VaultColors.accent,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  const Icon(
+                                    Icons.location_on_rounded,
+                                    color: VaultColors.accent,
+                                    size: 38,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black,
+                                        blurRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    // Floating Map Controls (Zoom In, Zoom Out, Recenter)
+                    Positioned(
+                      top: 14,
+                      right: 14,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildMapControlBtn(
+                            icon: Icons.add_rounded,
+                            tooltip: 'Zoom In',
+                            onTap: _zoomIn,
+                          ),
+                          const SizedBox(height: 6),
+                          _buildMapControlBtn(
+                            icon: Icons.remove_rounded,
+                            tooltip: 'Zoom Out',
+                            onTap: _zoomOut,
+                          ),
+                          const SizedBox(height: 10),
+                          _buildMapControlBtn(
+                            icon: Icons.store_rounded,
+                            tooltip: 'Focus Service Center',
+                            highlight: true,
+                            onTap: _recenterCenter,
+                          ),
+                          if (widget.userPosition != null) ...[
+                            const SizedBox(height: 6),
+                            _buildMapControlBtn(
+                              icon: Icons.my_location_rounded,
+                              tooltip: 'My Location',
+                              onTap: _recenterUser,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    // Bottom pill: Drag & Zoom hint
+                    Positioned(
+                      bottom: 12,
+                      left: 14,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: VaultColors.background.withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: VaultColors.hairline,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.pinch_rounded,
+                              size: 13,
+                              color: VaultColors.accent,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Pinch to zoom · Pan to explore',
+                              style: VaultTypography.mono(
+                                fontSize: 9.5,
+                                color: VaultColors.ink,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMapControlBtn({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    bool highlight = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: VaultColors.background.withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: highlight ? VaultColors.accent : VaultColors.hairline,
+              width: highlight ? 1.2 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 4,
+              ),
             ],
+          ),
+          child: Icon(
+            icon,
+            size: 19,
+            color: highlight ? VaultColors.accent : VaultColors.ink,
           ),
         ),
       ),

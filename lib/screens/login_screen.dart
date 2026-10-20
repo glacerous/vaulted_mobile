@@ -30,6 +30,8 @@ class _LoginScreenState extends State<LoginScreen>
   late Animation<double> _shadowAnim;
 
   bool _isLoading = false;
+  String? _signInError;
+  String? _signUpError;
 
   @override
   void initState() {
@@ -75,9 +77,19 @@ class _LoginScreenState extends State<LoginScreen>
     final user = _signInUsernameController.text.trim();
     final pass = _signInPasswordController.text.trim();
 
-    if (user.isEmpty || pass.isEmpty) return;
+    if (user.isEmpty || pass.isEmpty) {
+      HapticFeedback.heavyImpact();
+      setModalState(() {
+        _signInError = 'Please enter both username and password.';
+      });
+      return;
+    }
 
-    setModalState(() => _isLoading = true);
+    setModalState(() {
+      _isLoading = true;
+      _signInError = null;
+    });
+
     try {
       final success = await AuthService.instance.login(user, pass);
 
@@ -87,20 +99,16 @@ class _LoginScreenState extends State<LoginScreen>
         Navigator.pop(context); // Close sheet
         _navigateToApp();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Incorrect username or password.',
-              style: VaultTypography.sans(fontSize: 12, color: Colors.white),
-            ),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            backgroundColor: VaultColors.toastBg,
-          ),
-        );
+        HapticFeedback.heavyImpact();
+        setModalState(() {
+          _signInError = 'Incorrect username or password. Check credentials.';
+        });
       }
     } catch (e) {
       debugPrint('[LoginScreen] Sign-in error: $e');
+      setModalState(() {
+        _signInError = 'Error during sign in. Please try again.';
+      });
     } finally {
       if (mounted) {
         setModalState(() => _isLoading = false);
@@ -114,21 +122,18 @@ class _LoginScreenState extends State<LoginScreen>
     final pass = _signUpPasswordController.text.trim();
 
     if (user.isEmpty || pass.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please enter both username and password.',
-            style: VaultTypography.sans(fontSize: 12, color: Colors.white),
-          ),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          backgroundColor: VaultColors.toastBg,
-        ),
-      );
+      HapticFeedback.heavyImpact();
+      setModalState(() {
+        _signUpError = 'Please enter both username and password.';
+      });
       return;
     }
 
-    setModalState(() => _isLoading = true);
+    setModalState(() {
+      _isLoading = true;
+      _signUpError = null;
+    });
+
     try {
       final success = await AuthService.instance.register(
         user,
@@ -142,20 +147,16 @@ class _LoginScreenState extends State<LoginScreen>
         Navigator.pop(context); // Close sheet
         _navigateToApp();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Username already registered. Please try another.',
-              style: VaultTypography.sans(fontSize: 12, color: Colors.white),
-            ),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            backgroundColor: VaultColors.toastBg,
-          ),
-        );
+        HapticFeedback.heavyImpact();
+        setModalState(() {
+          _signUpError = 'Username is already registered. Please choose another.';
+        });
       }
     } catch (e) {
       debugPrint('[LoginScreen] Sign-up error: $e');
+      setModalState(() {
+        _signUpError = 'Error during registration. Please try again.';
+      });
     } finally {
       if (mounted) {
         setModalState(() => _isLoading = false);
@@ -188,6 +189,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _showSignUpSheet() {
     HapticFeedback.mediumImpact();
+    _signUpError = null;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -247,6 +249,9 @@ class _LoginScreenState extends State<LoginScreen>
                     TextField(
                       controller: _signUpFullNameController,
                       style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
+                      onChanged: (_) {
+                        if (_signUpError != null) setSheetState(() => _signUpError = null);
+                      },
                       decoration: InputDecoration(
                         hintText: 'e.g. Azzaky Raihan',
                         hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
@@ -271,6 +276,9 @@ class _LoginScreenState extends State<LoginScreen>
                     TextField(
                       controller: _signUpUsernameController,
                       style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
+                      onChanged: (_) {
+                        if (_signUpError != null) setSheetState(() => _signUpError = null);
+                      },
                       decoration: InputDecoration(
                         hintText: 'e.g. azzaky',
                         hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
@@ -296,6 +304,9 @@ class _LoginScreenState extends State<LoginScreen>
                       controller: _signUpPasswordController,
                       obscureText: true,
                       style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
+                      onChanged: (_) {
+                        if (_signUpError != null) setSheetState(() => _signUpError = null);
+                      },
                       decoration: InputDecoration(
                         hintText: 'Minimum 6 characters',
                         hintStyle: VaultTypography.sans(fontSize: 13, color: VaultColors.ink3),
@@ -312,7 +323,37 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
+
+                    // Inline Error Feedback Banner
+                    if (_signUpError != null) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: VaultColors.neg.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: VaultColors.neg.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline_rounded, size: 16, color: VaultColors.neg),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _signUpError!,
+                                style: VaultTypography.sans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: VaultColors.neg,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
 
                     // Submit Button
                     SizedBox(
@@ -351,6 +392,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _showSignInSheet() {
     HapticFeedback.mediumImpact();
+    _signInError = null;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -410,6 +452,9 @@ class _LoginScreenState extends State<LoginScreen>
                     TextField(
                       controller: _signInUsernameController,
                       style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
+                      onChanged: (_) {
+                        if (_signInError != null) setSheetState(() => _signInError = null);
+                      },
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: VaultColors.background,
@@ -433,6 +478,9 @@ class _LoginScreenState extends State<LoginScreen>
                       controller: _signInPasswordController,
                       obscureText: true,
                       style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
+                      onChanged: (_) {
+                        if (_signInError != null) setSheetState(() => _signInError = null);
+                      },
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: VaultColors.background,
@@ -447,7 +495,37 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
+
+                    // Inline Error Feedback Banner
+                    if (_signInError != null) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: VaultColors.neg.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: VaultColors.neg.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline_rounded, size: 16, color: VaultColors.neg),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _signInError!,
+                                style: VaultTypography.sans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: VaultColors.neg,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
 
                     // Unlock Button
                     SizedBox(

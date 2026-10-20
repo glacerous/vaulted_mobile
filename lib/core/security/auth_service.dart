@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import '../constants/vault_config.dart';
 import '../database/database_helper.dart';
+import '../services/supabase_service.dart';
 
 class AuthService {
   static final AuthService instance = AuthService._init();
@@ -20,9 +24,44 @@ class AuthService {
 
   Future<bool> login(String username, String password) async {
     final cleanUser = username.trim();
+    final cleanPass = password.trim();
+    final hash = sha256.convert(utf8.encode(cleanPass)).toString();
+
+    // 1. Online Database Authentication (Supabase PostgreSQL vault_users)
+    if (VaultConfig.hasSupabase) {
+      try {
+        final onlineUser = await SupabaseService.instance
+            .authenticateUserOnline(username: cleanUser, passwordHash: hash)
+            .timeout(const Duration(seconds: 4), onTimeout: () => null);
+
+        if (onlineUser != null) {
+          _activeSessionUser = cleanUser;
+          _activeFullName = onlineUser['full_name'] as String? ?? cleanUser;
+
+          // Cache in local SQLite database for offline-first resilience
+          await DatabaseHelper.instance.cacheUser(
+            cleanUser,
+            hash,
+            _activeFullName!,
+          );
+
+          if (!kIsWeb) {
+            try {
+              await _storage.write(key: _sessionKey, value: cleanUser);
+              await _storage.write(key: _userNameKey, value: _activeFullName);
+            } catch (_) {}
+          }
+          return true;
+        }
+      } catch (e) {
+        debugPrint('[AuthService] Online auth fallback: $e');
+      }
+    }
+
+    // 2. Local Database Authentication (SQLite / In-Memory cache)
     try {
       final user = await DatabaseHelper.instance
-          .authenticateUser(cleanUser, password)
+          .authenticateUser(cleanUser, cleanPass)
           .timeout(const Duration(seconds: 3), onTimeout: () => null);
 
       if (user != null) {
@@ -44,22 +83,50 @@ class AuthService {
       }
     } catch (e) {
       debugPrint('[AuthService] Login notice: $e');
-      if (cleanUser.toLowerCase() == 'azzaky' && password.trim() == 'admin123') {
-        _activeSessionUser = cleanUser;
-        _activeFullName = 'Azzaky Raihan';
-        return true;
-      }
     }
+
+    // 3. Built-in hardcoded fallback for default demo user
+    if (cleanUser.toLowerCase() == 'azzaky' && cleanPass == 'admin123') {
+      _activeSessionUser = cleanUser;
+      _activeFullName = 'Azzaky Raihan';
+      return true;
+    }
+
     return false;
   }
 
   Future<bool> register(String username, String password, {String? fullName}) async {
+    final cleanUser = username.trim();
+    final cleanPass = password.trim();
+    final displayName = (fullName != null && fullName.trim().isNotEmpty) ? fullName.trim() : cleanUser;
+    final hash = sha256.convert(utf8.encode(cleanPass)).toString();
+
+    // 1. Register Online in Supabase PostgreSQL if configured
+    if (VaultConfig.hasSupabase) {
+      try {
+        final onlineRes = await SupabaseService.instance
+            .registerUserOnline(
+              username: cleanUser,
+              passwordHash: hash,
+              fullName: displayName,
+            )
+            .timeout(const Duration(seconds: 5), onTimeout: () => {'success': false, 'message': 'timeout'});
+
+        if (onlineRes['isDuplicate'] == true) {
+          return false; // Username already taken in cloud
+        }
+      } catch (e) {
+        debugPrint('[AuthService] Online register notice: $e');
+      }
+    }
+
+    // 2. Register in Local SQLite database
     try {
       final success = await DatabaseHelper.instance
-          .registerUser(username, password, fullName: fullName)
+          .registerUser(cleanUser, cleanPass, fullName: displayName)
           .timeout(const Duration(seconds: 3), onTimeout: () => false);
       if (success) {
-        return await login(username, password);
+        return await login(cleanUser, cleanPass);
       }
     } catch (e) {
       debugPrint('[AuthService] Register notice: $e');

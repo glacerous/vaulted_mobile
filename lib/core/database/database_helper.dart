@@ -240,6 +240,32 @@ class DatabaseHelper {
     }
   }
 
+  Future<void> cacheUser(String username, String passwordHash, String fullName) async {
+    final cleanUser = username.trim().toLowerCase();
+    if (kIsWeb) {
+      _webUsers[cleanUser] = {
+        'id': _webUsers.length + 1,
+        'username': cleanUser,
+        'password_hash': passwordHash,
+        'full_name': fullName,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+      return;
+    }
+    try {
+      final db = await database;
+      if (db == null) return;
+      await db.insert('users', {
+        'username': cleanUser,
+        'password_hash': passwordHash,
+        'full_name': fullName,
+        'created_at': DateTime.now().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    } catch (e) {
+      debugPrint('[DatabaseHelper] cacheUser notice: $e');
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getItems([String? username]) async {
     final targetUser = (username != null && username.isNotEmpty)
         ? username.trim().toLowerCase()

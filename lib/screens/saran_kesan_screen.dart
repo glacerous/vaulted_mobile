@@ -190,66 +190,11 @@ class SaranKesanScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
-
-              // KELOMPOK PENGEMBANG
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: VaultColors.card,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: VaultColors.hairline),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'TIM PENGEMBANG PROYEK',
-                      style: VaultTypography.mono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
-                        color: VaultColors.accent,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildMemberRow('124240010', 'Pindo Dinarman Situngkir'),
-                    const Divider(color: VaultColors.hairline, height: 16),
-                    _buildMemberRow('124240018', 'Azzaky Raihan'),
-                    const Divider(color: VaultColors.hairline, height: 16),
-                    _buildMemberRow('124240031', 'Ariel Saputra'),
-                  ],
-                ),
-              ),
               const SizedBox(height: 24),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildMemberRow(String nim, String name) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          name,
-          style: VaultTypography.sans(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: VaultColors.ink,
-          ),
-        ),
-        Text(
-          nim,
-          style: VaultTypography.mono(
-            fontSize: 11.5,
-            color: VaultColors.ink2,
-          ),
-        ),
-      ],
     );
   }
 }

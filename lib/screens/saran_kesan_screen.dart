@@ -53,32 +53,23 @@ class SaranKesanScreen extends StatelessWidget {
 
               // SECTION TITLE
               Text(
-                'EVALUASI AKADEMIK',
-                style: VaultTypography.mono(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
-                  color: VaultColors.accent,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Saran & Kesan Kuliah',
+                'Saran & Kesan',
                 style: VaultTypography.sans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.6,
                   color: VaultColors.ink,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Pemrograman Aplikasi Mobile • Sistem Informasi UPNYK',
+                'Refleksi pembelajaran mata kuliah Pemrograman Aplikasi Mobile.',
                 style: VaultTypography.sans(
-                  fontSize: 12.5,
+                  fontSize: 13,
                   color: VaultColors.ink2,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // CARD KESAN
               Container(

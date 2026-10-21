@@ -142,20 +142,52 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
         backgroundColor: VaultColors.background,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: VaultColors.ink),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'VAULT EXCHANGE & CONVERTER',
-          style: VaultTypography.mono(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.2,
-            color: VaultColors.ink,
+        centerTitle: true,
+        leadingWidth: 54,
+        leading: Center(
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: VaultColors.card,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: VaultColors.hairline),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 14,
+                color: VaultColors.ink,
+              ),
+            ),
           ),
         ),
-        centerTitle: true,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Vault Converter',
+              style: VaultTypography.sans(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: VaultColors.ink,
+              ),
+            ),
+            Text(
+              'Exchange Rates & Global Timezones',
+              style: VaultTypography.mono(
+                fontSize: 10.5,
+                color: VaultColors.ink2,
+              ),
+            ),
+          ],
+        ),
+        actions: const [
+          SizedBox(width: 54),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: VaultColors.accent,

@@ -329,45 +329,102 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
     return Scaffold(
       backgroundColor: VaultColors.background,
-      appBar: AppBar(
-        backgroundColor: VaultColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            size: 18,
-            color: VaultColors.ink,
-          ),
-          onPressed: () => Navigator.pop(context, true),
-        ),
-        title: Text('Hardware & Devices', style: VaultTypography.sectionTitle),
-        actions: [
-          IconButton(
-            tooltip: 'Invoice OCR Scanner',
-            icon: const Icon(
-              Icons.receipt_long_rounded,
-              color: VaultColors.accent,
-              size: 22,
-            ),
-            onPressed: _showAiScannerModal,
-          ),
-          IconButton(
-            tooltip: 'Add Hardware Item',
-            icon: const Icon(
-              Icons.add_rounded,
-              color: VaultColors.ink,
-              size: 24,
-            ),
-            onPressed: () => _showAddItemModal(),
-          ),
-        ],
-      ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Column(
+          children: [
+            // Top Native App Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context, true),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: VaultColors.card,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 14,
+                        color: VaultColors.ink,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Hardware & Devices',
+                          style: VaultTypography.sans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: VaultColors.ink,
+                          ),
+                        ),
+                        Text(
+                          'Physical Assets & Equipment',
+                          style: VaultTypography.mono(
+                            fontSize: 10.5,
+                            color: VaultColors.ink2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _showAiScannerModal,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: VaultColors.card,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.receipt_long_rounded,
+                        color: VaultColors.accent,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => _showAddItemModal(),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: VaultColors.card,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.add_rounded,
+                        color: VaultColors.ink,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               Text(
                 'TOTAL HARDWARE VALUE',
                 style: VaultTypography.mono(
@@ -527,7 +584,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Add your tech gear, laptops, cameras, or timepieces â€” or scan an invoice using Gemini OCR.',
+                            'Add your tech gear, laptops, cameras, or timepieces — or scan an invoice using Gemini OCR.',
                             style: VaultTypography.cardDescription,
                             textAlign: TextAlign.center,
                           ),
@@ -750,7 +807,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                             backgroundColor: VaultColors.card,
                                             content: Text(
                                               sent
-                                                  ? 'ðŸ”” Warranty notification dispatched for ${item['name']}!'
+                                                  ? '🔔 Warranty notification dispatched for ${item['name']}!'
                                                   : 'Notification simulated for ${item['name']}.',
                                               style: VaultTypography.sans(
                                                 fontSize: 12,
@@ -812,6 +869,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
         ),
       ),
+    ],
+  ),
+),
     );
   }
 

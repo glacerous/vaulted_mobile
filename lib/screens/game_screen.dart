@@ -363,27 +363,64 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
         backgroundColor: VaultColors.background,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: VaultColors.ink),
-          onPressed: () => Navigator.pop(context),
+        leadingWidth: 54,
+        leading: Center(
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: VaultColors.card,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: VaultColors.hairline),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 14,
+                color: VaultColors.ink,
+              ),
+            ),
+          ),
         ),
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.videogame_asset_rounded, size: 18, color: VaultColors.accent),
-            const SizedBox(width: 8),
             Text(
               'The Appraiser',
-              style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w700, color: VaultColors.ink),
+              style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w700, color: VaultColors.ink),
+            ),
+            Text(
+              'Asset Valuation Challenge',
+              style: VaultTypography.mono(fontSize: 10.5, color: VaultColors.ink2),
             ),
           ],
         ),
         actions: [
-          // Reset / Restart Button for demo
-          IconButton(
-            tooltip: 'Restart Game',
-            icon: const Icon(Icons.refresh_rounded, size: 20, color: VaultColors.ink2),
-            onPressed: _restartGame,
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: GestureDetector(
+                onTap: _restartGame,
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: VaultColors.card,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: VaultColors.hairline),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.refresh_rounded,
+                    size: 18,
+                    color: VaultColors.ink2,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

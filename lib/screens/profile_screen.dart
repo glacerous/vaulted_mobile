@@ -164,32 +164,15 @@ class ProfileScreen extends StatelessWidget {
 
               // 2. SECTION TITLE
               Text(
-                'KELOMPOK PENGEMBANG',
-                style: VaultTypography.mono(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
-                  color: VaultColors.accent,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Profil Anggota Tim',
+                'Developers',
                 style: VaultTypography.sans(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.6,
                   color: VaultColors.ink,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Pemrograman Aplikasi Mobile • Sistem Informasi UPNYK',
-                style: VaultTypography.sans(
-                  fontSize: 12.5,
-                  color: VaultColors.ink2,
-                ),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // 3. MEMBER CARDS (Pindo, Azzaky, Ariel)
               _buildMemberCard(

@@ -362,27 +362,15 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       appBar: AppBar(
         backgroundColor: VaultColors.background,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         centerTitle: true,
-        leadingWidth: 54,
-        leading: Center(
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: VaultColors.card,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: VaultColors.hairline),
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 14,
-                color: VaultColors.ink,
-              ),
-            ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: VaultColors.ink,
           ),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -390,7 +378,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           children: [
             Text(
               'The Appraiser',
-              style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w700, color: VaultColors.ink),
+              style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w700, color: VaultColors.ink),
             ),
             Text(
               'Asset Valuation Challenge',
@@ -399,28 +387,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           ],
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: GestureDetector(
-                onTap: _restartGame,
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: VaultColors.card,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: VaultColors.hairline),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.refresh_rounded,
-                    size: 18,
-                    color: VaultColors.ink2,
-                  ),
-                ),
-              ),
+          IconButton(
+            tooltip: 'Restart Game',
+            icon: const Icon(
+              Icons.refresh_rounded,
+              size: 22,
+              color: VaultColors.ink2,
             ),
+            onPressed: _restartGame,
           ),
         ],
       ),

@@ -329,102 +329,66 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
     return Scaffold(
       backgroundColor: VaultColors.background,
-      body: SafeArea(
-        child: Column(
+      appBar: AppBar(
+        backgroundColor: VaultColors.background,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: VaultColors.ink,
+          ),
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Top Native App Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context, true),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: VaultColors.card,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: VaultColors.hairline),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 14,
-                        color: VaultColors.ink,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Hardware & Devices',
-                          style: VaultTypography.sans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: VaultColors.ink,
-                          ),
-                        ),
-                        Text(
-                          'Physical Assets & Equipment',
-                          style: VaultTypography.mono(
-                            fontSize: 10.5,
-                            color: VaultColors.ink2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: _showAiScannerModal,
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: VaultColors.card,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: VaultColors.hairline),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.receipt_long_rounded,
-                        color: VaultColors.accent,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _showAddItemModal(),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: VaultColors.card,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: VaultColors.hairline),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.add_rounded,
-                        color: VaultColors.ink,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
+            Text(
+              'Hardware & Devices',
+              style: VaultTypography.sans(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: VaultColors.ink,
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+            Text(
+              'Physical Assets & Equipment',
+              style: VaultTypography.mono(
+                fontSize: 10.5,
+                color: VaultColors.ink2,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Invoice OCR Scanner',
+            icon: const Icon(
+              Icons.receipt_long_rounded,
+              color: VaultColors.accent,
+              size: 22,
+            ),
+            onPressed: _showAiScannerModal,
+          ),
+          IconButton(
+            tooltip: 'Add Hardware Item',
+            icon: const Icon(
+              Icons.add_rounded,
+              color: VaultColors.ink,
+              size: 24,
+            ),
+            onPressed: () => _showAddItemModal(),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
                 'TOTAL HARDWARE VALUE',
                 style: VaultTypography.mono(
@@ -869,9 +833,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
         ),
       ),
-    ],
-  ),
-),
     );
   }
 

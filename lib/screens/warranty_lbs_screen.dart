@@ -429,24 +429,15 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                     child: Row(
                       children: [
                         if (Navigator.of(context).canPop())
-                          Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: VaultColors.card,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: VaultColors.hairline),
-                                ),
-                                alignment: Alignment.center,
-                                child: const Icon(
-                                  Icons.arrow_back_ios_new_rounded,
-                                  size: 13,
-                                  color: VaultColors.ink,
-                                ),
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => Navigator.pop(context),
+                            child: const Padding(
+                              padding: EdgeInsets.only(right: 12),
+                              child: Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                size: 18,
+                                color: VaultColors.ink,
                               ),
                             ),
                           ),

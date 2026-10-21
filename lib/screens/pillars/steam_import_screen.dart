@@ -1926,150 +1926,117 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: VaultColors.background,
-      body: SafeArea(
-        child: Column(
+      appBar: AppBar(
+        backgroundColor: VaultColors.background,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: VaultColors.ink,
+          ),
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Top Native App Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context, true),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: VaultColors.card,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: VaultColors.hairline),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 14,
-                        color: VaultColors.ink,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Steam Vault',
-                          style: VaultTypography.sans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: VaultColors.ink,
-                          ),
-                        ),
-                        Text(
-                          _isDetecting
-                              ? 'Connecting to Steam...'
-                              : (_isConnected
-                                    ? '@$_detectedPersona • Synced'
-                                    : 'Digital Asset Bridge'),
-                          style: VaultTypography.mono(
-                            fontSize: 10.5,
-                            color: _isConnected
-                                ? VaultColors.pos
-                                : VaultColors.ink2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_isConnected) ...[
-                    GestureDetector(
-                      onTap: _isLoading ? null : () => _syncSteam(),
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: VaultColors.card,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: VaultColors.hairline),
-                        ),
-                        alignment: Alignment.center,
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: VaultColors.accent,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.sync_rounded,
-                                size: 18,
-                                color: VaultColors.accent,
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: _showAccountOptionsSheet,
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: VaultColors.card,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: VaultColors.hairline),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.more_horiz_rounded,
-                          size: 20,
-                          color: VaultColors.ink,
-                        ),
-                      ),
-                    ),
-                  ] else ...[
-                    GestureDetector(
-                      onTap: _showOpenIdSheet,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: VaultColors.card,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: VaultColors.hairline),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.link_rounded,
-                              size: 14,
-                              color: VaultColors.accent,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              'OPENID',
-                              style: VaultTypography.mono(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: VaultColors.accent,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+            Text(
+              'Steam Vault',
+              style: VaultTypography.sans(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: VaultColors.ink,
               ),
             ),
-
-            Expanded(
-              child: RefreshIndicator(
+            Text(
+              _isDetecting
+                  ? 'Connecting to Steam...'
+                  : (_isConnected
+                        ? '@$_detectedPersona • Synced'
+                        : 'Digital Asset Bridge'),
+              style: VaultTypography.mono(
+                fontSize: 10.5,
+                color: _isConnected
+                    ? VaultColors.pos
+                    : VaultColors.ink2,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          if (_isConnected) ...[
+            IconButton(
+              tooltip: 'Sync Steam Inventory',
+              onPressed: _isLoading ? null : () => _syncSteam(),
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: VaultColors.accent,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.sync_rounded,
+                      size: 22,
+                      color: VaultColors.accent,
+                    ),
+            ),
+            IconButton(
+              tooltip: 'Account Options',
+              onPressed: _showAccountOptionsSheet,
+              icon: const Icon(
+                Icons.more_horiz_rounded,
+                size: 22,
+                color: VaultColors.ink,
+              ),
+            ),
+          ] else ...[
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: GestureDetector(
+                onTap: _showOpenIdSheet,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: VaultColors.card,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: VaultColors.hairline),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.link_rounded,
+                        size: 14,
+                        color: VaultColors.accent,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'OPENID',
+                        style: VaultTypography.mono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: VaultColors.accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      body: SafeArea(
+        top: false,
+        child: RefreshIndicator(
                 onRefresh: () => _syncSteam(),
                 color: VaultColors.accent,
                 backgroundColor: VaultColors.card,
@@ -2344,9 +2311,6 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

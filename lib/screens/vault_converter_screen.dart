@@ -143,26 +143,13 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
-        leadingWidth: 54,
-        leading: Center(
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: VaultColors.card,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: VaultColors.hairline),
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 14,
-                color: VaultColors.ink,
-              ),
-            ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 20,
+            color: VaultColors.ink,
           ),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -171,7 +158,7 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
             Text(
               'Vault Converter',
               style: VaultTypography.sans(
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: VaultColors.ink,
               ),
@@ -186,7 +173,7 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
           ],
         ),
         actions: const [
-          SizedBox(width: 54),
+          SizedBox(width: 48),
         ],
         bottom: TabBar(
           controller: _tabController,

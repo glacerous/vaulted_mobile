@@ -7,6 +7,24 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class VaultConfig {
   VaultConfig._();
 
+  // ===========================================================================
+  // 🎓 DOSEN LIVE DEMO SETTINGS (Mudah diubah saat sesi tanya jawab / uji kode)
+  // ===========================================================================
+
+  /// Sensitivitas sensor goyangan HP (Accelerometer) untuk Mode Privasi Saldo.
+  /// Turunkan nilainya (misal 12.0) jika ingin lebih gampang terpicu.
+  static double shakeSensitivity = 17.0;
+
+  /// Cooldown jeda antar goyangan (detik) agar tidak terpicu beruntun.
+  static int sensorCooldownSeconds = 2;
+
+  /// Kurs default USD ke IDR untuk konversi nilai aset.
+  static double defaultUsdToIdr = 15850.0;
+
+  /// Koordinat GPS default (Kampus UPN "Veteran" Yogyakarta)
+  static const double upnLatitude = -7.7618;
+  static const double upnLongitude = 110.4091;
+
   static const String _defaultPolygonRpc = 'https://rpc-amoy.polygon.technology';
   static const String _defaultExchangeRateUrl = 'https://open.er-api.com/v6/latest/USD';
 

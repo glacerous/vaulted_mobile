@@ -8,6 +8,28 @@ import 'login_screen.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  /// 👥 DAFTAR ANGGOTA KELOMPOK PENGEMBANG (Ubah / tambah di sini jika diminta dosen)
+  static const List<Map<String, String?>> developers = [
+    {
+      'name': 'Pindo Dinarman Situngkir',
+      'nim': '124240031',
+      'initials': 'PS',
+      'image': 'assets/images/pindo.jpeg',
+    },
+    {
+      'name': 'Azzaky Raihan',
+      'nim': '124240018',
+      'initials': 'AR',
+      'image': 'assets/images/azzaky.png',
+    },
+    {
+      'name': 'Ariel Saputra',
+      'nim': '124240010',
+      'initials': 'AS',
+      'image': null,
+    },
+  ];
+
   void _showLogoutConfirmation(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -174,29 +196,16 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // 3. MEMBER CARDS (Pindo, Azzaky, Ariel)
-              _buildMemberCard(
-                name: 'Pindo Dinarman Situngkir',
-                nim: '124240031',
-                initials: 'PS',
-                imagePath: 'assets/images/pindo.jpeg',
-              ),
-              const SizedBox(height: 14),
-
-              _buildMemberCard(
-                name: 'Azzaky Raihan',
-                nim: '124240018',
-                initials: 'AR',
-                imagePath: 'assets/images/azzaky.png',
-              ),
-              const SizedBox(height: 14),
-
-              _buildMemberCard(
-                name: 'Ariel Saputra',
-                nim: '124240010',
-                initials: 'AS',
-                imagePath: null,
-              ),
+              // 3. MEMBER CARDS (Mudah ditambah / diubah saat presentasi)
+              ...developers.map((dev) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _buildMemberCard(
+                  name: dev['name']!,
+                  nim: dev['nim']!,
+                  initials: dev['initials']!,
+                  imagePath: dev['image'],
+                ),
+              )),
               const SizedBox(height: 28),
 
               // 4. LOGOUT BUTTON

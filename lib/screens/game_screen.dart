@@ -4,23 +4,42 @@ import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/widgets/valto_mascot.dart';
 
+/// 🎮 PILIHAN TAMPILAN HEALTHBAR
+enum HealthbarStyle {
+  hearts, // Hanya ikon hati
+  bar,    // Bar HP gaming RPG / Fighting (dengan persentase & warna dinamis)
+  both,   // Ikon hati + Smooth Healthbar (Paling lengkap & fleksibel)
+}
+
 /// ============================================================================
-/// 🎮 DOSEN LIVE CHALLENGE: GAME CONFIG & QUESTIONS
+/// 🎓 DOSEN LIVE CHALLENGE: GAME CONFIGURATION
 /// 
 /// Dosen sering menguji fleksibilitas kode dengan tantangan:
-/// 1. "Coba tambahkan soal baru dengan gambar dan harga sendiri!"
-/// 2. "Coba ubah jawabannya jadi LOWER atau HIGHER!"
-/// 3. "Coba ubah jumlah nyawa awal (lives) atau poin per jawaban!"
-/// 
-/// SEMUA konfigurasi game dan daftar soal ada di bawah ini.
-/// Logika penentuan jawaban:
-/// - Jika actual_val >= benchmark_val => Jawaban benar adalah HIGHER
-/// - Jika actual_val < benchmark_val  => Jawaban benar adalah LOWER
+/// 1. "Coba ubah nyawa awal (health bar) jadi 5 atau 10!"
+///    -> Cukup ubah `startingLives = 5;` di bawah ini.
+/// 2. "Coba ganti style healthbar-nya!"
+///    -> Ubah `healthbarStyle = HealthbarStyle.bar;` atau `HealthbarStyle.hearts;`
+/// 3. "Coba ubah poinnya jadi 200 per soal!"
+///    -> Ubah `pointsPerCorrect = 200;`
+/// 4. "Coba tambahkan soal baru dengan harga dan penjelasan sendiri!"
+///    -> Lihat template soal di daftar `_questions`.
 /// ============================================================================
 class GameConfig {
-  static const int startingLives = 3;       // Nyawa awal pemain
-  static const int pointsPerCorrect = 100;  // Poin dasar per jawaban benar
-  static const int streakBonusPoints = 25;  // Bonus poin per kelipatan streak
+  /// 💖 HEALTH / NYAWA AWAL PEMAIN
+  /// Ubah nilai ini jika dosen menantang ganti nyawa saat presentasi
+  static const int startingLives = 3;
+
+  /// 📊 GAYA HEALTHBAR (hearts, bar, atau both)
+  static const HealthbarStyle healthbarStyle = HealthbarStyle.both;
+
+  /// 🎯 POIN DASAR PER JAWABAN BENAR
+  static const int pointsPerCorrect = 100;
+
+  /// 🔥 BONUS POIN PER STREAK
+  static const int streakBonusPoints = 25;
+
+  /// ⏱️ DURASI JEDA REVEAL HARGA (ms)
+  static const Duration feedbackDuration = Duration(milliseconds: 1400);
 }
 
 class GameScreen extends StatefulWidget {
@@ -46,7 +65,22 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   late Animation<double> _scaleAnimation;
 
   /// ==========================================================================
-  /// 💡 DAFTAR SOAL GAME (Bisa langsung diedit saat demo di depan dosen)
+  /// 💡 DAFTAR SOAL GAME (Bisa langsung diedit / ditambah saat demo di depan dosen)
+  /// Aturan Jawaban:
+  /// - actual_val >= benchmark_val  =>  Jawaban Benar: HIGHER
+  /// - actual_val < benchmark_val   =>  Jawaban Benar: LOWER
+  ///
+  /// 📝 TEMPLATE SOAL BARU UNTUK TEST DOSEN:
+  /// {
+  ///   'name': 'HP Victus Gaming Laptop 15',
+  ///   'category': 'Gaming Hardware',
+  ///   'retail_year': 'Released 2023 for $899.00',
+  ///   'benchmark': '$650.00',
+  ///   'benchmark_val': 650.0,
+  ///   'actual_val': 720.0, // actual >= benchmark -> HIGHER
+  ///   'explanation': 'Actual market value is ~$720! RTX 3050 laptops maintain solid resale demand.',
+  ///   'image': 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=300',
+  /// },
   /// ==========================================================================
   final List<Map<String, dynamic>> _questions = [
     {
@@ -352,6 +386,156 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     );
   }
 
+  /// 💖 HEALTHBAR WIDGET (Otomatis menyesuaikan jumlah startingLives tanpa overflow)
+  Widget _buildHealthBar() {
+    final maxLives = GameConfig.startingLives;
+    final hpRatio = (_lives / maxLives).clamp(0.0, 1.0);
+
+    // Warna dinamis: Hijau (>50%) -> Oranye/Kuning (>25%) -> Merah (<=25%)
+    final Color barColor = hpRatio > 0.5
+        ? VaultColors.pos
+        : hpRatio > 0.25
+            ? VaultColors.warn
+            : VaultColors.neg;
+
+    // Style 1: Hanya Ikon Hati
+    if (GameConfig.healthbarStyle == HealthbarStyle.hearts) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(maxLives, (i) {
+          final isAlive = i < _lives;
+          return Padding(
+            padding: const EdgeInsets.only(right: 3),
+            child: Icon(
+              isAlive ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+              color: isAlive ? VaultColors.neg : VaultColors.ink3.withValues(alpha: 0.3),
+              size: 18,
+            ),
+          );
+        }),
+      );
+    }
+
+    // Style 2: Hanya Bar HP Gaming
+    if (GameConfig.healthbarStyle == HealthbarStyle.bar) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.favorite_rounded, size: 13, color: VaultColors.neg),
+              const SizedBox(width: 4),
+              Text(
+                'HP $_lives/$maxLives',
+                style: VaultTypography.mono(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  color: barColor,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '(${(hpRatio * 100).toInt()}%)',
+                style: VaultTypography.mono(fontSize: 9.5, color: VaultColors.ink2),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: 105,
+            height: 7,
+            decoration: BoxDecoration(
+              color: VaultColors.background,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: VaultColors.hairline),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: hpRatio,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                decoration: BoxDecoration(
+                  color: barColor,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Style 3 (both): Hati + HP Bar (Aman tidak pernah overflow berapapun nyawanya)
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (maxLives <= 5)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(maxLives, (i) {
+                  final isAlive = i < _lives;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 3),
+                    child: Icon(
+                      isAlive ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                      color: isAlive ? VaultColors.neg : VaultColors.ink3.withValues(alpha: 0.3),
+                      size: 15,
+                    ),
+                  );
+                }),
+              )
+            else
+              Text(
+                'HP $_lives/$maxLives',
+                style: VaultTypography.mono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: barColor,
+                ),
+              ),
+            const SizedBox(width: 6),
+            Text(
+              '${(hpRatio * 100).toInt()}%',
+              style: VaultTypography.mono(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                color: barColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 100,
+          height: 6,
+          decoration: BoxDecoration(
+            color: VaultColors.background,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: VaultColors.hairline),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: hpRatio,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              decoration: BoxDecoration(
+                color: barColor,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final q = _questions[_currentIndex];
@@ -414,20 +598,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Hearts / Lives
-                    Row(
-                      children: List.generate(GameConfig.startingLives, (i) {
-                        final isAlive = i < _lives;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: Icon(
-                            isAlive ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                            color: isAlive ? VaultColors.neg : VaultColors.ink3.withValues(alpha: 0.3),
-                            size: 19,
-                          ),
-                        );
-                      }),
-                    ),
+                    // Health Bar (Hearts / Animated Gauge)
+                    _buildHealthBar(),
                     // Streak Pill
                     if (_streak > 1)
                       Container(

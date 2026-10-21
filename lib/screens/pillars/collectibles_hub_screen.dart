@@ -17,17 +17,17 @@ class CollectiblesHubScreen extends StatefulWidget {
 class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
   List<Map<String, dynamic>> _steamItems = [];
   double _steamTotal = 0.0;
-  String _steamSort = 'Value ↓';
+  String _steamSort = 'Highest';
   bool _isSyncingSteam = false;
 
   List<Map<String, dynamic>> get _sortedSteamItems {
     final list = List<Map<String, dynamic>>.from(_steamItems);
     switch (_steamSort) {
-      case 'Value ↓':
+      case 'Highest':
         list.sort((a, b) => ((b['current_valuation'] as num?)?.toDouble() ?? 0.0)
             .compareTo((a['current_valuation'] as num?)?.toDouble() ?? 0.0));
         break;
-      case 'Value ↑':
+      case 'Lowest':
         list.sort((a, b) => ((a['current_valuation'] as num?)?.toDouble() ?? 0.0)
             .compareTo((b['current_valuation'] as num?)?.toDouble() ?? 0.0));
         break;
@@ -295,7 +295,7 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
                     style: VaultTypography.mono(fontSize: 9.5, letterSpacing: 1.1, color: VaultColors.ink2),
                   ),
                   Row(
-                    children: ['Value ↓', 'Value ↑', 'Name A-Z', 'Game'].map((sortKey) {
+                    children: ['Highest', 'Lowest', 'Name A-Z', 'Game'].map((sortKey) {
                       final isSelected = _steamSort == sortKey;
                       return GestureDetector(
                         onTap: () {

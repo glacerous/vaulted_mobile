@@ -38,8 +38,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       'https://avatars.steamstatic.com/e1dde7fe207a397634580d4755f7890ccf24ddd7_full.jpg';
   bool _isConnected = false;
   List<Map<String, dynamic>> _syncedItems = [];
-  String _sortOrder =
-      'Value ↓'; // Opsi: 'Value ↓', 'Value ↑', 'Name A-Z', 'Game'
+  String _sortOrder = 'Highest'; // Opsi: 'Value ↓', 'Value ↑', 'Name A-Z', 'Game'
   DateTime? _lastSyncTime;
 
   // Search bar aset Steam
@@ -57,13 +56,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       return name.contains(q) || cat.contains(q) || serial.contains(q);
     }).toList();
     switch (_sortOrder) {
-      case 'Value ↓':
+      case 'Highest':
         list.sort(
           (a, b) => ((b['current_valuation'] as num?)?.toDouble() ?? 0.0)
               .compareTo((a['current_valuation'] as num?)?.toDouble() ?? 0.0),
         );
         break;
-      case 'Value ↑':
+      case 'Lowest':
         list.sort(
           (a, b) => ((a['current_valuation'] as num?)?.toDouble() ?? 0.0)
               .compareTo((b['current_valuation'] as num?)?.toDouble() ?? 0.0),
@@ -994,12 +993,12 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     HapticFeedback.selectionClick();
     const options = [
       {
-        'key': 'Value ↓',
+        'key': 'Highest',
         'label': 'Highest Valuation',
         'icon': Icons.arrow_downward_rounded,
       },
       {
-        'key': 'Value ↑',
+        'key': 'Lowest',
         'label': 'Lowest Valuation',
         'icon': Icons.arrow_upward_rounded,
       },

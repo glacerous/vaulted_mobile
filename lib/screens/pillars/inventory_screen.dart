@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../modals/ai_scanner_modal.dart';
 import 'package:intl/intl.dart';
@@ -21,7 +21,7 @@ class InventoryScreen extends StatefulWidget {
 class _InventoryScreenState extends State<InventoryScreen> {
   List<Map<String, dynamic>> _allItems = [];
   String _selectedFilter = 'All Hardware';
-  String _selectedSort = 'Value â†“';
+  String _selectedSort = 'Highest';
   bool _isLoading = true;
 
   // Search bar inventory
@@ -100,13 +100,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
 
     switch (_selectedSort) {
-      case 'Value â†“':
+      case 'Highest':
         list.sort(
           (a, b) => ((b['current_valuation'] as num?)?.toDouble() ?? 0.0)
               .compareTo((a['current_valuation'] as num?)?.toDouble() ?? 0.0),
         );
         break;
-      case 'Value â†‘':
+      case 'Lowest':
         list.sort(
           (a, b) => ((a['current_valuation'] as num?)?.toDouble() ?? 0.0)
               .compareTo((b['current_valuation'] as num?)?.toDouble() ?? 0.0),
@@ -440,7 +440,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ),
                   ),
                   Row(
-                    children: ['Value â†“', 'Value â†‘', 'Name A-Z', 'Category']
+                    children: ['Highest', 'Lowest', 'Name A-Z', 'Category']
                         .map((sortKey) {
                           final isSelected = _selectedSort == sortKey;
                           return GestureDetector(

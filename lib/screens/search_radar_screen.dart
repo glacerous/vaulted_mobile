@@ -940,6 +940,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                         style: VaultTypography.sans(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
+                          color: alertOn ? VaultColors.ink : VaultColors.background,
                         ),
                       ),
                     ),

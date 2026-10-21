@@ -197,7 +197,6 @@ class ProfileScreen extends StatelessWidget {
                 nim: '124240031',
                 initials: 'PS',
                 imagePath: 'assets/images/pindo.jpeg',
-                role: 'ANGGOTA TIM',
               ),
               const SizedBox(height: 14),
 
@@ -206,7 +205,6 @@ class ProfileScreen extends StatelessWidget {
                 nim: '124240018',
                 initials: 'AR',
                 imagePath: 'assets/images/azzaky.png',
-                role: 'ANGGOTA TIM',
               ),
               const SizedBox(height: 14),
 
@@ -215,7 +213,6 @@ class ProfileScreen extends StatelessWidget {
                 nim: '124240010',
                 initials: 'AS',
                 imagePath: null,
-                role: 'ANGGOTA TIM',
               ),
               const SizedBox(height: 28),
 
@@ -259,7 +256,6 @@ class ProfileScreen extends StatelessWidget {
     required String nim,
     required String initials,
     required String? imagePath,
-    required String role,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -314,29 +310,10 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '$nim · Sistem Informasi',
+                  '$nim  Sistem Informasi',
                   style: VaultTypography.mono(
                     fontSize: 11,
                     color: VaultColors.ink2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: VaultColors.badgeBg,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    role,
-                    style: VaultTypography.mono(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
-                      color: VaultColors.accent,
-                    ),
                   ),
                 ),
               ],

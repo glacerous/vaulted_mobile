@@ -277,27 +277,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
     }
   }
 
-  Color _brandColor(String? brand) {
-    switch (brand?.toLowerCase()) {
-      case 'apple':
-        return const Color(0xFF141413);
-      case 'asus':
-        return const Color(0xFF00539B);
-      case 'samsung':
-        return const Color(0xFF1428A0);
-      case 'xiaomi':
-        return const Color(0xFFFF6700);
-      case 'lenovo':
-        return const Color(0xFFE2231A);
-      case 'sony':
-        return const Color(0xFF1E1E1E);
-      case 'hp':
-        return const Color(0xFF0096D6);
-      default:
-        return VaultColors.accent;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final brands = ['All', 'Asus', 'Apple', 'Samsung', 'Xiaomi', 'Lenovo', 'HP', 'Sony'];
@@ -343,7 +322,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                           height: 38,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFF007AFF).withValues(alpha: 0.22),
+                            color: VaultColors.accent.withValues(alpha: 0.25),
                           ),
                         ),
                         Container(
@@ -351,11 +330,11 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                           height: 18,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFF007AFF),
+                            color: VaultColors.accent,
                             border: Border.all(color: Colors.white, width: 2.5),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.25),
+                                color: VaultColors.accent.withValues(alpha: 0.45),
                                 blurRadius: 6,
                               ),
                             ],
@@ -373,7 +352,6 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                     final lat = (item['lat'] as num).toDouble();
                     final lng = (item['lng'] as num).toDouble();
                     final brand = item['brand'] as String? ?? '';
-                    final bColor = _brandColor(brand);
                     final pinWidth = isSelected ? 40.0 : 32.0;
                     final pinHeight = isSelected ? 50.0 : 42.0;
 
@@ -396,9 +374,9 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                         },
                         child: CustomPaint(
                           painter: _TeardropPinPainter(
-                            color: isSelected ? VaultColors.accent : Colors.white,
-                            strokeColor: isSelected ? VaultColors.ink : bColor,
-                            strokeWidth: isSelected ? 2.2 : 1.8,
+                            color: isSelected ? VaultColors.ink : Colors.white,
+                            strokeColor: isSelected ? VaultColors.accent : VaultColors.ink,
+                            strokeWidth: isSelected ? 2.4 : 1.6,
                             isSelected: isSelected,
                           ),
                           child: Align(
@@ -410,7 +388,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                 child: Icon(
                                   _brandIconData(brand),
                                   size: isSelected ? 20 : 15,
-                                  color: isSelected ? VaultColors.ink : bColor,
+                                  color: isSelected ? VaultColors.accent : VaultColors.ink,
                                 ),
                               ),
                             ),
@@ -655,8 +633,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                         final item = _filteredList[idx];
                         final dist = _distanceTo(item);
                         final brand = item['brand'] as String? ?? '';
-                        final bColor = _brandColor(brand);
-                        final isSelected = idx == _selectedCenterIndex;
+                            final isSelected = idx == _selectedCenterIndex;
 
                         return Container(
                           margin: const EdgeInsets.symmetric(horizontal: 6),
@@ -686,15 +663,20 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: bColor.withValues(alpha: 0.12),
+                                      color: isSelected ? VaultColors.badgeBg : VaultColors.background,
                                       borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? VaultColors.accent.withValues(alpha: 0.45)
+                                            : VaultColors.hairline,
+                                      ),
                                     ),
                                     child: Text(
                                       brand.toUpperCase(),
                                       style: VaultTypography.mono(
                                         fontSize: 9.5,
                                         fontWeight: FontWeight.w700,
-                                        color: bColor,
+                                        color: isSelected ? VaultColors.accent : VaultColors.ink,
                                       ),
                                     ),
                                   ),

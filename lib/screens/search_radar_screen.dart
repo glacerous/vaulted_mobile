@@ -90,6 +90,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
   int _featuredIndex = 0;
   final Set<String> _alertedEvents = {};
   Timer? _ticker;
+  final Map<String, Timer> _alertTimers = {};
 
   static const List<String> _zones = ['WIB', 'WITA', 'WIT', 'LON'];
   // 💡 DOSEN LIVE CHALLENGE: TIMEZONE OFFSETS (WIB, WITA, WIT, London GMT)
@@ -106,8 +107,8 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
   @override
   void initState() {
     super.initState();
-    // Perbarui hitung mundur setiap menit
-    _ticker = Timer.periodic(const Duration(minutes: 1), (_) {
+    // Perbarui hitung mundur setiap 10 detik
+    _ticker = Timer.periodic(const Duration(seconds: 10), (_) {
       if (mounted) setState(() {});
     });
   }
@@ -115,6 +116,9 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
   @override
   void dispose() {
     _ticker?.cancel();
+    for (final t in _alertTimers.values) {
+      t.cancel();
+    }
     _pageController.dispose();
     super.dispose();
   }
@@ -134,7 +138,11 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         'subtitle': 'Counter-Strike 2 Liquidity Spike',
         'category': 'Gaming',
         'mode': 'Online',
-        'start': at(1, 18),
+        // EVENT TEST: waktu mulai ~2 menit dari sekarang. Tiap kali Alert diaktifkan,
+        // jam mulai digeser jadi 1 menit dari saat itu (lihat _setEventAlert).
+        // Setelah demo: hapus 'is_test' dan kembalikan ke at(1, 18).
+        'is_test': true,
+        'start': now.add(const Duration(minutes: 2)),
         'venue': 'Online · Steam Community Market',
         'floor_price': '\$1,850.00',
         'description': 'Seasonal Steam sale with a surge in Community Market volume for CS2 skins, cases and trading cards. Prices often spike during the first hours, a good moment to revalue your synced Steam assets.',
@@ -229,17 +237,61 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     if (d.isNegative) return 'now';
     if (d.inDays >= 1) return '${d.inDays}d ${d.inHours % 24}h';
     if (d.inHours >= 1) return '${d.inHours}h ${d.inMinutes % 60}m';
+    if (d.inMinutes < 10) return '${d.inMinutes}m ${_two(d.inSeconds % 60)}s';
     return '${d.inMinutes}m';
   }
 
   Future<void> _setEventAlert(Map<String, dynamic> event) async {
     final id = event['id'] as String;
     if (_alertedEvents.contains(id)) {
+      _alertTimers.remove(id)?.cancel();
       setState(() => _alertedEvents.remove(id));
       return;
     }
+
+    // Event test: mulai 1 menit dari sekarang supaya notifikasi bisa langsung dites
+    if (event['is_test'] == true) {
+      event['start'] = DateTime.now().toUtc().add(const Duration(minutes: 1));
+    }
     setState(() => _alertedEvents.add(id));
-    await _triggerAlert(event['title'] as String);
+
+    // Notifikasi dikirim tepat saat event dimulai (selama app masih berjalan)
+    final start = event['start'] as DateTime;
+    final wait = start.difference(DateTime.now().toUtc());
+    _alertTimers[id]?.cancel();
+    _alertTimers[id] = Timer(
+      wait.isNegative ? Duration.zero : wait,
+      () => _fireEventAlert(event),
+    );
+
+    if (mounted) {
+      VaultToast.show(
+        context,
+        icon: Icons.notifications_active_rounded,
+        iconColor: VaultColors.accent,
+        message: 'Alert set · you will be notified at ${_formatTime(start, _selectedZone)}',
+      );
+    }
+  }
+
+  Future<void> _fireEventAlert(Map<String, dynamic> event) async {
+    final id = event['id'] as String;
+    _alertTimers.remove(id);
+    final title = event['title'] as String;
+
+    await NotificationService.instance.showEventReminder(
+      title: title,
+      body: '${event['subtitle']} · ${event['venue']}. Starting now!',
+    );
+
+    if (!mounted) return;
+    setState(() => _alertedEvents.remove(id));
+    VaultToast.show(
+      context,
+      icon: Icons.notifications_active_rounded,
+      iconColor: VaultColors.accent,
+      message: 'Starting now: $title',
+    );
   }
 
   String _getZoneTime(Map<String, dynamic> drop, String zone) {

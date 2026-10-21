@@ -76,6 +76,41 @@ class NotificationService {
     }
   }
 
+  /// Pengingat event Market Radar (dikirim saat event dimulai)
+  Future<bool> showEventReminder({required String title, required String body}) async {
+    await init();
+    if (kIsWeb) {
+      debugPrint('[Web Simulation] Event Notification: $title - $body');
+      return true;
+    }
+
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'vaulted_event_channel',
+      'Market Radar Events',
+      channelDescription: 'Reminders for upcoming market drops and events',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(),
+    );
+
+    try {
+      await _notificationsPlugin.show(
+        1003,
+        '📡 Event starting: $title',
+        body,
+        platformDetails,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('Error showing event notification: $e');
+      return false;
+    }
+  }
+
   Future<bool> showSubscriptionDueAlert({required String serviceName, required double amount}) async {
     await init();
     if (kIsWeb) {

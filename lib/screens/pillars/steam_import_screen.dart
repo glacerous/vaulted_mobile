@@ -10,6 +10,7 @@ import '../../core/constants/vault_config.dart';
 import '../../core/database/database_helper.dart';
 import '../../core/data/real_steam_assets.dart';
 import '../../core/utils/image_utils.dart';
+import '../../core/widgets/gyro_tilt.dart';
 
 class SteamImportScreen extends StatefulWidget {
   const SteamImportScreen({super.key});
@@ -37,7 +38,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       'https://avatars.steamstatic.com/e1dde7fe207a397634580d4755f7890ccf24ddd7_full.jpg';
   bool _isConnected = false;
   List<Map<String, dynamic>> _syncedItems = [];
-  String _sortOrder = 'Value ↓'; // Opsi: 'Value ↓', 'Value ↑', 'Name A-Z', 'Game'
+  String _sortOrder =
+      'Value ↓'; // Opsi: 'Value ↓', 'Value ↑', 'Name A-Z', 'Game'
   DateTime? _lastSyncTime;
 
   // Search bar aset Steam
@@ -289,15 +291,19 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
         final invUri = Uri.parse(
           'https://steamcommunity.com/inventory/$steamId/753/6?l=english&count=75',
         );
-        final invRes = await http.get(invUri).timeout(const Duration(seconds: 4));
+        final invRes = await http
+            .get(invUri)
+            .timeout(const Duration(seconds: 4));
 
         if (invRes.statusCode == 200) {
           final invData = jsonDecode(invRes.body);
           final descriptions = invData['descriptions'] as List?;
           if (descriptions != null && descriptions.isNotEmpty) {
             for (var desc in descriptions) {
-              final String name = desc['name'] as String? ?? 'Steam Collectible';
-              final String type = desc['type'] as String? ?? 'Steam Trading Card';
+              final String name =
+                  desc['name'] as String? ?? 'Steam Collectible';
+              final String type =
+                  desc['type'] as String? ?? 'Steam Trading Card';
               final String? iconUrl =
                   desc['icon_url_large'] as String? ??
                   desc['icon_url'] as String?;
@@ -347,7 +353,9 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
 
       // Fallback if network blocked, private inventory, or empty
       if (imported.isEmpty) {
-        imported.addAll(xelSteamAssets.map((a) => Map<String, dynamic>.from(a)));
+        imported.addAll(
+          xelSteamAssets.map((a) => Map<String, dynamic>.from(a)),
+        );
       }
 
       if (imported.isNotEmpty) {
@@ -356,7 +364,9 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     } catch (e) {
       debugPrint('[SteamImportScreen] Sync error: $e');
       if (imported.isEmpty) {
-        imported.addAll(xelSteamAssets.map((a) => Map<String, dynamic>.from(a)));
+        imported.addAll(
+          xelSteamAssets.map((a) => Map<String, dynamic>.from(a)),
+        );
         try {
           await DatabaseHelper.instance.replaceSteamItems(imported);
         } catch (_) {}
@@ -983,10 +993,26 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
   void _showSortBottomSheet() {
     HapticFeedback.selectionClick();
     const options = [
-      {'key': 'Value ↓', 'label': 'Highest Valuation', 'icon': Icons.arrow_downward_rounded},
-      {'key': 'Value ↑', 'label': 'Lowest Valuation', 'icon': Icons.arrow_upward_rounded},
-      {'key': 'Name A-Z', 'label': 'Alphabetical (A - Z)', 'icon': Icons.sort_by_alpha_rounded},
-      {'key': 'Game', 'label': 'Game Collection', 'icon': Icons.sports_esports_rounded},
+      {
+        'key': 'Value ↓',
+        'label': 'Highest Valuation',
+        'icon': Icons.arrow_downward_rounded,
+      },
+      {
+        'key': 'Value ↑',
+        'label': 'Lowest Valuation',
+        'icon': Icons.arrow_upward_rounded,
+      },
+      {
+        'key': 'Name A-Z',
+        'label': 'Alphabetical (A - Z)',
+        'icon': Icons.sort_by_alpha_rounded,
+      },
+      {
+        'key': 'Game',
+        'label': 'Game Collection',
+        'icon': Icons.sports_esports_rounded,
+      },
     ];
 
     showModalBottomSheet(
@@ -1113,11 +1139,12 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         width: 40,
                         height: 40,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.person_rounded,
-                          size: 24,
-                          color: VaultColors.ink2,
-                        ),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
+                              Icons.person_rounded,
+                              size: 24,
+                              color: VaultColors.ink2,
+                            ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1151,14 +1178,25 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
 
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.sync_rounded, color: VaultColors.accent, size: 20),
+                  leading: const Icon(
+                    Icons.sync_rounded,
+                    color: VaultColors.accent,
+                    size: 20,
+                  ),
                   title: Text(
                     'Re-sync Steam Portfolio',
-                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                    style: VaultTypography.sans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.ink,
+                    ),
                   ),
                   subtitle: Text(
                     'Update market valuations & inventory',
-                    style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink2),
+                    style: VaultTypography.sans(
+                      fontSize: 11,
+                      color: VaultColors.ink2,
+                    ),
                   ),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -1168,14 +1206,25 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
 
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.add_circle_outline_rounded, color: VaultColors.ink, size: 20),
+                  leading: const Icon(
+                    Icons.add_circle_outline_rounded,
+                    color: VaultColors.ink,
+                    size: 20,
+                  ),
                   title: Text(
                     'Add Item Manually',
-                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                    style: VaultTypography.sans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.ink,
+                    ),
                   ),
                   subtitle: Text(
                     'Log CS2 skin or unlisted collectible',
-                    style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink2),
+                    style: VaultTypography.sans(
+                      fontSize: 11,
+                      color: VaultColors.ink2,
+                    ),
                   ),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -1185,17 +1234,33 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
 
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.copy_rounded, color: VaultColors.ink, size: 20),
+                  leading: const Icon(
+                    Icons.copy_rounded,
+                    color: VaultColors.ink,
+                    size: 20,
+                  ),
                   title: Text(
                     'Copy Steam Profile URL',
-                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                    style: VaultTypography.sans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.ink,
+                    ),
                   ),
                   onTap: () {
-                    Clipboard.setData(ClipboardData(text: 'https://steamcommunity.com/profiles/$_currentSteamId/'));
+                    Clipboard.setData(
+                      ClipboardData(
+                        text:
+                            'https://steamcommunity.com/profiles/$_currentSteamId/',
+                      ),
+                    );
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Steam URL copied to clipboard!', style: VaultTypography.sans(fontSize: 12)),
+                        content: Text(
+                          'Steam URL copied to clipboard!',
+                          style: VaultTypography.sans(fontSize: 12),
+                        ),
                         duration: const Duration(seconds: 2),
                       ),
                     );
@@ -1204,14 +1269,25 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
 
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.link_off_rounded, color: VaultColors.neg, size: 20),
+                  leading: const Icon(
+                    Icons.link_off_rounded,
+                    color: VaultColors.neg,
+                    size: 20,
+                  ),
                   title: Text(
                     'Disconnect Account',
-                    style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w600, color: VaultColors.neg),
+                    style: VaultTypography.sans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.neg,
+                    ),
                   ),
                   subtitle: Text(
                     'Remove cached portfolio from VAULTED',
-                    style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink2),
+                    style: VaultTypography.sans(
+                      fontSize: 11,
+                      color: VaultColors.ink2,
+                    ),
                   ),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -1228,10 +1304,12 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
 
   void _showItemDetailSheet(Map<String, dynamic> item) {
     HapticFeedback.selectionClick();
-    final double valuation = (item['current_valuation'] as num?)?.toDouble() ?? 0.0;
+    final double valuation =
+        (item['current_valuation'] as num?)?.toDouble() ?? 0.0;
     final String rawCat = item['category'] as String? ?? '';
     final String displayGame = rawCat.replaceFirst('Steam / ', '');
-    final bool isMarketable = (item['is_marketable'] == 1 || item['is_marketable'] == true);
+    final bool isMarketable =
+        (item['is_marketable'] == 1 || item['is_marketable'] == true);
     final String serial = item['serial_number'] as String? ?? 'STEAM-ASSET';
 
     showModalBottomSheet(
@@ -1260,22 +1338,25 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                Container(
-                  width: 86,
-                  height: 86,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: VaultColors.background,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: VaultColors.hairline),
-                  ),
-                  child: Image.network(
-                    vaultImageUrl(item['image_url'] as String?),
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.sports_esports_rounded,
-                      size: 36,
-                      color: VaultColors.ink2,
+                // Gambar item miring 3D mengikuti rotasi HP (Sensor: Gyroscope)
+                GyroTilt(
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: VaultColors.background,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: VaultColors.hairline),
+                    ),
+                    child: Image.network(
+                      vaultImageUrl(item['image_url'] as String?),
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.sports_esports_rounded,
+                        size: 40,
+                        color: VaultColors.ink2,
+                      ),
                     ),
                   ),
                 ),
@@ -1303,14 +1384,21 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                 const SizedBox(height: 12),
 
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: VaultColors.badgeBg,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: VaultColors.accent.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: VaultColors.accent.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
-                    valuation > 0 ? '\$${valuation.toStringAsFixed(2)} USD' : 'Steam Points Item',
+                    valuation > 0
+                        ? '\$${valuation.toStringAsFixed(2)} USD'
+                        : 'Steam Points Item',
                     style: VaultTypography.mono(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -1329,7 +1417,12 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildSpecRow('Market Status', isMarketable ? 'Tradable & Marketable' : 'Account-Bound'),
+                      _buildSpecRow(
+                        'Market Status',
+                        isMarketable
+                            ? 'Tradable & Marketable'
+                            : 'Account-Bound',
+                      ),
                       const Divider(color: VaultColors.hairline, height: 16),
                       _buildSpecRow('Serial / Asset ID', serial),
                       const Divider(color: VaultColors.hairline, height: 16),
@@ -1347,11 +1440,16 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: VaultColors.cardHover,
                       foregroundColor: VaultColors.ink,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: Text(
                       'Close',
-                      style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: VaultTypography.sans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -1367,11 +1465,18 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: VaultTypography.sans(fontSize: 11.5, color: VaultColors.ink2)),
+        Text(
+          label,
+          style: VaultTypography.sans(fontSize: 11.5, color: VaultColors.ink2),
+        ),
         Flexible(
           child: Text(
             value,
-            style: VaultTypography.mono(fontSize: 11.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+            style: VaultTypography.mono(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: VaultColors.ink,
+            ),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -1866,8 +1971,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                           _isDetecting
                               ? 'Connecting to Steam...'
                               : (_isConnected
-                                  ? '@$_detectedPersona • Synced'
-                                  : 'Digital Asset Bridge'),
+                                    ? '@$_detectedPersona • Synced'
+                                    : 'Digital Asset Bridge'),
                           style: VaultTypography.mono(
                             fontSize: 10.5,
                             color: _isConnected
@@ -2115,127 +2220,134 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         const SizedBox(height: 16),
                       ],
 
-                    // Alternative Sign-in Methods (only visible when disconnected)
-                    if (!_isConnected) ...[
-                      // Sign in with Steam OpenID Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 46,
-                        child: OutlinedButton.icon(
-                          onPressed: _showOpenIdSheet,
-                          icon: const Icon(
-                            Icons.language_rounded,
-                            size: 17,
-                            color: VaultColors.ink2,
-                          ),
-                          label: Text(
-                            'Sign In via Steam OpenID Portal',
-                            style: VaultTypography.sans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: VaultColors.ink,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: VaultColors.hairline),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Expandable Manual Link Option
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _showManualInput = !_showManualInput);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _showManualInput
-                                    ? 'Hide custom profile link'
-                                    : 'Or paste another Steam profile link',
-                                style: VaultTypography.mono(
-                                  fontSize: 11,
-                                  color: VaultColors.ink2,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                _showManualInput
-                                    ? Icons.keyboard_arrow_up_rounded
-                                    : Icons.keyboard_arrow_down_rounded,
-                                size: 16,
-                                color: VaultColors.ink2,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      if (_showManualInput) ...[
-                        const SizedBox(height: 10),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: VaultColors.card,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: VaultColors.hairline),
-                          ),
-                          child: TextField(
-                            controller: _urlController,
-                            style: VaultTypography.mono(
-                              fontSize: 12,
-                              color: VaultColors.ink,
-                            ),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'https://steamcommunity.com/profiles/...',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
+                      // Alternative Sign-in Methods (only visible when disconnected)
+                      if (!_isConnected) ...[
+                        // Sign in with Steam OpenID Button
                         SizedBox(
-                          height: 38,
-                          child: ElevatedButton.icon(
-                            onPressed: _isLoading ? null : _importCustomUrl,
-                            icon: const Icon(Icons.sync_rounded, size: 16),
+                          width: double.infinity,
+                          height: 46,
+                          child: OutlinedButton.icon(
+                            onPressed: _showOpenIdSheet,
+                            icon: const Icon(
+                              Icons.language_rounded,
+                              size: 17,
+                              color: VaultColors.ink2,
+                            ),
                             label: Text(
-                              'Sync Custom Profile',
+                              'Sign In via Steam OpenID Portal',
                               style: VaultTypography.sans(
-                                fontSize: 12.5,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w500,
+                                color: VaultColors.ink,
                               ),
                             ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: VaultColors.cardHover,
-                              foregroundColor: VaultColors.accent,
-                              side: BorderSide(
-                                color: VaultColors.accent.withValues(alpha: 0.5),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: VaultColors.hairline,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                           ),
                         ),
+                        const SizedBox(height: 16),
+
+                        // Expandable Manual Link Option
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(
+                              () => _showManualInput = !_showManualInput,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _showManualInput
+                                      ? 'Hide custom profile link'
+                                      : 'Or paste another Steam profile link',
+                                  style: VaultTypography.mono(
+                                    fontSize: 11,
+                                    color: VaultColors.ink2,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  _showManualInput
+                                      ? Icons.keyboard_arrow_up_rounded
+                                      : Icons.keyboard_arrow_down_rounded,
+                                  size: 16,
+                                  color: VaultColors.ink2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        if (_showManualInput) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            decoration: BoxDecoration(
+                              color: VaultColors.card,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: VaultColors.hairline),
+                            ),
+                            child: TextField(
+                              controller: _urlController,
+                              style: VaultTypography.mono(
+                                fontSize: 12,
+                                color: VaultColors.ink,
+                              ),
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText:
+                                    'https://steamcommunity.com/profiles/...',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: 38,
+                            child: ElevatedButton.icon(
+                              onPressed: _isLoading ? null : _importCustomUrl,
+                              icon: const Icon(Icons.sync_rounded, size: 16),
+                              label: Text(
+                                'Sync Custom Profile',
+                                style: VaultTypography.sans(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: VaultColors.cardHover,
+                                foregroundColor: VaultColors.accent,
+                                side: BorderSide(
+                                  color: VaultColors.accent.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 }

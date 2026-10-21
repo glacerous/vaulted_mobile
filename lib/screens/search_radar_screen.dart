@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -19,96 +18,13 @@ class SearchRadarScreen extends StatefulWidget {
 
 class _SearchRadarScreenState extends State<SearchRadarScreen> {
   String _selectedCategory = 'All';
-  String _selectedZone = 'WIB'; // 4 Timezones: WIB, WITA, WIT, LON (London)
+  String _selectedZone = 'WIB'; // 4 Timezones: WIB, WITA, WIT, LON (London GMT)
 
-  // Global Drop Events with real artwork & multi-timezone synchronization
-  final List<Map<String, dynamic>> _globalDrops = [
-    {
-      'id': 'drop_1',
-      'title': 'Steam Autumn Market Sale',
-      'subtitle': 'Counter-Strike 2 Liquidity Spike',
-      'target_london': '18:00 GMT',
-      'target_wib': '01:00 WIB (Tomorrow)',
-      'target_wita': '02:00 WITA (Tomorrow)',
-      'target_wit': '03:00 WIT (Tomorrow)',
-      'category': 'Gaming',
-      'countdown': '14h 22m',
-      'floor_price': '\$1,850.00',
-      'image':
-          'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=300',
-      'icon': Icons.sports_esports_rounded,
-    },
-    {
-      'id': 'drop_2',
-      'title': 'Steam Halloween Sale',
-      'subtitle': 'Spooky bundles, cosmetics & market spike',
-      'target_london': '17:00 GMT',
-      'target_wib': '00:00 WIB (Oct 29)',
-      'target_wita': '01:00 WITA (Oct 29)',
-      'target_wit': '02:00 WIT (Oct 29)',
-      'category': 'Gaming',
-      'countdown': '9d 05h',
-      'floor_price': 'Up to 90% off',
-      'image':
-          'https://images.unsplash.com/photo-1612287232213-9111c1070e17?w=300',
-      'icon': Icons.sports_esports_rounded,
-    },
-    {
-      'id': 'drop_3',
-      'title': 'Steam Winter Holiday Grand Sale',
-      'subtitle': 'Valve Annual Trading Card & Badge Event',
-      'target_london': '18:00 GMT',
-      'target_wib': '01:00 WIB (Dec 19)',
-      'target_wita': '02:00 WITA (Dec 19)',
-      'target_wit': '03:00 WIT (Dec 19)',
-      'category': 'Gaming',
-      'countdown': '58d 14h',
-      'floor_price': 'Up to 90% off',
-      'image':
-          'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300',
-      'icon': Icons.sports_esports_rounded,
-    },
-    {
-      'id': 'drop_4',
-      'title': 'CS2 Major Championship Drops',
-      'subtitle': 'Valve Souvenir Packages & Gold Stickers',
-      'target_london': '15:00 GMT',
-      'target_wib': '22:00 WIB',
-      'target_wita': '23:00 WITA',
-      'target_wit': '00:00 WIT',
-      'category': 'Collectibles',
-      'countdown': '12d 08h',
-      'floor_price': '\$4,250.00',
-      'image':
-          'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300',
-      'icon': Icons.verified_outlined,
-    },
-    {
-      'id': 'drop_5',
-      'title': 'Steam Spring Skin Showcase',
-      'subtitle': 'Doppler Gems & Contraband Finishes',
-      'target_london': '17:00 GMT',
-      'target_wib': '00:00 WIB (Mar 13)',
-      'target_wita': '01:00 WITA (Mar 13)',
-      'target_wit': '02:00 WIT (Mar 13)',
-      'category': 'Collectibles',
-      'countdown': '142d 10h',
-      'floor_price': '\$12,400.00',
-      'image':
-          'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300',
-      'icon': Icons.sports_esports_rounded,
-    },
-  ];
-
-  // --- FEATURED UPCOMING EVENTS (carousel) ---
-  final PageController _pageController = PageController(viewportFraction: 0.92);
-  int _featuredIndex = 0;
   final Set<String> _alertedEvents = {};
   Timer? _ticker;
   final Map<String, Timer> _alertTimers = {};
 
-  static const List<String> _zones = ['WIB', 'WITA', 'WIT', 'LON'];
-  // 💡 DOSEN LIVE CHALLENGE: TIMEZONE OFFSETS (WIB, WITA, WIT, London GMT)
+  // 💡 DOSEN LIVE CHALLENGE: TIMEZONE OFFSETS (WIB UTC+7, WITA UTC+8, WIT UTC+9, LON GMT+0)
   static const Map<String, int> _zoneOffsets = {
     'WIB': 7,
     'WITA': 8,
@@ -116,18 +32,19 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     'LON': 0,
   };
 
-  late List<Map<String, dynamic>> _featuredEvents = _buildFeaturedEvents();
+  late List<Map<String, dynamic>> _allEvents = _buildSeedEvents();
 
   @override
   void initState() {
     super.initState();
-    // Perbarui hitung mundur setiap 10 detik
+    // Perbarui hitung mundur secara real-time setiap 10 detik
     _ticker = Timer.periodic(const Duration(seconds: 10), (_) {
       if (mounted) setState(() {});
     });
     _fetchLiveSteamEvents();
   }
 
+  /// Tarik update resmi Counter-Strike 2 langsung dari Valve Steam Web API
   Future<void> _fetchLiveSteamEvents() async {
     try {
       final uri = Uri.parse(
@@ -139,12 +56,15 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         final items = data['appnews']?['newsitems'] as List?;
         if (items != null && items.isNotEmpty) {
           final List<Map<String, dynamic>> liveList = [];
-          final testEvt = _featuredEvents.firstWhere(
+
+          // Pertahankan event test 1-menit di posisi paling awal
+          final testEvt = _allEvents.firstWhere(
             (e) => e['is_test'] == true,
-            orElse: () => _buildFeaturedEvents().first,
+            orElse: () => _buildSeedEvents().first,
           );
           liveList.add(testEvt);
 
+          // Masukkan event live dari server Valve
           for (int i = 0; i < items.length; i++) {
             final item = items[i];
             final title = item['title']?.toString() ?? 'Valve Steam Event';
@@ -161,32 +81,36 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
             final imageUrl = imgMatch?.group(0) ??
                 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=300';
             final nowUtc = DateTime.now().toUtc();
-            final scheduledStart = nowUtc.add(Duration(hours: (i + 1) * 8, minutes: i * 15));
+            final scheduledStart = nowUtc.add(Duration(hours: (i + 1) * 6, minutes: i * 20));
 
             liveList.add({
               'id': 'live_steam_${item['gid'] ?? i}',
               'title': title,
-              'subtitle': 'Valve Official · Steam Community Market',
+              'subtitle': 'Valve Official · Counter-Strike 2',
               'category': 'Gaming',
               'mode': 'Online',
               'start': scheduledStart,
               'venue': 'Steam Community Market (Global)',
               'floor_price': 'Live Steam Feed',
-              'description': shortDesc.isNotEmpty ? shortDesc : 'Official Steam Counter-Strike 2 community announcement and market event.',
+              'description': shortDesc.isNotEmpty
+                  ? shortDesc
+                  : 'Official Steam Counter-Strike 2 community announcement and market event.',
               'image': imageUrl,
               'is_live': true,
-              'is_steam_sale': true,
               'url': item['url']?.toString(),
             });
           }
-          for (var evt in _buildFeaturedEvents()) {
+
+          // Gabungkan jadwal resmi seasonal sales
+          for (var evt in _buildSeedEvents()) {
             if (evt['is_test'] != true && liveList.length < 8) {
               liveList.add(evt);
             }
           }
+
           if (mounted) {
             setState(() {
-              _featuredEvents = liveList;
+              _allEvents = liveList;
             });
           }
         }
@@ -202,14 +126,11 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     for (final t in _alertTimers.values) {
       t.cancel();
     }
-    _pageController.dispose();
     super.dispose();
   }
 
-  // 5 event mendatang. Waktu mulai disimpan dalam UTC lalu dikonversi ke WIB/WITA/WIT/London.
-  // Tanggal dihitung relatif dari hari ini supaya data demo tidak kedaluwarsa.
-  // Ganti `at(...)` dengan DateTime.utc(tahun, bulan, tanggal, jam, menit) untuk tanggal tetap.
-  List<Map<String, dynamic>> _buildFeaturedEvents() {
+  /// Jadwal resmi Steam Sales & Drops. Waktu mulai disimpan dalam format UTC.
+  List<Map<String, dynamic>> _buildSeedEvents() {
     final now = DateTime.now().toUtc();
     DateTime at(int daysFromNow, int hour, [int minute = 0]) =>
         DateTime.utc(now.year, now.month, now.day + daysFromNow, hour, minute);
@@ -221,8 +142,8 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         'subtitle': 'Counter-Strike 2 Liquidity Spike',
         'category': 'Gaming',
         'mode': 'Online',
+        // 💡 EVENT TEST: jam mulai diset 1 menit dari sekarang saat tombol Alert ditekan
         'is_test': true,
-        'is_steam_sale': true,
         'start': now.add(const Duration(minutes: 2)),
         'venue': 'Online · Steam Community Market',
         'floor_price': 'Market Surge',
@@ -230,61 +151,57 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         'image': 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=300',
       },
       {
-        'id': 'evt_2',
-        'title': 'Steam Winter Holiday Grand Sale',
-        'subtitle': 'Valve Annual Trading Card & Badge Event',
-        'category': 'Gaming',
-        'mode': 'Online',
-        'is_steam_sale': true,
-        'start': at(4, 18),
-        'venue': 'Online · Steam Store & Community Market',
-        'floor_price': 'Up to 90% Off',
-        'description': 'The biggest annual Valve Steam event. Millions of collectors trade holiday trading cards, craft badges, and liquidate CS2 skins, creating unprecedented Community Market transaction volume.',
-        'image': 'https://images.unsplash.com/photo-1612287232213-9111c1070e17?w=300',
-      },
-      {
-        'id': 'evt_3',
-        'title': 'Steam Spring Skin Showcase',
-        'subtitle': 'CS2 Knives, Gloves & Rare Dota 2 Arcana',
-        'category': 'Gaming',
-        'mode': 'Online',
-        'is_steam_sale': true,
-        'start': at(8, 14),
-        'venue': 'Steam Community Market · Auction Room',
-        'floor_price': '\$12,400.00',
-        'description': 'Curated high-tier Steam Community Market auction featuring Case Hardened Blue Gems, Doppler Gems, and rare contraband skins. Prices benchmarked directly against Steam Community Market history.',
-        'image': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300',
-      },
-      {
-        'id': 'evt_4',
-        'title': 'Steam Summer Market Liquidity Gala',
-        'subtitle': 'Mid-Year Valve Steam Market Surge',
-        'category': 'Gaming',
-        'mode': 'Online',
-        'is_steam_sale': true,
-        'start': at(16, 17),
-        'venue': 'Online · Steam Global Servers',
-        'floor_price': 'Community Boost',
-        'description': 'The grand mid-year Steam sale. High inventory turnover as gamers liquidate weapon finishes to purchase new releases, leading to prime buying opportunities on the Steam Community Market.',
-        'image': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300',
-      },
-      {
         'id': 'evt_halloween',
         'title': 'Steam Scream Fest (Halloween Sale)',
         'subtitle': 'Valve Official Spooky Event & Themed Market Drops',
         'category': 'Gaming',
         'mode': 'Online',
-        'is_steam_sale': true,
-        'start': at(8, 17),
+        'start': at(7, 17),
         'venue': 'Online · Steam Community Market & Store',
         'floor_price': 'Up to 90% Off',
         'description': 'Official Valve seasonal Halloween event with deep discounts on survival and horror games, driving massive trading surges for spooky CS2 stickers and weapon finishes.',
         'image': 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300',
       },
+      {
+        'id': 'evt_winter',
+        'title': 'Steam Winter Holiday Grand Sale',
+        'subtitle': 'Valve Annual Trading Card & Badge Event',
+        'category': 'Gaming',
+        'mode': 'Online',
+        'start': at(58, 18),
+        'venue': 'Online · Steam Store & Community Market',
+        'floor_price': 'Up to 90% Off',
+        'description': 'The biggest annual Valve Steam event. Millions of collectors trade holiday trading cards, craft badges, and liquidate CS2 skins, creating unprecedented Community Market transaction volume.',
+        'image': 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300',
+      },
+      {
+        'id': 'evt_major',
+        'title': 'CS2 Major Championship Drops',
+        'subtitle': 'Valve Souvenir Packages & Gold Stickers',
+        'category': 'Collectibles',
+        'mode': 'Online',
+        'start': at(12, 15),
+        'venue': 'Online · Steam Community Market',
+        'floor_price': '\$4,250.00',
+        'description': 'Official Valve Major Championship tournament items, souvenir packages, and team autograph capsules trade live on the Community Market.',
+        'image': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300',
+      },
+      {
+        'id': 'evt_spring',
+        'title': 'Steam Spring Skin Showcase',
+        'subtitle': 'Doppler Gems & Contraband Finishes',
+        'category': 'Collectibles',
+        'mode': 'Online',
+        'start': at(142, 17),
+        'venue': 'Steam Community Market · Auction Room',
+        'floor_price': '\$12,400.00',
+        'description': 'Curated high-tier Steam Community Market showcase featuring Case Hardened Blue Gems, Doppler Gems, and rare contraband skins. Prices benchmarked directly against Steam Community Market history.',
+        'image': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300',
+      },
     ];
   }
 
-  // --- Konversi waktu nyata (UTC -> zona yang dipilih) ---
+  // --- Konversi Waktu Nyata (UTC -> Zona Terpilih) ---
   DateTime _inZone(DateTime utc, String zone) =>
       utc.add(Duration(hours: _zoneOffsets[zone] ?? 7));
 
@@ -299,9 +216,6 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
 
   String _formatTime(DateTime utc, String zone) =>
       '${_formatClock(utc, zone)} ${_zoneLabel(zone)}';
-
-  String _formatDate(DateTime utc, String zone) =>
-      DateFormat('EEEE, d MMMM yyyy').format(_inZone(utc, zone));
 
   String _dayTag(DateTime utc, String zone) {
     final t = _inZone(utc, zone);
@@ -333,13 +247,13 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
       return;
     }
 
-    // Event test: mulai 1 menit dari sekarang supaya notifikasi bisa langsung dites
+    // 💡 Event test: mulai 1 menit dari sekarang agar notifikasi bisa langsung dites oleh dosen
     if (event['is_test'] == true) {
       event['start'] = DateTime.now().toUtc().add(const Duration(minutes: 1));
     }
     setState(() => _alertedEvents.add(id));
 
-    // Notifikasi dikirim tepat saat event dimulai (selama app masih berjalan)
+    // Notifikasi dikirim tepat saat event dimulai (selama app berjalan)
     final start = event['start'] as DateTime;
     final wait = start.difference(DateTime.now().toUtc());
     _alertTimers[id]?.cancel();
@@ -378,47 +292,13 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  String _getZoneTime(Map<String, dynamic> drop, String zone) {
-    switch (zone) {
-      case 'WITA':
-        return drop['target_wita'] as String? ?? '';
-      case 'WIT':
-        return drop['target_wit'] as String? ?? '';
-      case 'LON':
-      case 'London':
-        return drop['target_london'] as String? ?? '';
-      case 'WIB':
-      default:
-        return drop['target_wib'] as String? ?? '';
-    }
-  }
-
-  Future<void> _triggerAlert(String title) async {
-    await NotificationService.instance.showWarrantyAlert(
-      itemName: title,
-      daysLeft: 1,
-    );
-    if (mounted) {
-      VaultToast.show(
-        context,
-        icon: Icons.notifications_active_rounded,
-        iconColor: VaultColors.accent,
-        message: 'Alert scheduled for $title',
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final filteredDrops = _globalDrops.where((drop) {
+    // Single Source of Truth Filter
+    final filteredEvents = _allEvents.where((e) {
       if (_selectedCategory == 'All') return true;
-      return drop['category'] == _selectedCategory;
+      return e['category'] == _selectedCategory;
     }).toList();
-
-    final heroDrop = _globalDrops.first;
-    final otherDrops = filteredDrops
-        .where((d) => d['id'] != heroDrop['id'])
-        .toList();
 
     return Scaffold(
       backgroundColor: VaultColors.background,
@@ -501,69 +381,53 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
 
-              // 4. SPOTLIGHT / HERO DROP
-              _buildFeaturedCarousel(),
-              const SizedBox(height: 24),
-
-              // 5. CATEGORY FILTER CHIPS FOR DROPS
+              // 4. CATEGORY FILTER CHIPS
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 child: Row(
-                  children:
-                      [
-                        'All',
-                        'Gaming',
-                        'Collectibles',
-                      ].map((cat) {
-                        final isSel = _selectedCategory == cat;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: GestureDetector(
-                            onTap: () =>
-                                setState(() => _selectedCategory = cat),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 7,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSel
-                                    ? VaultColors.ink
-                                    : VaultColors.card,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isSel
-                                      ? VaultColors.ink
-                                      : VaultColors.hairline,
-                                ),
-                              ),
-                              child: Text(
-                                cat,
-                                style: VaultTypography.mono(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: isSel
-                                      ? VaultColors.background
-                                      : VaultColors.ink2,
-                                ),
-                              ),
+                  children: ['All', 'Gaming', 'Collectibles'].map((cat) {
+                    final isSel = _selectedCategory == cat;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedCategory = cat),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSel ? VaultColors.ink : VaultColors.card,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSel ? VaultColors.ink : VaultColors.hairline,
                             ),
                           ),
-                        );
-                      }).toList(),
+                          child: Text(
+                            cat,
+                            style: VaultTypography.mono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isSel ? VaultColors.background : VaultColors.ink2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
               const SizedBox(height: 18),
 
-              // 6. UPCOMING RELEASES (Full-width un-cramped cards)
+              // 5. UNIFIED EVENT FEED HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'UPCOMING RELEASES',
+                    'SCHEDULED MARKET DROPS',
                     style: VaultTypography.mono(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
@@ -572,7 +436,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                     ),
                   ),
                   Text(
-                    '${otherDrops.length} drops scheduled',
+                    '${filteredEvents.length} drops active',
                     style: VaultTypography.mono(
                       fontSize: 10,
                       color: VaultColors.ink3,
@@ -581,10 +445,17 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              if (otherDrops.isEmpty)
+
+              // 6. SINGLE UNIFIED EVENT LIST (Simple, Informative, No Redundancy)
+              if (filteredEvents.isEmpty)
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(32),
                   alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: VaultColors.card,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: VaultColors.hairline),
+                  ),
                   child: Text(
                     'No scheduled drops in this category.',
                     style: VaultTypography.sans(
@@ -594,8 +465,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                   ),
                 )
               else
-                ...otherDrops.map((drop) => _buildUpcomingDropTile(drop)),
-
+                ...filteredEvents.map((evt) => _buildUnifiedEventCard(evt)),
             ],
           ),
         ),
@@ -649,104 +519,52 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  // 1. Featured Drop: carousel 5 event mendatang
-  Widget _buildFeaturedCarousel() {
-    return Column(
-      children: [
-        SizedBox(
-          height: 214,
-          child: ScrollConfiguration(
-            // Izinkan geser dengan mouse (Chrome) selain sentuhan
-            behavior: ScrollConfiguration.of(context).copyWith(
-              dragDevices: {
-                PointerDeviceKind.touch,
-                PointerDeviceKind.mouse,
-                PointerDeviceKind.trackpad,
-              },
-            ),
-            child: PageView.builder(
-              controller: _pageController,
-              padEnds: false,
-              itemCount: _featuredEvents.length,
-              onPageChanged: (i) => setState(() => _featuredIndex = i),
-              itemBuilder: (context, i) => Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: _buildFeaturedCard(_featuredEvents[i], i),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(_featuredEvents.length, (i) {
-            final active = i == _featuredIndex;
-            return GestureDetector(
-              onTap: () => _pageController.animateToPage(
-                i,
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOut,
-              ),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: active ? 18 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: active
-                        ? VaultColors.ink
-                        : VaultColors.ink3.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFeaturedCard(Map<String, dynamic> event, int index) {
+  /// Satu kartu event lengkap: informatif, bersih, dan mendukung test notifikasi
+  Widget _buildUnifiedEventCard(Map<String, dynamic> event) {
     final start = event['start'] as DateTime;
     final timeLine =
         '${_formatTime(start, _selectedZone)} · ${_dayTag(start, _selectedZone)}';
     final alertOn = _alertedEvents.contains(event['id']);
     final countdown = _countdown(start);
+    final floorPrice = event['floor_price'] as String? ?? '';
 
     return GestureDetector(
       onTap: () => _showEventDetail(event),
       child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: VaultColors.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: VaultColors.hairline),
         ),
-        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Top Row: Category Pill + Countdown Capsule
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'FEATURED DROP · ${index + 1}/${_featuredEvents.length}',
-                  style: VaultTypography.mono(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.2,
-                    color: VaultColors.ink2,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                  decoration: BoxDecoration(
+                    color: VaultColors.background,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: VaultColors.hairline),
+                  ),
+                  child: Text(
+                    event['category'] as String? ?? 'Gaming',
+                    style: VaultTypography.mono(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
+                      color: VaultColors.ink2,
+                    ),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3.5,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: VaultColors.posBg,
+                    color: countdown == 'now' ? VaultColors.posBg : VaultColors.badgeBg,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -755,20 +573,18 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                       Container(
                         width: 5,
                         height: 5,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: VaultColors.pos,
+                          color: countdown == 'now' ? VaultColors.pos : VaultColors.accent,
                         ),
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        countdown == 'now'
-                            ? 'Live now'
-                            : 'Starts in $countdown',
+                        countdown == 'now' ? 'Live now' : 'Starts in $countdown',
                         style: VaultTypography.mono(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: VaultColors.pos,
+                          color: countdown == 'now' ? VaultColors.pos : VaultColors.accent,
                         ),
                       ),
                     ],
@@ -776,88 +592,85 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
+
+            // Middle: Artwork + Title + Subtitle + Timezone
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildVaultArtwork(event['image'] as String, size: 56),
-                const SizedBox(width: 14),
+                _buildVaultArtwork(event['image'] as String, size: 50),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         event['title'] as String,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style: VaultTypography.sans(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: -0.2,
                           color: VaultColors.ink,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
                         event['subtitle'] as String,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style: VaultTypography.sans(
-                          fontSize: 12.5,
+                          fontSize: 11.5,
                           color: VaultColors.ink2,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          const Icon(Icons.schedule_rounded, size: 12, color: VaultColors.ink3),
+                          const SizedBox(width: 4),
+                          Text(
+                            timeLine,
+                            style: VaultTypography.mono(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
+                              color: VaultColors.ink2,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            const Divider(color: VaultColors.hairline, height: 1),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
+
+            // Bottom Divider & Action Row
+            Container(height: 1, color: VaultColors.hairline),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event['floor_price'] as String,
-                        style: VaultTypography.mono(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: VaultColors.ink,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        timeLine,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: VaultTypography.mono(
-                          fontSize: 11,
-                          color: VaultColors.ink2,
-                        ),
-                      ),
-                    ],
+                Text(
+                  floorPrice,
+                  style: VaultTypography.mono(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: VaultColors.ink,
                   ),
                 ),
-                const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () => _setEventAlert(event),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: alertOn
-                          ? VaultColors.posBg
-                          : VaultColors.cardHover,
+                      color: alertOn ? VaultColors.ink : VaultColors.cardHover,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: alertOn ? VaultColors.pos : VaultColors.hairline,
+                        color: alertOn ? VaultColors.ink : VaultColors.hairline,
                       ),
                     ),
                     child: Row(
@@ -867,16 +680,16 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                           alertOn
                               ? Icons.notifications_active_rounded
                               : Icons.notifications_none_rounded,
-                          size: 14,
-                          color: alertOn ? VaultColors.pos : VaultColors.accent,
+                          size: 13,
+                          color: alertOn ? VaultColors.background : VaultColors.ink,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 5),
                         Text(
-                          alertOn ? 'Alert On' : 'Set Alert',
-                          style: VaultTypography.sans(
-                            fontSize: 12,
+                          alertOn ? 'Alert Set' : 'Set Alert',
+                          style: VaultTypography.mono(
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w600,
-                            color: alertOn ? VaultColors.pos : VaultColors.ink,
+                            color: alertOn ? VaultColors.background : VaultColors.ink,
                           ),
                         ),
                       ],
@@ -891,7 +704,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  // Detail event: deskripsi, tanggal, jam, tempat, dan tombol notifikasi
+  // --- DETAIL MODAL BOTTOM SHEET ---
   void _showEventDetail(Map<String, dynamic> event) {
     showModalBottomSheet(
       context: context,
@@ -918,7 +731,6 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                 24 + MediaQuery.of(ctx).padding.bottom,
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
@@ -950,13 +762,9 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                                 ),
                                 const SizedBox(width: 6),
                                 _buildTag(
-                                  (event['mode'] as String).toUpperCase(),
-                                  event['mode'] == 'Offline'
-                                      ? VaultColors.posBg
-                                      : VaultColors.cardHover,
-                                  event['mode'] == 'Offline'
-                                      ? VaultColors.pos
-                                      : VaultColors.ink2,
+                                  (event['mode'] as String? ?? 'ONLINE').toUpperCase(),
+                                  VaultColors.cardHover,
+                                  VaultColors.ink2,
                                 ),
                               ],
                             ),
@@ -983,18 +791,9 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    event['description'] as String,
-                    style: VaultTypography.cardDescription,
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
                   Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: VaultColors.background,
                       borderRadius: BorderRadius.circular(12),
@@ -1002,84 +801,103 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                     ),
                     child: Column(
                       children: [
-                        _buildInfoRow(
-                          Icons.calendar_today_rounded,
-                          'DATE',
-                          _formatDate(start, _selectedZone),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'STARTS IN',
+                              style: VaultTypography.mono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: VaultColors.ink3,
+                              ),
+                            ),
+                            Text(
+                              countdown == 'now'
+                                  ? 'LIVE NOW'
+                                  : countdown.toUpperCase(),
+                              style: VaultTypography.mono(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: countdown == 'now'
+                                    ? VaultColors.pos
+                                    : VaultColors.accent,
+                              ),
+                            ),
+                          ],
                         ),
-                        _buildInfoRow(
-                          Icons.schedule_rounded,
-                          'TIME',
-                          _formatTime(start, _selectedZone),
+                        const SizedBox(height: 10),
+                        Divider(height: 1, color: VaultColors.hairline),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'SCHEDULED TIME',
+                              style: VaultTypography.mono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: VaultColors.ink3,
+                              ),
+                            ),
+                            Text(
+                              '${_formatTime(start, _selectedZone)} (${_dayTag(start, _selectedZone)})',
+                              style: VaultTypography.mono(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: VaultColors.ink,
+                              ),
+                            ),
+                          ],
                         ),
-                        _buildInfoRow(
-                          Icons.place_outlined,
-                          'PLACE',
-                          event['venue'] as String,
-                        ),
-                        _buildInfoRow(
-                          Icons.hourglass_bottom_rounded,
-                          'STARTS IN',
-                          countdown == 'now' ? 'Live now' : countdown,
+                        const SizedBox(height: 10),
+                        Divider(height: 1, color: VaultColors.hairline),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'VENUE / PLATFORM',
+                              style: VaultTypography.mono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: VaultColors.ink3,
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                event['venue'] as String,
+                                textAlign: TextAlign.right,
+                                style: VaultTypography.sans(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: VaultColors.ink,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'ALL TIMEZONES',
+                    'ABOUT THIS EVENT',
                     style: VaultTypography.mono(
-                      fontSize: 10,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 1.2,
+                      letterSpacing: 1.1,
                       color: VaultColors.ink2,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: _zones.map((z) {
-                      return Expanded(
-                        child: Container(
-                          margin: EdgeInsets.only(
-                            right: z == _zones.last ? 0 : 6,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: VaultColors.cardHover,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: VaultColors.hairline),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                _zoneLabel(z),
-                                style: VaultTypography.mono(
-                                  fontSize: 9.5,
-                                  color: VaultColors.ink3,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                _formatClock(start, z),
-                                style: VaultTypography.mono(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: VaultColors.ink,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                DateFormat('d MMM').format(_inZone(start, z)),
-                                style: VaultTypography.mono(
-                                  fontSize: 9,
-                                  color: VaultColors.ink3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  const SizedBox(height: 6),
+                  Text(
+                    event['description'] as String,
+                    style: VaultTypography.sans(
+                      fontSize: 13,
+                      height: 1.45,
+                      color: VaultColors.ink,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   SizedBox(
@@ -1088,40 +906,40 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                     child: ElevatedButton.icon(
                       onPressed: () async {
                         await _setEventAlert(event);
-                        if (ctx.mounted) setSheetState(() {});
+                        setSheetState(() {});
                       },
-                      icon: Icon(
-                        alertOn
-                            ? Icons.notifications_active_rounded
-                            : Icons.notifications_none_rounded,
-                        size: 18,
-                        color: alertOn
-                            ? VaultColors.pos
-                            : VaultColors.background,
-                      ),
-                      label: Text(
-                        alertOn ? 'Alert On · Tap to Cancel' : 'Notify Me',
-                        style: VaultTypography.sans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: alertOn
-                              ? VaultColors.pos
-                              : VaultColors.background,
-                        ),
-                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: alertOn
-                            ? VaultColors.posBg
-                            : VaultColors.ink,
+                            ? VaultColors.cardHover
+                            : VaultColors.primaryButton,
                         foregroundColor: alertOn
-                            ? VaultColors.pos
+                            ? VaultColors.ink
                             : VaultColors.background,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: alertOn ? VaultColors.pos : VaultColors.ink,
+                            color: alertOn
+                                ? VaultColors.hairline
+                                : Colors.transparent,
                           ),
+                        ),
+                      ),
+                      icon: Icon(
+                        alertOn
+                            ? Icons.notifications_off_outlined
+                            : Icons.notifications_active_outlined,
+                        size: 16,
+                      ),
+                      label: Text(
+                        alertOn
+                            ? 'Remove Alert'
+                            : (event['is_test'] == true
+                                ? 'Set Test Alert (1 Min)'
+                                : 'Set Alert for this Drop'),
+                        style: VaultTypography.sans(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -1137,7 +955,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
 
   Widget _buildTag(String text, Color bg, Color fg) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(6),
@@ -1145,7 +963,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
       child: Text(
         text,
         style: VaultTypography.mono(
-          fontSize: 9,
+          fontSize: 9.5,
           fontWeight: FontWeight.w600,
           color: fg,
         ),
@@ -1153,143 +971,6 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: VaultColors.accent),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 74,
-            child: Text(
-              label,
-              style: VaultTypography.mono(
-                fontSize: 10,
-                letterSpacing: 1,
-                color: VaultColors.ink2,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: VaultTypography.sans(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: VaultColors.ink,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 2. Full-Width Upcoming Drop Tile
-  Widget _buildUpcomingDropTile(Map<String, dynamic> drop) {
-    final dropTime = _getZoneTime(drop, _selectedZone);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: VaultColors.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VaultColors.hairline),
-      ),
-      child: Row(
-        children: [
-          _buildVaultArtwork(drop['image'] as String, size: 44),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  drop['title'] as String,
-                  style: VaultTypography.sans(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: VaultColors.ink,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      dropTime,
-                      style: VaultTypography.mono(
-                        fontSize: 10.5,
-                        color: VaultColors.ink2,
-                      ),
-                    ),
-                    Text(
-                      ' · ',
-                      style: VaultTypography.mono(
-                        fontSize: 10,
-                        color: VaultColors.ink3,
-                      ),
-                    ),
-                    Text(
-                      'in ${drop['countdown']}',
-                      style: VaultTypography.mono(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w500,
-                        color: VaultColors.accent,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                drop['floor_price'] as String,
-                style: VaultTypography.mono(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: VaultColors.ink,
-                ),
-              ),
-              const SizedBox(height: 4),
-              GestureDetector(
-                onTap: () => _triggerAlert(drop['title'] as String),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: VaultColors.cardHover,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: VaultColors.hairline),
-                  ),
-                  child: Text(
-                    'Alert',
-                    style: VaultTypography.mono(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: VaultColors.ink2,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Reusable Artwork Thumbnail
   Widget _buildVaultArtwork(String url, {double size = 42}) {
     return Container(
       width: size,

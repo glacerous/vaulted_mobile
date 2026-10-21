@@ -8,7 +8,7 @@ import 'login_screen.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  /// 👥 DAFTAR ANGGOTA KELOMPOK PENGEMBANG (Ubah / tambah di sini jika diminta dosen)
+  /// DAFTAR ANGGOTA KELOMPOK PENGEMBANG (Ubah / tambah di sini jika diminta dosen)
   static const List<Map<String, String?>> developers = [
     {
       'name': 'Pindo Dinarman Situngkir',

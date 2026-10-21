@@ -24,7 +24,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
   Timer? _ticker;
   final Map<String, Timer> _alertTimers = {};
 
-  // 💡 DOSEN LIVE CHALLENGE: TIMEZONE OFFSETS (WIB UTC+7, WITA UTC+8, WIT UTC+9, LON GMT+0)
+  // DOSEN LIVE CHALLENGE: TIMEZONE OFFSETS (WIB UTC+7, WITA UTC+8, WIT UTC+9, LON GMT+0)
   static const Map<String, int> _zoneOffsets = {
     'WIB': 7,
     'WITA': 8,
@@ -142,7 +142,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         'subtitle': 'Counter-Strike 2 Liquidity Spike',
         'category': 'Gaming',
         'mode': 'Online',
-        // 💡 EVENT TEST: jam mulai diset 1 menit dari sekarang saat tombol Alert ditekan
+        // EVENT TEST: jam mulai diset 1 menit dari sekarang saat tombol Alert ditekan
         'is_test': true,
         'start': now.add(const Duration(minutes: 2)),
         'venue': 'Online · Steam Community Market',
@@ -247,7 +247,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
       return;
     }
 
-    // 💡 Event test: mulai 1 menit dari sekarang agar notifikasi bisa langsung dites oleh dosen
+    // Event test: mulai 1 menit dari sekarang agar notifikasi bisa langsung dites oleh dosen
     if (event['is_test'] == true) {
       event['start'] = DateTime.now().toUtc().add(const Duration(minutes: 1));
     }

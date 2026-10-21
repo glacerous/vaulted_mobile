@@ -8,7 +8,7 @@ class VaultConfig {
   VaultConfig._();
 
   // ===========================================================================
-  // 🎓 DOSEN LIVE DEMO SETTINGS (Mudah diubah saat sesi tanya jawab / uji kode)
+  // DOSEN LIVE DEMO SETTINGS (Mudah diubah saat sesi tanya jawab / uji kode)
   // ===========================================================================
 
   /// Sensitivitas sensor goyangan HP (Accelerometer) untuk Mode Privasi Saldo.

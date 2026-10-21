@@ -65,7 +65,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   ];
 
   // =========================================================================
-  // 💡 DOSEN LIVE CHALLENGE: KURS MATA UANG (Live Exchange Rates)
+  // DOSEN LIVE CHALLENGE: KURS MATA UANG (Live Exchange Rates)
   // Tambah / ubah kurs mata uang di sini jika dosen menantang saat presentasi:
   // (Contoh tambah: 'SGD': 1.35, 'MYR': 4.45)
   // =========================================================================
@@ -145,7 +145,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   }
 
   // =========================================================================
-  // 💡 DOSEN LIVE CHALLENGE: RUMUS TOTAL VALUASI NET WORTH
+  // DOSEN LIVE CHALLENGE: RUMUS TOTAL VALUASI NET WORTH
   // Total Aset = Nilai Hardware Inventory + Nilai Koleksi Steam
   // =========================================================================
   double get _netWorth => _inventoryTotal + _collectiblesTotal;

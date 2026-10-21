@@ -22,7 +22,7 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   // =========================================================================
-  // 💡 DOSEN LIVE CHALLENGE: SENSOR & NAVIGATION SETTINGS
+  // DOSEN LIVE CHALLENGE: SENSOR & NAVIGATION SETTINGS
   // Ubah nilai di bawah ini jika dosen meminta modifikasi live saat demo:
   // - Accelerometer: Goyang HP untuk sembunyikan/tampilkan saldo (Privacy Mode)
   // - Gyroscope: Balik/telungkupkan HP (Flip Face-Down) untuk kunci brankas

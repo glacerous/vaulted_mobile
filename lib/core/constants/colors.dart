@@ -16,7 +16,7 @@ class VaultColors {
   static const Color body = Color(0xFF52504B);       // Body copy text
 
   // =========================================================================
-  // 💡 DOSEN LIVE CHALLENGE: THEME & BRAND ACCENT COLOR
+  // DOSEN LIVE CHALLENGE: THEME & BRAND ACCENT COLOR
   // Jika dosen meminta mengubah warna aksen/tema (misal jadi Emerald atau Sapphire):
   // Ubah hex value `accent` di bawah:
   // - Gold bawaan: Color(0xFFC0A85C)

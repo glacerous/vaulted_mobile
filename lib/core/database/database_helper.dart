@@ -306,7 +306,7 @@ class DatabaseHelper {
         'items',
         where: 'LOWER(user_id) = ? OR (user_id IS NULL AND ? = ?)',
         whereArgs: [targetUser, targetUser, 'azzaky'],
-        // 💡 DOSEN LIVE CHALLENGE: Ubah urutan sorting (misal 'current_valuation DESC' atau 'name ASC')
+        // DOSEN LIVE CHALLENGE: Ubah urutan sorting (misal 'current_valuation DESC' atau 'name ASC')
         orderBy: 'id DESC',
       );
       return items;

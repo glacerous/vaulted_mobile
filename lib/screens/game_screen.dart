@@ -4,7 +4,7 @@ import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/widgets/valto_mascot.dart';
 
-/// 🎮 PILIHAN TAMPILAN HEALTHBAR
+/// PILIHAN TAMPILAN HEALTHBAR
 enum HealthbarStyle {
   hearts, // Hanya ikon hati
   bar,    // Bar HP gaming RPG / Fighting (dengan persentase & warna dinamis)
@@ -12,7 +12,7 @@ enum HealthbarStyle {
 }
 
 /// ============================================================================
-/// 🎓 DOSEN LIVE CHALLENGE: GAME CONFIGURATION
+/// DOSEN LIVE CHALLENGE: GAME CONFIGURATION
 /// 
 /// Dosen sering menguji fleksibilitas kode dengan tantangan:
 /// 1. "Coba ubah nyawa awal (health bar) jadi 5 atau 10!"
@@ -25,20 +25,20 @@ enum HealthbarStyle {
 ///    -> Lihat template soal di daftar `_questions`.
 /// ============================================================================
 class GameConfig {
-  /// 💖 HEALTH / NYAWA AWAL PEMAIN
+  /// HEALTH / NYAWA AWAL PEMAIN
   /// Ubah nilai ini jika dosen menantang ganti nyawa saat presentasi
   static const int startingLives = 3;
 
-  /// 📊 GAYA HEALTHBAR (hearts, bar, atau both)
+  /// GAYA HEALTHBAR (hearts, bar, atau both)
   static const HealthbarStyle healthbarStyle = HealthbarStyle.both;
 
-  /// 🎯 POIN DASAR PER JAWABAN BENAR
+  /// POIN DASAR PER JAWABAN BENAR
   static const int pointsPerCorrect = 100;
 
-  /// 🔥 BONUS POIN PER STREAK
+  /// BONUS POIN PER STREAK
   static const int streakBonusPoints = 25;
 
-  /// ⏱️ DURASI JEDA REVEAL HARGA (ms)
+  /// DURASI JEDA REVEAL HARGA (ms)
   static const Duration feedbackDuration = Duration(milliseconds: 1400);
 }
 
@@ -65,12 +65,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   late Animation<double> _scaleAnimation;
 
   /// ==========================================================================
-  /// 💡 DAFTAR SOAL GAME (Bisa langsung diedit / ditambah saat demo di depan dosen)
+  /// DAFTAR SOAL GAME (Bisa langsung diedit / ditambah saat demo di depan dosen)
   /// Aturan Jawaban:
   /// - actual_val >= benchmark_val  =>  Jawaban Benar: HIGHER
   /// - actual_val < benchmark_val   =>  Jawaban Benar: LOWER
   ///
-  /// 📝 TEMPLATE SOAL BARU UNTUK TEST DOSEN:
+  /// TEMPLATE SOAL BARU UNTUK TEST DOSEN:
   /// {
   ///   'name': 'HP Victus Gaming Laptop 15',
   ///   'category': 'Gaming Hardware',
@@ -386,7 +386,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     );
   }
 
-  /// 💖 HEALTHBAR WIDGET (Otomatis menyesuaikan jumlah startingLives tanpa overflow)
+  /// HEALTHBAR WIDGET (Otomatis menyesuaikan jumlah startingLives tanpa overflow)
   Widget _buildHealthBar() {
     final maxLives = GameConfig.startingLives;
     final hpRatio = (_lives / maxLives).clamp(0.0, 1.0);

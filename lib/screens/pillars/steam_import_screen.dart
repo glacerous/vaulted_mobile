@@ -30,7 +30,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
   bool _hasCsPrivateWarning = false;
   int _csPrivateCount = 0;
 
-  // 💡 DOSEN LIVE CHALLENGE: DEFAULT STEAM ACCOUNT & SORTING
+  // DOSEN LIVE CHALLENGE: DEFAULT STEAM ACCOUNT & SORTING
   // Ganti persona, steamId, atau default sort order di bawah jika diminta demo akun lain:
   String _detectedPersona = 'xel';
   String _currentSteamId = '76561199089584380';

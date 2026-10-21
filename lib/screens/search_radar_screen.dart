@@ -92,6 +92,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
   Timer? _ticker;
 
   static const List<String> _zones = ['WIB', 'WITA', 'WIT', 'LON'];
+  // 💡 DOSEN LIVE CHALLENGE: TIMEZONE OFFSETS (WIB, WITA, WIT, London GMT)
   static const Map<String, int> _zoneOffsets = {
     'WIB': 7,
     'WITA': 8,

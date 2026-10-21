@@ -23,6 +23,9 @@ import 'modals/valto_chat_modal.dart';
 class HomeVaultScreen extends StatefulWidget {
   const HomeVaultScreen({super.key});
 
+  /// Global reactive notifier for privacy mode (Shake to Hide Balance)
+  static final ValueNotifier<bool> isBalanceVisible = ValueNotifier<bool>(true);
+
   @override
   State<HomeVaultScreen> createState() => _HomeVaultScreenState();
 }
@@ -35,7 +38,6 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   late AnimationController _animController;
   static const int _frameCount = 36;
 
-  bool _isBalanceVisible = true;
   double _inventoryTotal = 0.0;
   double _collectiblesTotal = 0.0;
   int _steamItemsCount = 0;
@@ -77,11 +79,16 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   @override
   void initState() {
     super.initState();
+    HomeVaultScreen.isBalanceVisible.addListener(_onPrivacyChanged);
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2800),
     )..repeat();
     _loadVaultData();
+  }
+
+  void _onPrivacyChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -97,6 +104,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
 
   @override
   void dispose() {
+    HomeVaultScreen.isBalanceVisible.removeListener(_onPrivacyChanged);
     _animController.dispose();
     _promptController.dispose();
     _promptFocus.dispose();
@@ -527,11 +535,12 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                               ),
                               const SizedBox(width: 6),
                               GestureDetector(
-                                onTap: () => setState(
-                                  () => _isBalanceVisible = !_isBalanceVisible,
-                                ),
+                                onTap: () {
+                                  HomeVaultScreen.isBalanceVisible.value =
+                                      !HomeVaultScreen.isBalanceVisible.value;
+                                },
                                 child: Icon(
-                                  _isBalanceVisible
+                                  HomeVaultScreen.isBalanceVisible.value
                                       ? Icons.visibility_outlined
                                       : Icons.visibility_off_outlined,
                                   size: 14,
@@ -570,7 +579,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                                   fit: BoxFit.scaleDown,
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    _isBalanceVisible
+                                    HomeVaultScreen.isBalanceVisible.value
                                         ? _formatRawNumber(_netWorth)
                                         : '••••••••',
                                     style: VaultTypography.mono(

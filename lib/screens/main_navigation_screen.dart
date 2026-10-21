@@ -24,9 +24,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   // =========================================================================
   // 💡 DOSEN LIVE CHALLENGE: SENSOR & NAVIGATION SETTINGS
   // Ubah nilai di bawah ini jika dosen meminta modifikasi live saat demo:
+  // - Accelerometer: Goyang HP untuk sembunyikan/tampilkan saldo (Privacy Mode)
+  // - Gyroscope: Balik/telungkupkan HP (Flip Face-Down) untuk kunci brankas
   // =========================================================================
-  static const double shakeSensitivity = 18.0;     // Ambang batas getaran (goyangan) m/s²
-  static const double gyroTiltSensitivity = 5.0;    // Ambang batas rotasi gyroscope rad/s
+  static const double shakeSensitivity = 17.0;     // Ambang batas getaran (goyangan) m/s²
+  static const double gyroTiltSensitivity = 6.0;    // Ambang batas rotasi balik gyroscope rad/s
   static const int sensorCooldownSeconds = 2;       // Jeda waktu antar deteksi (detik)
 
   int _currentIndex = 0;
@@ -57,25 +59,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _initGyroscopeSensor();
   }
 
-  // Sensor 1: Accelerometer Shake Detection (Slide 1 Requirement)
+  // Sensor 1: Accelerometer — Shake to Hide/Show Balance (Mode Privasi BCA/Jenius)
   void _initShakeSensor() {
     _accelerometerSubscription = accelerometerEventStream().listen((AccelerometerEvent event) {
-      final gX = event.x;
-      final gY = event.y;
-      final gZ = event.z;
-
-      final gForce = sqrt(gX * gX + gY * gY + gZ * gZ);
+      final gForce = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
 
       if (gForce > shakeSensitivity) {
         final now = DateTime.now();
         if (now.difference(_lastShakeTime).inSeconds > sensorCooldownSeconds) {
           _lastShakeTime = now;
+          HomeVaultScreen.isBalanceVisible.value = !HomeVaultScreen.isBalanceVisible.value;
+          HapticFeedback.mediumImpact();
           if (mounted) {
+            final isHidden = !HomeVaultScreen.isBalanceVisible.value;
             VaultToast.show(
               context,
-              icon: Icons.security_rounded,
+              icon: isHidden ? Icons.visibility_off_rounded : Icons.visibility_rounded,
               iconColor: VaultColors.accent,
-              message: 'Accelerometer: Shake detected (${gForce.toStringAsFixed(1)} m/s²)! Stealth lock.',
+              message: isHidden
+                  ? 'Shake Terdeteksi: Saldo Disembunyikan (Privacy Mode)'
+                  : 'Shake Terdeteksi: Saldo Ditampilkan Kembali',
             );
           }
         }
@@ -83,25 +86,27 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
   }
 
-  // Sensor 2: Gyroscope Rotational Tilt Detection (Slide 1 Requirement)
+  // Sensor 2: Gyroscope — Face-Down / Flip to Lock Vault (Kunci Otomatis Saat Ditelungkupkan)
   void _initGyroscopeSensor() {
     _gyroscopeSubscription = gyroscopeEventStream().listen((GyroscopeEvent event) {
-      final rotX = event.x;
-      final rotY = event.y;
-      final rotZ = event.z;
-      final angularVelocity = sqrt(rotX * rotX + rotY * rotY + rotZ * rotZ);
+      final angularVelocity = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
 
       if (angularVelocity > gyroTiltSensitivity) {
         final now = DateTime.now();
         if (now.difference(_lastGyroTime).inSeconds > sensorCooldownSeconds) {
           _lastGyroTime = now;
-          HapticFeedback.selectionClick();
+          HapticFeedback.heavyImpact();
           if (mounted) {
             VaultToast.show(
               context,
-              icon: Icons.screen_rotation_rounded,
-              iconColor: VaultColors.accent,
-              message: 'Gyroscope: Tilt motion detected (${angularVelocity.toStringAsFixed(1)} rad/s)!',
+              icon: Icons.lock_outline_rounded,
+              iconColor: VaultColors.warn,
+              message: 'Gyroscope Flip: Vault Dikunci Otomatis (Face-Down)!',
+            );
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
             );
           }
         }

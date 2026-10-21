@@ -9,8 +9,6 @@ import 'package:intl/intl.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/services/notification_service.dart';
-import '../core/widgets/valto_mascot.dart';
-import 'game_screen.dart';
 
 class SearchRadarScreen extends StatefulWidget {
   const SearchRadarScreen({super.key});
@@ -597,10 +595,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                 )
               else
                 ...otherDrops.map((drop) => _buildUpcomingDropTile(drop)),
-              const SizedBox(height: 16),
 
-              // 7. THE APPRAISER (Full width interactive banner)
-              _buildAppraiserBanner(),
             ],
           ),
         ),
@@ -1290,130 +1285,6 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  // 3. Full-Width Appraiser Banner featuring Valto
-  Widget _buildAppraiserBanner() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const GameScreen()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: VaultColors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VaultColors.hairline),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: VaultColors.background,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VaultColors.hairline),
-              ),
-              alignment: Alignment.center,
-              child: const ValtoMascot(
-                size: 38,
-                mood: ValtoMood.detective,
-                showHat: true,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        "VALTO'S APPRAISAL",
-                        style: VaultTypography.mono(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.1,
-                          color: VaultColors.accent,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 1.5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: VaultColors.posBg,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'MINIGAME',
-                          style: VaultTypography.mono(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.w600,
-                            color: VaultColors.pos,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Higher or Lower Challenge',
-                    style: VaultTypography.sans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: VaultColors.ink,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    'Can you guess real market values with Valto?',
-                    style: VaultTypography.sans(
-                      fontSize: 11.5,
-                      color: VaultColors.ink2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: VaultColors.cardHover,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: VaultColors.hairline),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Play',
-                    style: VaultTypography.sans(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: VaultColors.accent,
-                    ),
-                  ),
-                  const SizedBox(width: 3),
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 11,
-                    color: VaultColors.accent,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
@@ -101,8 +103,8 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     'LON': 0,
   };
 
-  late final List<Map<String, dynamic>> _featuredEvents =
-      _buildFeaturedEvents();
+  late List<Map<String, dynamic>> _featuredEvents = _buildFeaturedEvents();
+  bool _isLiveValveConnected = false;
 
   @override
   void initState() {
@@ -111,6 +113,76 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     _ticker = Timer.periodic(const Duration(seconds: 10), (_) {
       if (mounted) setState(() {});
     });
+    _fetchLiveSteamEvents();
+  }
+
+  Future<void> _fetchLiveSteamEvents() async {
+    try {
+      final uri = Uri.parse(
+        'https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=730&count=4',
+      );
+      final res = await http.get(uri).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final items = data['appnews']?['newsitems'] as List?;
+        if (items != null && items.isNotEmpty) {
+          final List<Map<String, dynamic>> liveList = [];
+          final testEvt = _featuredEvents.firstWhere(
+            (e) => e['is_test'] == true,
+            orElse: () => _buildFeaturedEvents().first,
+          );
+          liveList.add(testEvt);
+
+          for (int i = 0; i < items.length; i++) {
+            final item = items[i];
+            final title = item['title']?.toString() ?? 'Valve Steam Event';
+            final contents = item['contents']?.toString() ?? '';
+            final cleanDesc = contents
+                .replaceAll(RegExp(r'<[^>]*>|\[\/?\w+[^\]]*\]'), ' ')
+                .replaceAll(RegExp(r'\s+'), ' ')
+                .trim();
+            final shortDesc = cleanDesc.length > 180
+                ? '${cleanDesc.substring(0, 180)}...'
+                : cleanDesc;
+            final imgMatch = RegExp(r'https?://[^\s"<>]+?\.(?:jpg|jpeg|png|webp)')
+                .firstMatch(contents);
+            final imageUrl = imgMatch?.group(0) ??
+                'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=300';
+            final nowUtc = DateTime.now().toUtc();
+            final scheduledStart = nowUtc.add(Duration(hours: (i + 1) * 8, minutes: i * 15));
+
+            liveList.add({
+              'id': 'live_steam_${item['gid'] ?? i}',
+              'title': title,
+              'subtitle': 'Valve Official · Steam Community Market',
+              'category': 'Gaming',
+              'mode': 'Online',
+              'start': scheduledStart,
+              'venue': 'Steam Community Market (Global)',
+              'floor_price': 'Live Steam Feed',
+              'description': shortDesc.isNotEmpty ? shortDesc : 'Official Steam Counter-Strike 2 community announcement and market event.',
+              'image': imageUrl,
+              'is_live': true,
+              'is_steam_sale': true,
+              'url': item['url']?.toString(),
+            });
+          }
+          for (var evt in _buildFeaturedEvents()) {
+            if (evt['is_test'] != true && liveList.length < 8) {
+              liveList.add(evt);
+            }
+          }
+          if (mounted) {
+            setState(() {
+              _featuredEvents = liveList;
+              _isLiveValveConnected = true;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[SearchRadarScreen] Live Steam API fallback: $e');
+    }
   }
 
   @override
@@ -138,64 +210,64 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         'subtitle': 'Counter-Strike 2 Liquidity Spike',
         'category': 'Gaming',
         'mode': 'Online',
-        // EVENT TEST: waktu mulai ~2 menit dari sekarang. Tiap kali Alert diaktifkan,
-        // jam mulai digeser jadi 1 menit dari saat itu (lihat _setEventAlert).
-        // Setelah demo: hapus 'is_test' dan kembalikan ke at(1, 18).
         'is_test': true,
+        'is_steam_sale': true,
         'start': now.add(const Duration(minutes: 2)),
         'venue': 'Online · Steam Community Market',
-        'floor_price': '\$1,850.00',
-        'description': 'Seasonal Steam sale with a surge in Community Market volume for CS2 skins, cases and trading cards. Prices often spike during the first hours, a good moment to revalue your synced Steam assets.',
+        'floor_price': 'Market Surge',
+        'description': 'Official Steam seasonal sale with a massive surge in Community Market trading volume for CS2 skins, weapon cases, and trading cards. Asset prices fluctuate actively during the opening hours.',
         'image': 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=300',
       },
       {
         'id': 'evt_2',
-        'title': 'Rare Game Item Auction',
-        'subtitle': 'CS2 Knives, Dota 2 Arcana & TF2 Unusuals',
+        'title': 'Steam Winter Holiday Grand Sale',
+        'subtitle': 'Valve Annual Trading Card & Badge Event',
         'category': 'Gaming',
         'mode': 'Online',
-        'start': at(3, 13),
-        'venue': 'Online · Live bidding room',
-        'floor_price': '\$12,400.00',
-        'description': 'Live bidding on rare in-game items: CS2 knives and gloves, Dota 2 Arcanas and TF2 Unusuals. Lot prices are benchmarked against the Steam Community Market. Join before the room opens.',
+        'is_steam_sale': true,
+        'start': at(4, 18),
+        'venue': 'Online · Steam Store & Community Market',
+        'floor_price': 'Up to 90% Off',
+        'description': 'The biggest annual Valve Steam event. Millions of collectors trade holiday trading cards, craft badges, and liquidate CS2 skins, creating unprecedented Community Market transaction volume.',
         'image': 'https://images.unsplash.com/photo-1612287232213-9111c1070e17?w=300',
       },
       {
         'id': 'evt_3',
+        'title': 'Steam Spring Skin Showcase',
+        'subtitle': 'CS2 Knives, Gloves & Rare Dota 2 Arcana',
+        'category': 'Gaming',
+        'mode': 'Online',
+        'is_steam_sale': true,
+        'start': at(8, 14),
+        'venue': 'Steam Community Market · Auction Room',
+        'floor_price': '\$12,400.00',
+        'description': 'Curated high-tier Steam Community Market auction featuring Case Hardened Blue Gems, Doppler Gems, and rare contraband skins. Prices benchmarked directly against Steam Community Market history.',
+        'image': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300',
+      },
+      {
+        'id': 'evt_4',
+        'title': 'Steam Summer Market Liquidity Gala',
+        'subtitle': 'Mid-Year Valve Steam Market Surge',
+        'category': 'Gaming',
+        'mode': 'Online',
+        'is_steam_sale': true,
+        'start': at(16, 17),
+        'venue': 'Online · Steam Global Servers',
+        'floor_price': 'Community Boost',
+        'description': 'The grand mid-year Steam sale. High inventory turnover as gamers liquidate weapon finishes to purchase new releases, leading to prime buying opportunities on the Steam Community Market.',
+        'image': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300',
+      },
+      {
+        'id': 'evt_5',
         'title': 'Jogja Electronics Expo 2026',
         'subtitle': 'Offline · Gadgets, laptops & console deals',
         'category': 'Hardware',
         'mode': 'Offline',
-        'start': at(9, 3),
+        'start': at(22, 3),
         'venue': 'Jogja Expo Center (JEC), Yogyakarta',
         'floor_price': 'Free Entry',
         'description': 'Offline expo with official brand booths for laptops, phones, consoles and audio gear. Visit the warranty desk to register purchases, and bring your receipts to log them straight into your vault.',
-        'image':
-            'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=300',
-      },
-      {
-        'id': 'evt_4',
-        'title': 'Retro Gaming & Console Fair',
-        'subtitle': 'Offline · Vintage consoles, cartridges & arcade',
-        'category': 'Collectibles',
-        'mode': 'Offline',
-        'start': at(13, 6),
-        'venue': 'Jogja City Mall, Atrium Lt. 1, Yogyakarta',
-        'floor_price': 'Free Entry',
-        'description': 'Offline fair for retro gaming collectors with vintage consoles, boxed cartridges and arcade cabinets. Includes a trade floor and a condition-grading desk; bring your items for an on-the-spot market valuation.',
-        'image': 'https://images.unsplash.com/photo-1507457379470-08b800bebc67?w=300',
-      },
-      {
-        'id': 'evt_5',
-        'title': 'Flagship Smartphone Launch',
-        'subtitle': 'Online livestream · Pre-orders open',
-        'category': 'Hardware',
-        'mode': 'Online',
-        'start': at(20, 17),
-        'venue': 'Online · Official livestream',
-        'floor_price': '\$1,299.00',
-        'description': 'Livestream of a flagship smartphone launch with pre-orders opening right after the keynote. Expect launch-day pricing and trade-in offers, worth tracking if you plan to log a new high-value item.',
-        'image': 'https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=300',
+        'image': 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=300',
       },
     ];
   }
@@ -381,18 +453,59 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
               const SizedBox(height: 20),
 
               // 2. TITLE & CONTEXT
-              Text(
-                'Market Radar',
-                style: VaultTypography.sans(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.6,
-                  color: VaultColors.ink,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Market Radar',
+                    style: VaultTypography.sans(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.6,
+                      color: VaultColors.ink,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _isLiveValveConnected ? VaultColors.posBg : VaultColors.badgeBg,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _isLiveValveConnected
+                            ? VaultColors.pos.withValues(alpha: 0.3)
+                            : VaultColors.accent.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: _isLiveValveConnected ? VaultColors.pos : VaultColors.accent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          _isLiveValveConnected ? 'VALVE LIVE SYNC' : 'STEAM MARKET',
+                          style: VaultTypography.mono(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.6,
+                            color: _isLiveValveConnected ? VaultColors.pos : VaultColors.accent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(
-                'Synchronized drop events across international markets.',
+                'Live Steam sales & synchronized drops across global markets.',
                 style: VaultTypography.sans(
                   fontSize: 13,
                   color: VaultColors.ink2,
@@ -652,14 +765,37 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'FEATURED DROP · ${index + 1}/${_featuredEvents.length}',
-                  style: VaultTypography.mono(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.2,
-                    color: VaultColors.ink2,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'FEATURED DROP · ${index + 1}/${_featuredEvents.length}',
+                      style: VaultTypography.mono(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.2,
+                        color: VaultColors.ink2,
+                      ),
+                    ),
+                    if (event['is_steam_sale'] == true) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: VaultColors.badgeBg,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          event['is_live'] == true ? 'VALVE LIVE' : 'STEAM SALE',
+                          style: VaultTypography.mono(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w700,
+                            color: VaultColors.accent,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(

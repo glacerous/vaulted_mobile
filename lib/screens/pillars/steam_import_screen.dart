@@ -29,14 +29,15 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
   bool _hasCsPrivateWarning = false;
   int _csPrivateCount = 0;
 
-  // Live profile detected via Steam API
+  // 💡 DOSEN LIVE CHALLENGE: DEFAULT STEAM ACCOUNT & SORTING
+  // Ganti persona, steamId, atau default sort order di bawah jika diminta demo akun lain:
   String _detectedPersona = 'xel';
   String _currentSteamId = '76561199089584380';
   String _detectedAvatar =
       'https://avatars.steamstatic.com/e1dde7fe207a397634580d4755f7890ccf24ddd7_full.jpg';
   bool _isConnected = false;
   List<Map<String, dynamic>> _syncedItems = [];
-  String _sortOrder = 'Value ↓';
+  String _sortOrder = 'Value ↓'; // Opsi: 'Value ↓', 'Value ↑', 'Name A-Z', 'Game'
   DateTime? _lastSyncTime;
 
   // Search bar aset Steam

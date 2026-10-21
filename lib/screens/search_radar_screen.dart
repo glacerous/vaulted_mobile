@@ -119,7 +119,6 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
   };
 
   late List<Map<String, dynamic>> _featuredEvents = _buildFeaturedEvents();
-  bool _isLiveValveConnected = false;
 
   @override
   void initState() {
@@ -190,7 +189,6 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
           if (mounted) {
             setState(() {
               _featuredEvents = liveList;
-              _isLiveValveConnected = true;
             });
           }
         }
@@ -469,55 +467,14 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
               const SizedBox(height: 20),
 
               // 2. TITLE & CONTEXT
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Market Radar',
-                    style: VaultTypography.sans(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.6,
-                      color: VaultColors.ink,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _isLiveValveConnected ? VaultColors.posBg : VaultColors.badgeBg,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: _isLiveValveConnected
-                            ? VaultColors.pos.withValues(alpha: 0.3)
-                            : VaultColors.accent.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: _isLiveValveConnected ? VaultColors.pos : VaultColors.accent,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          _isLiveValveConnected ? 'VALVE LIVE SYNC' : 'STEAM MARKET',
-                          style: VaultTypography.mono(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                            color: _isLiveValveConnected ? VaultColors.pos : VaultColors.accent,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Text(
+                'Market Radar',
+                style: VaultTypography.sans(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.6,
+                  color: VaultColors.ink,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -779,37 +736,14 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'FEATURED DROP · ${index + 1}/${_featuredEvents.length}',
-                      style: VaultTypography.mono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.2,
-                        color: VaultColors.ink2,
-                      ),
-                    ),
-                    if (event['is_steam_sale'] == true) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: VaultColors.badgeBg,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          event['is_live'] == true ? 'VALVE LIVE' : 'STEAM SALE',
-                          style: VaultTypography.mono(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.w700,
-                            color: VaultColors.accent,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                Text(
+                  'FEATURED DROP · ${index + 1}/${_featuredEvents.length}',
+                  style: VaultTypography.mono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                    color: VaultColors.ink2,
+                  ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(

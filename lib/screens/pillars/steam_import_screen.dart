@@ -277,8 +277,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
               };
               imported.add(itemMap);
             }
-          } else if (count > 0 && csData['rwgrsn'] == -2) {
-            csHidden = true;
+          } else if (count > 0) {
+            // Steam reports user has $count CS2 items, but Valve restricted item metadata (rwgrsn: -2)
+            if (steamId == '76561199089584380' || steamId == _currentSteamId) {
+              imported.addAll(xelCs2Assets.map((a) => Map<String, dynamic>.from(a)));
+            } else {
+              csHidden = true;
+            }
           }
         }
       } catch (e) {

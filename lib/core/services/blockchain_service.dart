@@ -27,7 +27,6 @@ class BlockchainService {
     required String hash,
     required String registeredDate,
     String? warrantyExpiryDate,
-    VoidCallback? onTestNotification,
   }) {
     final rpcUrl = VaultConfig.polygonRpcUrl;
     final bool hasValidSerial = serialNumber.isNotEmpty &&
@@ -180,62 +179,40 @@ class BlockchainService {
 
                   const SizedBox(height: 18),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 46,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  backgroundColor: VaultColors.card,
-                                  content: Row(
-                                    children: [
-                                      const Icon(Icons.check_circle_rounded, color: VaultColors.pos, size: 18),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          'Cryptographic proof verified! Signature matches Polygon ERC-721 ledger.',
-                                          style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
-                                        ),
-                                      ),
-                                    ],
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: VaultColors.card,
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle_rounded, color: VaultColors.pos, size: 18),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Cryptographic proof verified! Signature matches Polygon ERC-721 ledger.',
+                                    style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
                                   ),
-                                  behavior: SnackBarBehavior.floating,
                                 ),
-                              );
-                            },
-                            icon: const Icon(Icons.fingerprint_rounded, size: 18),
-                            label: Text('Verify on Blockchain', style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.background)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: VaultColors.accent,
-                              foregroundColor: VaultColors.background,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ],
                             ),
+                            behavior: SnackBarBehavior.floating,
                           ),
-                        ),
+                        );
+                      },
+                      icon: const Icon(Icons.fingerprint_rounded, size: 18),
+                      label: Text('Verify on Blockchain', style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.background)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: VaultColors.accent,
+                        foregroundColor: VaultColors.background,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      if (onTestNotification != null) ...[
-                        const SizedBox(width: 10),
-                        IconButton(
-                          tooltip: 'Simulate Warranty Alert',
-                          onPressed: () {
-                            onTestNotification();
-                          },
-                          icon: const Icon(Icons.notifications_active_outlined, color: VaultColors.accent),
-                          style: IconButton.styleFrom(
-                            backgroundColor: VaultColors.cardHover,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: const BorderSide(color: VaultColors.hairline),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ],
               ),

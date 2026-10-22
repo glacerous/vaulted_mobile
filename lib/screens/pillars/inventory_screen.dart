@@ -8,7 +8,6 @@ import '../../core/constants/typography.dart';
 import '../../core/database/database_helper.dart';
 
 import '../../core/services/blockchain_service.dart';
-import '../../core/services/notification_service.dart';
 import '../../core/widgets/vault_thumbnail.dart';
 
 class InventoryScreen extends StatefulWidget {
@@ -653,31 +652,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             hash: hash,
                             registeredDate: registeredDate,
                             warrantyExpiryDate: warranty,
-                            onTestNotification: () async {
-                              final sent = await NotificationService.instance
-                                  .showWarrantyAlert(
-                                itemName: item['name'] as String,
-                                daysLeft: 42,
-                              );
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: VaultColors.card,
-                                    content: Text(
-                                      sent
-                                          ? 'Warranty alert dispatched for ${item['name']}!'
-                                          : 'Notification simulated for ${item['name']}.',
-                                      style: VaultTypography.sans(
-                                        fontSize: 12,
-                                        color: VaultColors.ink,
-                                      ),
-                                    ),
-                                    behavior: SnackBarBehavior.floating,
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            },
                           );
                         },
                         borderRadius: BorderRadius.circular(14),

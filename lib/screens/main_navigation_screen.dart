@@ -7,6 +7,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/security/auth_service.dart';
+import '../core/services/notification_service.dart';
 import 'home_vault_screen.dart';
 import 'search_radar_screen.dart';
 import 'profile_screen.dart';
@@ -47,6 +48,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _initSensors();
+    if (!kIsWeb) {
+      NotificationService.instance.requestPermission();
+    }
   }
 
   void _initSensors() {

@@ -244,16 +244,39 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     if (_alertedEvents.contains(id)) {
       _alertTimers.remove(id)?.cancel();
       setState(() => _alertedEvents.remove(id));
+      if (mounted) {
+        VaultToast.show(
+          context,
+          icon: Icons.notifications_off_rounded,
+          iconColor: VaultColors.ink2,
+          message: 'Alert removed for ${event['title']}',
+        );
+      }
       return;
     }
 
-    // Event test: mulai 1 menit dari sekarang agar notifikasi bisa langsung dites oleh dosen
-    if (event['is_test'] == true) {
-      event['start'] = DateTime.now().toUtc().add(const Duration(minutes: 1));
+    // Pastikan izin notifikasi sudah disetujui di Android
+    final granted = await NotificationService.instance.requestPermission();
+    if (!granted && mounted) {
+      VaultToast.show(
+        context,
+        icon: Icons.notifications_off_rounded,
+        iconColor: VaultColors.neg,
+        message: 'Notification permission is disabled in your phone settings',
+      );
+      return;
     }
+
+    // Event test langsung dikirimkan ke bar notifikasi sistem HP tanpa delay
+    if (event['is_test'] == true) {
+      setState(() => _alertedEvents.add(id));
+      await _fireEventAlert(event);
+      return;
+    }
+
     setState(() => _alertedEvents.add(id));
 
-    // Notifikasi dikirim tepat saat event dimulai (selama app berjalan)
+    // Notifikasi terjadwal dikirim tepat saat event dimulai (selama app berjalan)
     final start = event['start'] as DateTime;
     final wait = start.difference(DateTime.now().toUtc());
     _alertTimers[id]?.cancel();
@@ -277,7 +300,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     _alertTimers.remove(id);
     final title = event['title'] as String;
 
-    await NotificationService.instance.showEventReminder(
+    final sent = await NotificationService.instance.showEventReminder(
       title: title,
       body: '${event['subtitle']} · ${event['venue']}. Starting now!',
     );
@@ -288,7 +311,9 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
       context,
       icon: Icons.notifications_active_rounded,
       iconColor: VaultColors.accent,
-      message: 'Starting now: $title',
+      message: sent
+          ? 'Notification sent to phone: $title'
+          : 'Starting now: $title (check phone notification settings)',
     );
   }
 
@@ -935,7 +960,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                         alertOn
                             ? 'Remove Alert'
                             : (event['is_test'] == true
-                                ? 'Set Test Alert (1 Min)'
+                                ? 'Send Test Alert to Phone'
                                 : 'Set Alert for this Drop'),
                         style: VaultTypography.sans(
                           fontSize: 13.5,

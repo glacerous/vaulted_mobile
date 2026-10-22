@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'core/constants/colors.dart';
 import 'core/constants/vault_config.dart';
 import 'core/security/auth_service.dart';
+import 'core/services/notification_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_navigation_screen.dart';
 
@@ -10,6 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await VaultConfig.initialize();
+  await NotificationService.instance.init();
 
   // Crisp dark status bar & navigation bar overlay on warm porcelain canvas
   SystemChrome.setSystemUIOverlayStyle(

@@ -27,10 +27,47 @@ class NotificationService {
       );
 
       try {
-        await _notificationsPlugin.initialize(settings);
-        final androidImpl = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        await _notificationsPlugin.initialize(
+          settings,
+          onDidReceiveNotificationResponse: (NotificationResponse details) {
+            debugPrint('Notification tapped: ${details.payload}');
+          },
+        );
+
+        final androidImpl = _notificationsPlugin
+            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
         if (androidImpl != null) {
-          await androidImpl.requestNotificationsPermission();
+          // Inisialisasi channel notifikasi dengan importance max agar banner heads-up muncul
+          await androidImpl.createNotificationChannel(
+            const AndroidNotificationChannel(
+              'vaulted_event_channel',
+              'Market Radar Events',
+              description: 'Reminders for upcoming market drops and events',
+              importance: Importance.max,
+              playSound: true,
+              enableVibration: true,
+            ),
+          );
+          await androidImpl.createNotificationChannel(
+            const AndroidNotificationChannel(
+              'vaulted_warranty_channel',
+              'Warranty Alerts',
+              description: 'Alerts for expiring warranties on registered vault items',
+              importance: Importance.max,
+              playSound: true,
+              enableVibration: true,
+            ),
+          );
+          await androidImpl.createNotificationChannel(
+            const AndroidNotificationChannel(
+              'vaulted_subs_channel',
+              'Subscription Renewals',
+              description: 'Reminders for recurring subscriptions',
+              importance: Importance.max,
+              playSound: true,
+              enableVibration: true,
+            ),
+          );
         }
         _isInitialized = true;
       } catch (e) {
@@ -39,6 +76,34 @@ class NotificationService {
     } else {
       _isInitialized = true;
     }
+  }
+
+  Future<bool> requestPermission() async {
+    await init();
+    if (kIsWeb) return true;
+
+    try {
+      final androidImpl = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImpl != null) {
+        final granted = await androidImpl.requestNotificationsPermission();
+        return granted ?? false;
+      }
+
+      final iosImpl = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      if (iosImpl != null) {
+        final granted = await iosImpl.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        return granted ?? false;
+      }
+    } catch (e) {
+      debugPrint('Error requesting notification permission: $e');
+    }
+    return true;
   }
 
   Future<bool> showWarrantyAlert({required String itemName, required int daysLeft}) async {
@@ -54,18 +119,25 @@ class NotificationService {
       channelDescription: 'Alerts for expiring warranties on registered vault items',
       importance: Importance.max,
       priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      playSound: true,
+      enableVibration: true,
       ticker: 'ticker',
     );
 
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
-      iOS: DarwinNotificationDetails(),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
     try {
       await _notificationsPlugin.show(
         1001,
-        '🛡️ VAULTED Warranty Alert: $itemName',
+        'VAULTED Warranty Alert: $itemName',
         'Official warranty coverage ends in $daysLeft days. Tap to find nearest authorized service center.',
         platformDetails,
       );
@@ -76,7 +148,7 @@ class NotificationService {
     }
   }
 
-  /// Pengingat event Market Radar (dikirim saat event dimulai)
+  // Pengingat event Market Radar
   Future<bool> showEventReminder({required String title, required String body}) async {
     await init();
     if (kIsWeb) {
@@ -90,17 +162,24 @@ class NotificationService {
       channelDescription: 'Reminders for upcoming market drops and events',
       importance: Importance.max,
       priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      playSound: true,
+      enableVibration: true,
     );
 
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
-      iOS: DarwinNotificationDetails(),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
     try {
       await _notificationsPlugin.show(
         1003,
-        '📡 Event starting: $title',
+        'Event starting: $title',
         body,
         platformDetails,
       );
@@ -124,17 +203,24 @@ class NotificationService {
       channelDescription: 'Reminders for recurring subscriptions',
       importance: Importance.max,
       priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      playSound: true,
+      enableVibration: true,
     );
 
     const NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
-      iOS: DarwinNotificationDetails(),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
     try {
       await _notificationsPlugin.show(
         1002,
-        '💳 Subscription Renewal Due: $serviceName',
+        'Subscription Renewal Due: $serviceName',
         'Auto-debit of \$$amount scheduled in 3 days. Review active seats in Vault.',
         platformDetails,
       );

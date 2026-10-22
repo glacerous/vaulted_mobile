@@ -23,19 +23,15 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   // =========================================================================
   // DOSEN LIVE CHALLENGE: SENSOR & NAVIGATION SETTINGS
-  // Ubah nilai di bawah ini jika dosen meminta modifikasi live saat demo:
-  // - Accelerometer: Goyang HP untuk sembunyikan/tampilkan saldo (Privacy Mode)
-  // - Gyroscope: Balik/telungkupkan HP (Flip Face-Down) untuk kunci brankas
+  // - Accelerometer: Goyang HP kencang (Emergency Shake) untuk Kunci Otomatis (Auto Lock)
+  // - Gyroscope: Efek Kemiringan 3D Hologram pada Kartu Koleksi (GyroTilt)
   // =========================================================================
-  static const double shakeSensitivity = 17.0;     // Ambang batas getaran (goyangan) m/s²
-  static const double gyroTiltSensitivity = 6.0;    // Ambang batas rotasi balik gyroscope rad/s
+  static const double shakeSensitivity = 17.0;     // Ambang batas guncangan accelerometer m/s²
   static const int sensorCooldownSeconds = 2;       // Jeda waktu antar deteksi (detik)
 
   int _currentIndex = 0;
   StreamSubscription? _accelerometerSubscription;
-  StreamSubscription? _gyroscopeSubscription;
   DateTime _lastShakeTime = DateTime.now();
-  DateTime _lastGyroTime = DateTime.now();
 
   // Slide Requirement:
   // "Terdapat menu buttom navigation: menu profil (ada gambar) dan
@@ -55,12 +51,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   void _initSensors() {
     if (kIsWeb) return;
-    _initShakeSensor();
-    _initGyroscopeSensor();
+    _initAccelerometerLock();
   }
 
-  // Sensor 1: Accelerometer — Shake to Hide/Show Balance (Mode Privasi BCA/Jenius)
-  void _initShakeSensor() {
+  // Sensor: Accelerometer — Emergency Shake to Auto Lock Vault
+  void _initAccelerometerLock() {
     _accelerometerSubscription = accelerometerEventStream().listen((AccelerometerEvent event) {
       final gForce = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
 
@@ -68,40 +63,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         final now = DateTime.now();
         if (now.difference(_lastShakeTime).inSeconds > sensorCooldownSeconds) {
           _lastShakeTime = now;
-          HomeVaultScreen.isBalanceVisible.value = !HomeVaultScreen.isBalanceVisible.value;
-          HapticFeedback.mediumImpact();
-          if (mounted) {
-            final isHidden = !HomeVaultScreen.isBalanceVisible.value;
-            VaultToast.show(
-              context,
-              icon: isHidden ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-              iconColor: VaultColors.accent,
-              message: isHidden
-                  ? 'Shake Terdeteksi: Saldo Disembunyikan (Privacy Mode)'
-                  : 'Shake Terdeteksi: Saldo Ditampilkan Kembali',
-            );
-          }
-        }
-      }
-    });
-  }
-
-  // Sensor 2: Gyroscope — Face-Down / Flip to Lock Vault (Kunci Otomatis Saat Ditelungkupkan)
-  void _initGyroscopeSensor() {
-    _gyroscopeSubscription = gyroscopeEventStream().listen((GyroscopeEvent event) {
-      final angularVelocity = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
-
-      if (angularVelocity > gyroTiltSensitivity) {
-        final now = DateTime.now();
-        if (now.difference(_lastGyroTime).inSeconds > sensorCooldownSeconds) {
-          _lastGyroTime = now;
           HapticFeedback.heavyImpact();
           if (mounted) {
             VaultToast.show(
               context,
               icon: Icons.lock_outline_rounded,
               iconColor: VaultColors.warn,
-              message: 'Gyroscope Flip: Vault Dikunci Otomatis (Face-Down)!',
+              message: 'Accelerometer: Emergency Shake Terdeteksi! Vault Dikunci.',
             );
             Navigator.pushAndRemoveUntil(
               context,
@@ -117,7 +85,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void dispose() {
     _accelerometerSubscription?.cancel();
-    _gyroscopeSubscription?.cancel();
     super.dispose();
   }
 

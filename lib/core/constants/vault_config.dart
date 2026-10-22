@@ -11,8 +11,8 @@ class VaultConfig {
   // DOSEN LIVE DEMO SETTINGS (Mudah diubah saat sesi tanya jawab / uji kode)
   // ===========================================================================
 
-  /// Sensitivitas sensor goyangan HP (Accelerometer) untuk Mode Privasi Saldo.
-  /// Turunkan nilainya (misal 12.0) jika ingin lebih gampang terpicu.
+  /// Sensitivitas sensor goyangan HP (Accelerometer) untuk Auto Lock Brankas.
+  /// Turunkan nilainya (misal 14.0) jika ingin lebih gampang terpicu.
   static double shakeSensitivity = 17.0;
 
   /// Cooldown jeda antar goyangan (detik) agar tidak terpicu beruntun.

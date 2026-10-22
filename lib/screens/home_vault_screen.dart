@@ -1125,12 +1125,20 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
               ? '$cat · ${item['purchase_date']}'
               : cat);
 
+    final isSteamOrCollectible = cat.contains('Steam') ||
+        cat.contains('Gaming') ||
+        (item['is_collectible'] == 1);
+
     return InkWell(
       onTap: () {
         HapticFeedback.selectionClick();
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const InventoryScreen()),
+          MaterialPageRoute(
+            builder: (_) => isSteamOrCollectible
+                ? const CollectiblesHubScreen()
+                : const InventoryScreen(),
+          ),
         ).then((_) => _loadVaultData());
       },
       child: _buildActivityItem(

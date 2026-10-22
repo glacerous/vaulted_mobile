@@ -456,6 +456,46 @@ class DatabaseHelper {
     } catch (_) {}
   }
 
+  Future<bool> deleteItem(dynamic id, {String? blockchainHash, String? serialNumber, String? name}) async {
+    final activeUser = AuthService.instance.activeSessionUser?.toLowerCase() ?? 'azzaky';
+    _webItems.removeWhere((i) {
+      if (id != null && i['id'] == id) return true;
+      if (blockchainHash != null && blockchainHash.isNotEmpty && i['blockchain_hash'] == blockchainHash) return true;
+      if (serialNumber != null && serialNumber.isNotEmpty && i['serial_number'] == serialNumber) return true;
+      if (name != null && name.isNotEmpty && i['name'] == name) return true;
+      return false;
+    });
+
+    if (kIsWeb) return true;
+
+    try {
+      final db = await database;
+      if (db == null) return true;
+
+      int deleted = 0;
+      if (id != null) {
+        deleted = await db.delete('items', where: 'id = ?', whereArgs: [id]);
+      }
+      if (deleted == 0 && blockchainHash != null && blockchainHash.isNotEmpty) {
+        deleted = await db.delete('items', where: 'blockchain_hash = ?', whereArgs: [blockchainHash]);
+      }
+      if (deleted == 0 && serialNumber != null && serialNumber.isNotEmpty) {
+        deleted = await db.delete('items', where: 'serial_number = ?', whereArgs: [serialNumber]);
+      }
+      if (deleted == 0 && name != null && name.isNotEmpty) {
+        deleted = await db.delete(
+          'items',
+          where: 'name = ? AND (LOWER(user_id) = ? OR user_id IS NULL)',
+          whereArgs: [name, activeUser],
+        );
+      }
+      return deleted > 0;
+    } catch (e) {
+      debugPrint('[DatabaseHelper] deleteItem notice: $e');
+      return false;
+    }
+  }
+
   final List<Map<String, dynamic>> _webSubscriptions = [
     {
       'id': 1,

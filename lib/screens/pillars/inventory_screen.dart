@@ -87,6 +87,126 @@ class _InventoryScreenState extends State<InventoryScreen> {
     });
   }
 
+  Future<bool> _showDeleteConfirmationDialog(String itemName) async {
+    HapticFeedback.mediumImpact();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: VaultColors.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: VaultColors.hairline),
+        ),
+        title: Text(
+          'Remove Asset?',
+          style: VaultTypography.sans(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: VaultColors.ink,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to remove "$itemName" from your vault? This will update your total net worth and cloud sync across your devices.',
+          style: VaultTypography.sans(fontSize: 13, color: VaultColors.body),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Cancel',
+              style: VaultTypography.mono(
+                fontSize: 12,
+                color: VaultColors.ink2,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VaultColors.neg.withValues(alpha: 0.15),
+              foregroundColor: VaultColors.neg,
+              elevation: 0,
+            ),
+            child: Text(
+              'Delete',
+              style: VaultTypography.mono(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: VaultColors.neg,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
+  Future<void> _executeDeleteItem(Map<String, dynamic> item) async {
+    final itemName = item['name'] as String? ?? 'this asset';
+    final id = item['id'];
+    final hash = item['blockchain_hash'] as String?;
+    final serial = item['serial_number'] as String?;
+    final name = item['name'] as String?;
+
+    setState(() {
+      _items.removeWhere((it) {
+        if (id != null && it['id'] == id) return true;
+        if (hash != null && it['blockchain_hash'] == hash) return true;
+        if (serial != null && serial.isNotEmpty && it['serial_number'] == serial) return true;
+        if (name != null && it['name'] == name) return true;
+        return false;
+      });
+    });
+
+    await DatabaseHelper.instance.deleteItem(
+      id,
+      blockchainHash: hash,
+      serialNumber: serial,
+      name: name,
+    );
+
+    await SupabaseService.instance.deleteItemOnline(
+      id: id,
+      blockchainHash: hash,
+      serialNumber: serial,
+      name: name,
+    );
+
+    await _loadItems();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: VaultColors.card,
+          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: VaultColors.pos, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Removed "$itemName" from your vault.',
+                  style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<bool> _confirmDeleteItem(Map<String, dynamic> item) async {
+    final itemName = item['name'] as String? ?? 'this asset';
+    final confirmed = await _showDeleteConfirmationDialog(itemName);
+    if (confirmed) {
+      await _executeDeleteItem(item);
+      return true;
+    }
+    return false;
+  }
+
   void _showSortSheet() {
     HapticFeedback.selectionClick();
     const options = [
@@ -771,6 +891,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             hash: hash,
                             registeredDate: registeredDate,
                             warrantyExpiryDate: warranty,
+                            onDelete: () => _confirmDeleteItem(item),
                           );
                         },
                         borderRadius: BorderRadius.circular(14),
@@ -858,7 +979,56 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         ),
                       );
 
-                      return card;
+                      final dismissibleKey = ValueKey(
+                        item['id']?.toString() ??
+                            item['blockchain_hash']?.toString() ??
+                            item['serial_number']?.toString() ??
+                            'item_$idx',
+                      );
+
+                      return Dismissible(
+                        key: dismissibleKey,
+                        direction: DismissDirection.endToStart,
+                        confirmDismiss: (_) async {
+                          final itemName = item['name'] as String? ?? 'this asset';
+                          return await _showDeleteConfirmationDialog(itemName);
+                        },
+                        onDismissed: (_) {
+                          _executeDeleteItem(item);
+                        },
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          decoration: BoxDecoration(
+                            color: VaultColors.neg.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: VaultColors.neg.withValues(alpha: 0.25),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                'REMOVE',
+                                style: VaultTypography.mono(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.0,
+                                  color: VaultColors.neg,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.delete_outline_rounded,
+                                color: VaultColors.neg,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                        child: card,
+                      );
                     },
                   ),
                 ),

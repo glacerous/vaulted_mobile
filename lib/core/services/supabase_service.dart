@@ -469,4 +469,36 @@ CREATE POLICY "Allow all for demo" ON vault_items
       debugPrint('[SupabaseService] pushSingleItemOnline notice: $e');
     }
   }
+
+  /// Delete an asset from Supabase PostgreSQL table
+  Future<void> deleteItemOnline({
+    dynamic id,
+    String? blockchainHash,
+    String? serialNumber,
+    String? name,
+  }) async {
+    if (!VaultConfig.hasSupabase) return;
+    try {
+      final activeUser = AuthService.instance.activeSessionUser ?? 'azzaky';
+      String filter;
+      if (blockchainHash != null && blockchainHash.isNotEmpty) {
+        filter = 'blockchain_hash=eq.$blockchainHash';
+      } else if (serialNumber != null && serialNumber.isNotEmpty) {
+        filter = 'serial_number=eq.$serialNumber';
+      } else if (name != null && name.isNotEmpty) {
+        filter = 'name=eq.${Uri.encodeComponent(name)}';
+      } else {
+        return;
+      }
+
+      final endpoint = Uri.parse(
+        '${VaultConfig.supabaseUrl}/rest/v1/vault_items?user_id=eq.$activeUser&$filter',
+      );
+      await http
+          .delete(endpoint, headers: _headers())
+          .timeout(const Duration(seconds: 8));
+    } catch (e) {
+      debugPrint('[SupabaseService] deleteItemOnline notice: $e');
+    }
+  }
 }

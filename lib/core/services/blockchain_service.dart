@@ -27,6 +27,7 @@ class BlockchainService {
     required String hash,
     required String registeredDate,
     String? warrantyExpiryDate,
+    VoidCallback? onDelete,
   }) {
     final rpcUrl = VaultConfig.polygonRpcUrl;
     final bool hasValidSerial = serialNumber.isNotEmpty &&
@@ -214,6 +215,26 @@ class BlockchainService {
                       ),
                     ),
                   ),
+                  if (onDelete != null) ...[
+                    const SizedBox(height: 8),
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          onDelete();
+                        },
+                        icon: const Icon(Icons.delete_outline_rounded, size: 16, color: VaultColors.neg),
+                        label: Text(
+                          'Remove Asset from Vault',
+                          style: VaultTypography.mono(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: VaultColors.neg,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );

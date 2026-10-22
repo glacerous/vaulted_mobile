@@ -116,8 +116,15 @@ class _SteamAuthSheetState extends State<SteamAuthSheet> {
               // 1. Fetch CS2 items dynamically with authenticated session
               let cs2 = null;
               try {
-                const r1 = await fetch("https://steamcommunity.com/inventory/" + steamId + "/730/2?l=english&count=100");
-                cs2 = await r1.json();
+                const r1 = await fetch("https://steamcommunity.com/inventory/" + steamId + "/730/2?l=english&count=100", {
+                  credentials: "include",
+                  headers: { "Accept": "application/json" }
+                });
+                if (r1.ok) {
+                  cs2 = await r1.json();
+                } else {
+                  cs2 = { error: "HTTP " + r1.status };
+                }
               } catch(e1) {
                 cs2 = { error: e1.toString() };
               }
@@ -125,8 +132,15 @@ class _SteamAuthSheetState extends State<SteamAuthSheet> {
               // 2. Fetch Steam community items (cards, avatars) dynamically
               let steam = null;
               try {
-                const r2 = await fetch("https://steamcommunity.com/inventory/" + steamId + "/753/6?l=english&count=100");
-                steam = await r2.json();
+                const r2 = await fetch("https://steamcommunity.com/inventory/" + steamId + "/753/6?l=english&count=100", {
+                  credentials: "include",
+                  headers: { "Accept": "application/json" }
+                });
+                if (r2.ok) {
+                  steam = await r2.json();
+                } else {
+                  steam = { error: "HTTP " + r2.status };
+                }
               } catch(e2) {
                 steam = { error: e2.toString() };
               }

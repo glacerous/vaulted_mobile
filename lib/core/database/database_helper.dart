@@ -188,6 +188,10 @@ class DatabaseHelper {
       }
     } catch (e) {
       debugPrint('[DatabaseHelper] Authentication notice: $e');
+      final user = _webUsers[cleanUser];
+      if (user != null && user['password_hash'] == hash) {
+        return user;
+      }
     }
 
     return null;

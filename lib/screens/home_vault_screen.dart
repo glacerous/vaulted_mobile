@@ -287,8 +287,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
     ValtoChatModal.show(
       context,
       chatHistory: _chatHistory,
-      valtoMood: _valtoMood,
-      isAiProcessing: _isAiProcessing,
+      getValtoMood: () => _valtoMood,
+      getIsAiProcessing: () => _isAiProcessing,
       onSubmitPrompt: (p) async => _handlePromptSubmit(p),
       onRegisterModalState: (setter) => _modalSetState = setter,
       onDismiss: () {

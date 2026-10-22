@@ -155,7 +155,7 @@ Return ONLY valid JSON with no markdown formatting:
 }
 ''';
 
-      for (final model in ['gemini-3.8-flash', 'gemini-flash-latest']) {
+      for (final model in ['gemini-flash-lite-latest', 'gemini-flash-latest']) {
         try {
           final uri = Uri.parse(
             'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
@@ -178,7 +178,7 @@ Return ONLY valid JSON with no markdown formatting:
                 'responseMimeType': 'application/json',
               },
             }),
-          ).timeout(const Duration(seconds: 12));
+          ).timeout(const Duration(seconds: 6));
 
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
@@ -476,15 +476,17 @@ Return ONLY valid JSON with no markdown formatting:
             : 'To record Valorant items or points, you can type: "Buy Valorant Points \$20" or "Log Vandal Skin 250k".';
       } else {
         speechText = isIndo
-            ? 'Saya siap membantu memantau aset Vault Anda. Anda bisa mengecek total saldo, garansi aktif, atau mencatat aset baru seperti "Laptop Victus 15 harga 12 juta".'
+            ? (lower.contains('siapa') || lower.contains('halo') || lower.contains('hai')
+                ? 'Halo! Saya Valto Sentinel, asisten intelijen aset pribadi Anda di Vaulted. Saya siap membantu mencatat aset baru, memantau garansi, menghitung total valuasi, atau menjawab pertanyaan seputar portofolio Anda.'
+                : 'Saya siap membantu memantau aset Vault Anda. Anda bisa mengecek total saldo, garansi aktif, atau mencatat aset baru seperti "Laptop Victus 15 harga 12 juta".')
             : 'I am ready to assist with your portfolio. You can query your total net worth, active warranties, or log new assets like "Laptop Victus 15 \$800".';
       }
     }
 
     return ValtoAgentResult(
       isAction: isAction,
-      actionType: 'hardware',
-      title: cleanTitle.isEmpty ? (isIndo ? 'Aset Baru' : 'New Asset') : cleanTitle,
+      actionType: isAction ? 'hardware' : 'query',
+      title: cleanTitle.isEmpty ? (isIndo ? 'Valto Sentinel' : 'Valto Sentinel') : cleanTitle,
       speechText: speechText,
       amount: amount,
       currency: currency,

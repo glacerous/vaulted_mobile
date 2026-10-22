@@ -9,8 +9,8 @@ class ValtoChatModal {
   static void show(
     BuildContext context, {
     required List<Map<String, dynamic>> chatHistory,
-    required ValtoMood valtoMood,
-    required bool isAiProcessing,
+    required ValtoMood Function() getValtoMood,
+    required bool Function() getIsAiProcessing,
     required Future<void> Function(String prompt) onSubmitPrompt,
     required void Function(void Function(void Function()) registerSetState) onRegisterModalState,
     required VoidCallback onDismiss,
@@ -28,6 +28,8 @@ class ValtoChatModal {
       builder: (ctx) => StatefulBuilder(
         builder: (modalContext, setModalState) {
           onRegisterModalState(setModalState);
+          final valtoMood = getValtoMood();
+          final isAiProcessing = getIsAiProcessing();
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (scrollCtrl.hasClients) {
               scrollCtrl.animateTo(

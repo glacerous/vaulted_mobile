@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../../core/constants/colors.dart';
@@ -21,6 +22,13 @@ class SteamImportScreen extends StatefulWidget {
 }
 
 class _SteamImportScreenState extends State<SteamImportScreen> {
+  static const FlutterSecureStorage _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+  static const String _steamIdKey = 'vaulted_connected_steam_id';
+  static const String _steamPersonaKey = 'vaulted_steam_persona';
+  static const String _steamAvatarKey = 'vaulted_steam_avatar';
+
   bool _isDetecting = true;
   bool _isLoading = false;
   bool _hasCsPrivateWarning = false;
@@ -96,15 +104,31 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     // 1. Purge legacy mock items
     await DatabaseHelper.instance.removeMockItems();
 
-    // 2. Check if user already has synced Steam items in database
+    // 2. Read saved Steam connection from secure storage
+    String? savedSteamId;
+    String? savedPersona;
+    String? savedAvatar;
+    try {
+      savedSteamId = await _storage.read(key: _steamIdKey);
+      savedPersona = await _storage.read(key: _steamPersonaKey);
+      savedAvatar = await _storage.read(key: _steamAvatarKey);
+    } catch (_) {}
+
+    if (savedSteamId != null && savedSteamId.isNotEmpty) {
+      _currentSteamId = savedSteamId;
+      if (savedPersona != null && savedPersona.isNotEmpty) _detectedPersona = savedPersona;
+      if (savedAvatar != null && savedAvatar.isNotEmpty) _detectedAvatar = savedAvatar;
+    }
+
+    // 3. Check if user already has synced Steam items in database
     final allItems = await DatabaseHelper.instance.getItems();
     final existingSteam = allItems
         .where((i) => i['category'].toString().startsWith('Steam'))
         .toList();
 
-    // Ensure verified CS2 items are present in existing cache
+    // Ensure verified CS2 items are present in existing cache if default xel account
     final hasCs2 = existingSteam.any((i) => (i['serial_number'] ?? '').toString().startsWith('CS2-'));
-    if (!hasCs2 && existingSteam.isNotEmpty) {
+    if (!hasCs2 && existingSteam.isNotEmpty && _currentSteamId == '76561199089584380') {
       for (var csItem in xelCs2Assets) {
         await DatabaseHelper.instance.insertItem(csItem);
       }
@@ -114,7 +138,8 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
         refreshed.where((i) => i['category'].toString().startsWith('Steam')),
       );
     }
-    if (existingSteam.isNotEmpty && mounted) {
+
+    if ((existingSteam.isNotEmpty || savedSteamId != null) && mounted) {
       setState(() {
         _isConnected = true;
         _syncedItems = existingSteam;
@@ -122,7 +147,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       });
     }
 
-    // 3. Contact Valve Steam API for latest persona & avatar
+    // 4. Contact Valve Steam API for latest persona & avatar
     await _fetchPlayerSummary(_currentSteamId);
 
     if (mounted) {
@@ -144,12 +169,16 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
           final sumData = jsonDecode(sumRes.body);
           final player = sumData['response']?['players']?[0];
           if (player != null && mounted) {
+            final newPersona = player['personaname'] as String? ?? _detectedPersona;
+            final newAvatar = player['avatarfull'] as String? ?? _detectedAvatar;
             setState(() {
-              _detectedPersona =
-                  player['personaname'] as String? ?? _detectedPersona;
-              _detectedAvatar =
-                  player['avatarfull'] as String? ?? _detectedAvatar;
+              _detectedPersona = newPersona;
+              _detectedAvatar = newAvatar;
             });
+            try {
+              await _storage.write(key: _steamPersonaKey, value: newPersona);
+              await _storage.write(key: _steamAvatarKey, value: newAvatar);
+            } catch (_) {}
           }
         }
       } catch (e) {
@@ -487,7 +516,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     }
 
     final hasCs2 = imported.any((i) => (i['serial_number'] ?? '').toString().startsWith('CS2-'));
-    if (!hasCs2) {
+    if (!hasCs2 && _currentSteamId == '76561199089584380') {
       imported.insertAll(0, xelCs2Assets.map((a) => Map<String, dynamic>.from(a)));
     }
 
@@ -501,7 +530,23 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       setState(() => _isLoading = true);
       try {
         _currentSteamId = res.steamId;
+        if (res.personaName != null && res.personaName!.isNotEmpty) {
+          _detectedPersona = res.personaName!;
+        }
+
+        try {
+          await _storage.write(key: _steamIdKey, value: res.steamId);
+          if (res.personaName != null && res.personaName!.isNotEmpty) {
+            await _storage.write(key: _steamPersonaKey, value: res.personaName!);
+          }
+        } catch (_) {}
+
         await _fetchPlayerSummary(res.steamId);
+
+        try {
+          await _storage.write(key: _steamPersonaKey, value: _detectedPersona);
+          await _storage.write(key: _steamAvatarKey, value: _detectedAvatar);
+        } catch (_) {}
 
         final imported = _parseInventoryPayload(
           cs2Data: res.cs2Data,
@@ -618,6 +663,11 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     );
 
     if (confirm == true) {
+      try {
+        await _storage.delete(key: _steamIdKey);
+        await _storage.delete(key: _steamPersonaKey);
+        await _storage.delete(key: _steamAvatarKey);
+      } catch (_) {}
       await DatabaseHelper.instance.clearSteamItems();
       if (mounted) {
         setState(() {
@@ -2033,7 +2083,44 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       ],
 
                       // LIVE SYNCED INVENTORY SECTION
-                      if (_syncedItems.isNotEmpty) ...[
+                      if (_isConnected && _syncedItems.isEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 36,
+                                  color: VaultColors.ink2.withValues(alpha: 0.5),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Steam account connected.\nNo inventory items detected yet.',
+                                  style: VaultTypography.cardDescription,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 14),
+                                OutlinedButton.icon(
+                                  onPressed: _showAddCsItemDialog,
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: Text(
+                                    'Manual Add Collectible',
+                                    style: VaultTypography.mono(fontSize: 12),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: VaultColors.ink,
+                                    side: const BorderSide(color: VaultColors.hairline),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ] else if (_syncedItems.isNotEmpty) ...[
                         _buildSearchAndSortBar(),
                         const SizedBox(height: 12),
 
@@ -2075,7 +2162,9 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 24),
                             child: Center(
                               child: Text(
-                                'No assets match "$_searchQuery".',
+                                _searchQuery.isNotEmpty
+                                    ? 'No assets match "$_searchQuery".'
+                                    : 'No items in this collection.',
                                 style: VaultTypography.cardDescription,
                                 textAlign: TextAlign.center,
                               ),

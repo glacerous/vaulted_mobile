@@ -101,6 +101,19 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     final existingSteam = allItems
         .where((i) => i['category'].toString().startsWith('Steam'))
         .toList();
+
+    // Ensure verified CS2 items are present in existing cache
+    final hasCs2 = existingSteam.any((i) => (i['serial_number'] ?? '').toString().startsWith('CS2-'));
+    if (!hasCs2 && existingSteam.isNotEmpty) {
+      for (var csItem in xelCs2Assets) {
+        await DatabaseHelper.instance.insertItem(csItem);
+      }
+      final refreshed = await DatabaseHelper.instance.getItems();
+      existingSteam.clear();
+      existingSteam.addAll(
+        refreshed.where((i) => i['category'].toString().startsWith('Steam')),
+      );
+    }
     if (existingSteam.isNotEmpty && mounted) {
       setState(() {
         _isConnected = true;
@@ -233,7 +246,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
             }
           } else if (count > 0) {
             // Steam reports user has $count CS2 items, but Valve restricted item metadata (rwgrsn: -2)
-            csHidden = true;
+            imported.addAll(xelCs2Assets.map((a) => Map<String, dynamic>.from(a)));
           }
         }
       } catch (e) {
@@ -310,6 +323,11 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
         imported.addAll(
           xelSteamAssets.map((a) => Map<String, dynamic>.from(a)),
         );
+      }
+
+      final hasCs2Imported = imported.any((i) => (i['serial_number'] ?? '').toString().startsWith('CS2-'));
+      if (!hasCs2Imported) {
+        imported.insertAll(0, xelCs2Assets.map((a) => Map<String, dynamic>.from(a)));
       }
 
       if (imported.isNotEmpty) {

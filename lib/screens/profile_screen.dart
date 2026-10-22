@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
       'name': 'Ariel Saputra',
       'nim': '124240010',
       'initials': 'AS',
-      'image': null,
+      'image': 'assets/images/ariel.jpeg',
     },
   ];
 

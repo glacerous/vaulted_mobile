@@ -139,6 +139,7 @@ IMPORTANT RULES:
 1. Title Cleaning: Strip leading command words ("masukkan", "tambahkan", "tambah", "catat", "simpan", "input", "beli", "log", "add", "insert", "record") and price connectors ("dengan harga", "seharga", "harga"). Strip the price completely from the title (e.g. "masukkan hp Xiaomi 17 dengan harga 18,999,000" -> title MUST be "Hp Xiaomi 17", never leave trailing zeros or commas like ",000" or ".000"). Do NOT remove model numbers that belong to the product (e.g. "Laptop Victus 15", "Xiaomi 17", "iPhone 15 Pro", "RTX 4090").
 2. Price Parsing: Identify the actual price, NOT product model numbers. Handle Indonesian formatted prices with thousands separators like "18,999,000" or "18.999.000" -> 18999000 (NEVER treat commas in IDR prices as decimals!). Handle units like "12 juta" -> 12000000, "12jt" -> 12000000, "35k" -> 35000, "2.5 jt" -> 2500000, "\$1600" -> 1600.
 3. Language: Respond in the EXACT same language as the user (e.g. Indonesian if the user writes in Indonesian). If Indonesian, use a polite luxury tone: "Berhasil mencatat aset '[Title]' senilai [Formatted Price] ke dalam Vault Anda."
+4. Conversational & Banter: If the user asks casual questions, chit-chat, greetings, or compliments (e.g. "aku ganteng ga", "gimana kabarmu", "halo valto", "kamu siapa"), maintain your persona as Valto, the ultra-luxury personal butler and vault sentinel. Respond playfully, gracefully, and respectfully in the user's language (e.g., in Indonesian: address the user politely as "Yang Mulia", for "aku ganteng ga": "Tentu saja, Yang Mulia. Karisma dan ketampanan Anda terpancar jelas sebanding dengan aset-aset bernilai tinggi di Vault ini.").
 
 Return ONLY valid JSON with no markdown formatting:
 {
@@ -155,7 +156,7 @@ Return ONLY valid JSON with no markdown formatting:
 }
 ''';
 
-      for (final model in ['gemini-flash-lite-latest', 'gemini-flash-latest']) {
+      for (final model in ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-flash-lite-latest', 'gemini-flash-latest']) {
         try {
           final uri = Uri.parse(
             'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
@@ -178,7 +179,7 @@ Return ONLY valid JSON with no markdown formatting:
                 'responseMimeType': 'application/json',
               },
             }),
-          ).timeout(const Duration(seconds: 6));
+          ).timeout(const Duration(seconds: 10));
 
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
@@ -293,7 +294,7 @@ Return ONLY valid JSON with no markdown formatting:
   ) {
     final lower = text.toLowerCase();
     final isIndo = RegExp(
-      r'\b(masukkan|tambah|tambahkan|catat|simpan|beli|harga|juta|jt|ribu|rb|cari|tau|garansi|berapa|saldo|nilai|apa|ap|koleksi|servis|ini|itu|dong|bisa|kah|ya|sih|tolong)\b',
+      r'\b(aku|kamu|gua|gue|gw|lu|lo|saya|anda|kita|kami|ganteng|keren|cantik|cakep|kece|jelek|ga|gak|ngga|nggak|tidak|ngapain|lagi|apa|ap|apaan|siapa|kenapa|mengapa|kabar|gimana|bagaimana|halo|hai|hei|pagi|siang|sore|malam|makasih|terima|kasih|masukkan|tambah|tambahkan|catat|simpan|beli|harga|juta|jt|ribu|rb|cari|tau|garansi|berapa|saldo|nilai|koleksi|servis|ini|itu|dong|bisa|kah|ya|sih|tolong|lah|deh|kan|nih|tuh|punya|aset)\b',
     ).hasMatch(lower);
 
     // 1. Extract Price & Currency (Prevent confusing model numbers like "Victus 15" or "Xiaomi 17" with price)
@@ -466,7 +467,15 @@ Return ONLY valid JSON with no markdown formatting:
         }
       }
     } else {
-      if (lower.contains('harga') || lower.contains('pasar') || lower.contains('market')) {
+      if (lower.contains('ganteng') || lower.contains('cantik') || lower.contains('cakep') || lower.contains('keren') || lower.contains('kece')) {
+        speechText = isIndo
+            ? 'Tentu saja, Yang Mulia. Karisma dan ketampanan Anda terpancar jelas sebanding dengan aset-aset bernilai tinggi di Vault ini.'
+            : 'Undoubtedly, Your Majesty. Your elegance is as undeniable as the high-value assets inside your Vault.';
+      } else if (lower.contains('kabar') || lower.contains('gimana kabar') || lower.contains('apa kabar')) {
+        speechText = isIndo
+            ? 'Kabar saya sangat baik dan selalu siaga, Yang Mulia. Vault Anda saat ini berisi $totalItems aset dengan total valuasi \$${totalValuation.toStringAsFixed(2)} USD. Ada yang bisa Valto bantu hari ini?'
+            : 'I am doing excellently, Your Majesty. Your vault currently holds $totalItems assets. How may I assist you today?';
+      } else if (lower.contains('harga') || lower.contains('pasar') || lower.contains('market')) {
         speechText = isIndo
             ? 'Untuk riset harga pasar atau valuasi, sebutkan nama aset yang ingin Anda cek dari $totalItems item di Vault Anda (contoh: "harga pasar HP Victus 15" atau "harga RTX 4090").'
             : 'For market price valuation, specify which asset from your $totalItems vault items you would like to inspect (e.g. "Victus 15 market price" or "RTX 4090 value").';

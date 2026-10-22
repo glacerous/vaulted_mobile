@@ -47,7 +47,7 @@ Extract JSON with exactly these keys:
 Respond ONLY with valid JSON. Do not include markdown codeblocks or extra text.
 ''';
 
-      for (final model in ['gemini-flash-lite-latest', 'gemini-flash-latest']) {
+      for (final model in ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-lite-latest', 'gemini-flash-latest']) {
         try {
           final uri = Uri.parse(
             'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',
@@ -124,7 +124,7 @@ Receipt Text:
 $text
 ''';
 
-      for (final model in ['gemini-flash-lite-latest', 'gemini-flash-latest']) {
+      for (final model in ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-lite-latest', 'gemini-flash-latest']) {
         try {
           final uri = Uri.parse(
             'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',

@@ -240,9 +240,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                     ),
                   )
                 : null,
-            'serial_number':
-                result.serialNumber ??
-                'SN-${DateTime.now().millisecondsSinceEpoch}',
+            'serial_number': result.serialNumber,
             'image_url': null,
             'is_collectible': 0,
             'blockchain_hash':
@@ -1119,7 +1117,12 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
       icon = Icons.watch_outlined;
     }
 
-    final subtitle = serial != null && serial.isNotEmpty
+    final hasRealSerial = serial != null &&
+        serial.isNotEmpty &&
+        serial != 'N/A' &&
+        !serial.startsWith('SN-17') &&
+        !serial.startsWith('SN-18');
+    final subtitle = hasRealSerial
         ? '$cat · SN: $serial'
         : (item['purchase_date'] != null
               ? '$cat · ${item['purchase_date']}'

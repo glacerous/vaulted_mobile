@@ -343,6 +343,13 @@ class DatabaseHelper {
         );
       } catch (_) {}
 
+      // Clean up legacy fake timestamp serial numbers
+      try {
+        await db.rawUpdate(
+          "UPDATE items SET serial_number = NULL WHERE serial_number LIKE 'SN-17%' OR serial_number LIKE 'SN-18%'",
+        );
+      } catch (_) {}
+
       final items = await db.query(
         'items',
         where: 'LOWER(user_id) = ? OR (user_id IS NULL AND ? = ?)',

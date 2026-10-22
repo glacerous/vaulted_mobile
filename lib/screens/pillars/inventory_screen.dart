@@ -236,9 +236,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             ),
                           ),
                         ),
-                        'serial_number': serial.isNotEmpty
-                            ? serial
-                            : 'SN-${DateTime.now().millisecondsSinceEpoch}',
+                        'serial_number': serial.isNotEmpty ? serial : null,
                         'image_url': null,
                         'is_collectible': 0,
                         'blockchain_hash': hash,
@@ -634,7 +632,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       final purchase = (item['purchase_price'] as num)
                           .toDouble();
                       final warranty = item['warranty_expiry_date'] as String?;
-                      final serial = item['serial_number'] as String? ?? 'N/A';
+                      final rawSerial = item['serial_number'] as String?;
+                      final hasRealSerial = rawSerial != null &&
+                          rawSerial.isNotEmpty &&
+                          rawSerial != 'N/A' &&
+                          !rawSerial.startsWith('SN-17') &&
+                          !rawSerial.startsWith('SN-18');
+                      final serial = hasRealSerial ? rawSerial : '';
                       final hash =
                           item['blockchain_hash'] as String? ?? '0x7bfa8...';
                       final registeredDate =
@@ -648,6 +652,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             serialNumber: serial,
                             hash: hash,
                             registeredDate: registeredDate,
+                            warrantyExpiryDate: warranty,
+                            onTestNotification: () async {
+                              final sent = await NotificationService.instance
+                                  .showWarrantyAlert(
+                                itemName: item['name'] as String,
+                                daysLeft: 42,
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: VaultColors.card,
+                                    content: Text(
+                                      sent
+                                          ? 'Warranty alert dispatched for ${item['name']}!'
+                                          : 'Notification simulated for ${item['name']}.',
+                                      style: VaultTypography.sans(
+                                        fontSize: 12,
+                                        color: VaultColors.ink,
+                                      ),
+                                    ),
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
                           );
                         },
                         borderRadius: BorderRadius.circular(14),
@@ -686,7 +716,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'Paid: ${currencyFormatter.format(purchase)} Â· S/N: $serial',
+                                          hasRealSerial
+                                              ? 'Paid: ${currencyFormatter.format(purchase)} · S/N: $serial'
+                                              : 'Paid: ${currencyFormatter.format(purchase)}',
                                           style: VaultTypography.sans(
                                             fontSize: 11,
                                             color: VaultColors.ink2,
@@ -747,52 +779,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        'Polygon Amoy: ${hash.length > 14 ? "${hash.substring(0, 14)}..." : hash}',
+                                        'On-Chain Verified',
                                         style: VaultTypography.mono(
                                           fontSize: 10,
-                                          color: VaultColors.ink2,
+                                          fontWeight: FontWeight.w500,
+                                          color: VaultColors.pos,
                                         ),
                                       ),
                                     ],
                                   ),
-                                  InkWell(
-                                    onTap: () async {
-                                      final sent = await NotificationService
-                                          .instance
-                                          .showWarrantyAlert(
-                                            itemName: item['name'] as String,
-                                            daysLeft: 42,
-                                          );
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            backgroundColor: VaultColors.card,
-                                            content: Text(
-                                              sent
-                                                  ? '🔔 Warranty notification dispatched for ${item['name']}!'
-                                                  : 'Notification simulated for ${item['name']}.',
-                                              style: VaultTypography.sans(
-                                                fontSize: 12,
-                                                color: VaultColors.ink,
-                                              ),
-                                            ),
-                                            behavior: SnackBarBehavior.floating,
-                                            duration: const Duration(
-                                              seconds: 2,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Container(
+                                  if (warranty != null)
+                                    Container(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 3,
+                                        horizontal: 7,
+                                        vertical: 2.5,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: VaultColors.cardHover,
+                                        color: VaultColors.badgeBg,
                                         borderRadius: BorderRadius.circular(6),
                                         border: Border.all(
                                           color: VaultColors.hairline,
@@ -802,13 +805,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           const Icon(
-                                            Icons.notifications_active_outlined,
-                                            size: 12,
+                                            Icons.shield_outlined,
+                                            size: 11,
                                             color: VaultColors.accent,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            'Test Alert',
+                                            'Warranty Active',
                                             style: VaultTypography.mono(
                                               fontSize: 9.5,
                                               color: VaultColors.accent,
@@ -817,7 +820,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         ],
                                       ),
                                     ),
-                                  ),
                                 ],
                               ),
                             ],

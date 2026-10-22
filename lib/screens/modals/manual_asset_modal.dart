@@ -197,7 +197,7 @@ class ManualAssetModal {
                       'purchase_date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
                       'warranty_expiry_date': DateFormat('yyyy-MM-dd')
                           .format(DateTime.now().add(Duration(days: warrantyMonths * 30))),
-                      'serial_number': serial.isNotEmpty ? serial : 'SN-${DateTime.now().millisecondsSinceEpoch}',
+                      'serial_number': serial.isNotEmpty ? serial : null,
                       'image_url': null,
                       'is_collectible': 0,
                       'blockchain_hash': '0xvalto${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',

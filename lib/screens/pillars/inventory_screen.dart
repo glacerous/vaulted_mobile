@@ -734,68 +734,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 10),
-                              const Divider(
-                                color: VaultColors.hairline,
-                                height: 1,
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.verified_user_rounded,
-                                        size: 13,
-                                        color: VaultColors.pos,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'On-Chain Verified',
-                                        style: VaultTypography.mono(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                          color: VaultColors.pos,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  if (warranty != null)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 7,
-                                        vertical: 2.5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: VaultColors.badgeBg,
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(
-                                          color: VaultColors.hairline,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.shield_outlined,
-                                            size: 11,
-                                            color: VaultColors.accent,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Warranty Active',
-                                            style: VaultTypography.mono(
-                                              fontSize: 9.5,
-                                              color: VaultColors.accent,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
                             ],
                           ),
                         ),

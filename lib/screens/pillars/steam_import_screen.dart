@@ -1539,9 +1539,6 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       displayGame = '${displayGame.replaceFirst(' Trading Card', '')} • Card';
     }
 
-    final bool isMarketable =
-        (item['is_marketable'] == 1 || item['is_marketable'] == true);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -1619,29 +1616,6 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         color: valuation > 0
                             ? VaultColors.ink
                             : VaultColors.accent,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 1.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isMarketable
-                            ? VaultColors.posBg
-                            : VaultColors.cardHover,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        isMarketable ? 'MARKETABLE' : 'BOUND',
-                        style: VaultTypography.mono(
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.w700,
-                          color: isMarketable
-                              ? VaultColors.pos
-                              : VaultColors.ink2,
-                        ),
                       ),
                     ),
                   ],

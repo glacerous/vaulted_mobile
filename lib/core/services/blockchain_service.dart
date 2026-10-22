@@ -64,16 +64,16 @@ class BlockchainService {
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: VaultColors.pos.withValues(alpha: 0.15),
+                              color: VaultColors.accent.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.verified_user_rounded, color: VaultColors.pos, size: 20),
+                            child: const Icon(Icons.verified_user_rounded, color: VaultColors.accent, size: 20),
                           ),
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('VAULTED DIGITAL PASSPORT', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.2, color: VaultColors.pos)),
+                              Text('VAULTED DIGITAL PASSPORT', style: VaultTypography.mono(fontSize: 10, letterSpacing: 1.2, color: VaultColors.accent)),
                               Text('Certificate of Authenticity', style: VaultTypography.sans(fontSize: 15, fontWeight: FontWeight.w700)),
                             ],
                           ),

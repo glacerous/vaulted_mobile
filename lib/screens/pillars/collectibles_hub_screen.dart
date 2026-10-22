@@ -165,24 +165,6 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
                     const Icon(Icons.sports_esports_rounded, size: 16, color: VaultColors.accent),
                     const SizedBox(width: 8),
                     Text('Steam items', style: VaultTypography.cardLabel),
-                    if (hasItems) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: VaultColors.posBg,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'SYNCED',
-                          style: VaultTypography.mono(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            color: VaultColors.pos,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
                 const Icon(Icons.north_east_rounded, size: 14, color: VaultColors.ink2),
@@ -190,7 +172,7 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              hasItems ? '${_steamItems.length} items · Synced with Steam' : 'Community Cards · Avatars · In-game Items',
+              hasItems ? '${_steamItems.length} items' : 'Community Cards · Avatars · In-game Items',
               style: VaultTypography.cardSub,
             ),
             const SizedBox(height: 12),
@@ -200,63 +182,23 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        '\$${_steamTotal.toStringAsFixed(2)}',
-                        style: VaultTypography.mono(fontSize: 24, fontWeight: FontWeight.w500, color: VaultColors.ink),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: VaultColors.posBg,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'VALVE SYNCED',
-                          style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, color: VaultColors.pos),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    '\$${_steamTotal.toStringAsFixed(2)}',
+                    style: VaultTypography.mono(fontSize: 24, fontWeight: FontWeight.w500, color: VaultColors.ink),
                   ),
-                  GestureDetector(
-                    onTap: _isSyncingSteam ? null : _quickSyncSteam,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: VaultColors.cardHover,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: VaultColors.accent.withValues(alpha: 0.5)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _isSyncingSteam
-                              ? const SizedBox(
-                                  width: 12,
-                                  height: 12,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 1.5,
-                                    color: VaultColors.accent,
-                                  ),
-                                )
-                              : const Icon(Icons.sync_rounded, size: 14, color: VaultColors.accent),
-                          const SizedBox(width: 5),
-                          Text(
-                            'UPDATE',
-                            style: VaultTypography.mono(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
+                  IconButton(
+                    tooltip: 'Sync Steam Inventory',
+                    onPressed: _isSyncingSteam ? null : _quickSyncSteam,
+                    icon: _isSyncingSteam
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
                               color: VaultColors.accent,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                          )
+                        : const Icon(Icons.sync_rounded, size: 18, color: VaultColors.ink2),
                   ),
                 ],
               ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/widgets/valto_mascot.dart';
+import '../core/widgets/vault_thumbnail.dart';
 
 /// PILIHAN TAMPILAN HEALTHBAR
 enum HealthbarStyle {
@@ -91,7 +92,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       'benchmark_val': 480.0,
       'actual_val': 515.0, // actual >= bench -> HIGHER
       'explanation': 'Actual market value is ~\$515! OLED Steam Decks retain 94% value due to exceptional Linux gaming optimization.',
-      'image': 'https://images.unsplash.com/photo-1612287232213-9111c1070e17?w=300',
+      'image': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400',
     },
     {
       'name': 'Sony PlayStation 4 Pro 1TB',
@@ -101,7 +102,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       'benchmark_val': 180.0,
       'actual_val': 195.0, // actual >= bench -> HIGHER
       'explanation': 'Actual market value is ~\$195! PS4 Pro retains strong liquidity for jailbreak enthusiasts and local couch co-op.',
-      'image': 'https://images.unsplash.com/photo-1507457379470-08b800bebc67?w=300',
+      'image': 'https://images.unsplash.com/photo-1507457379470-08b800bebc67?w=400',
     },
     {
       'name': 'Apple iPhone 11 64GB',
@@ -111,7 +112,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       'benchmark_val': 280.0,
       'actual_val': 210.0, // actual < bench -> LOWER
       'explanation': 'Actual market value is ~\$210! Mass-market smartphones suffer ~70% steep depreciation over 5+ years.',
-      'image': 'https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=300',
+      'image': 'https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=400',
     },
     {
       'name': 'AK-47 | Case Hardened (Tier 1 Blue Gem)',
@@ -121,7 +122,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       'benchmark_val': 15000.0,
       'actual_val': 42000.0, // actual >= bench -> HIGHER
       'explanation': 'Actual market value is ~\$42,000+! Pattern #661 Scar Blue Gems command immense luxury premiums in the CS2 collector community.',
-      'image': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300',
+      'image': 'https://community.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyLwlcK3wiFO0POlPPNSIeqHC2SvzOtyufRkAXrlwkwj5m3dyt-scX2SZw8kDJN5EONbsUPtkYfnYbvmtlCMi4MQyiTgznQeFZeHgOE',
     },
     {
       'name': 'Nintendo Switch OLED Pokémon Scarlet Edition',
@@ -131,7 +132,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       'benchmark_val': 290.0,
       'actual_val': 310.0, // actual >= bench -> HIGHER
       'explanation': 'Actual market value is ~\$310! Limited Pokémon SKUs depreciate significantly slower than standard consumer electronics.',
-      'image': 'https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=300',
+      'image': 'https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=400',
     },
     {
       'name': 'Sony WH-1000XM5 Noise Cancelling',
@@ -141,7 +142,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       'benchmark_val': 320.0,
       'actual_val': 265.0, // actual < bench -> LOWER
       'explanation': 'Actual market value is ~\$265! Second-hand audio hardware loses value as battery wear and newer revisions release.',
-      'image': 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=300',
+      'image': 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400',
     },
   ];
 
@@ -768,14 +769,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                             color: VaultColors.background,
                             border: Border.all(color: VaultColors.hairline),
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: Image.network(
-                              q['image'] as String,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.inventory_2_outlined, size: 48, color: VaultColors.ink3),
-                            ),
+                          child: VaultThumbnail(
+                            imageUrl: q['image'] as String?,
+                            category: q['category'] as String?,
+                            name: q['name'] as String?,
+                            width: 130,
+                            height: 130,
+                            borderRadius: 15,
                           ),
                         ),
                         const SizedBox(height: 14),

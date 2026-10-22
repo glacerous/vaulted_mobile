@@ -914,7 +914,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                       children: [
                         Text(
                           _currentIndex + 1 >= _questions.length ? 'See Final Results' : 'Next Item',
-                          style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w700),
+                          style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w700, color: VaultColors.background),
                         ),
                         const SizedBox(width: 6),
                         const Icon(Icons.arrow_forward_rounded, size: 16),
@@ -941,7 +941,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                           icon: const Icon(Icons.arrow_upward_rounded, size: 20),
                           label: Text(
                             'HIGHER',
-                            style: VaultTypography.mono(fontSize: 14, fontWeight: FontWeight.w800),
+                            style: VaultTypography.mono(fontSize: 14, fontWeight: FontWeight.w800, color: VaultColors.pos),
                           ),
                         ),
                       ),
@@ -962,7 +962,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                           icon: const Icon(Icons.arrow_downward_rounded, size: 20),
                           label: Text(
                             'LOWER',
-                            style: VaultTypography.mono(fontSize: 14, fontWeight: FontWeight.w800),
+                            style: VaultTypography.mono(fontSize: 14, fontWeight: FontWeight.w800, color: VaultColors.neg),
                           ),
                         ),
                       ),

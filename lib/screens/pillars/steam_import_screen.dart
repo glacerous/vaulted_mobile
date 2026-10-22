@@ -586,6 +586,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
               style: VaultTypography.mono(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
+                color: VaultColors.neg,
               ),
             ),
           ),
@@ -903,6 +904,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         style: VaultTypography.sans(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
+                          color: VaultColors.background,
                         ),
                       ),
                     ),
@@ -1377,6 +1379,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                       style: VaultTypography.sans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
+                        color: VaultColors.ink,
                       ),
                     ),
                   ),
@@ -1675,15 +1678,20 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              height: 44,
+              height: 48,
               child: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _connectWithSteam,
-                icon: const Icon(Icons.security_rounded, size: 18),
+                icon: const Icon(
+                  Icons.security_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
                 label: Text(
                   'Sign In with Steam',
                   style: VaultTypography.sans(
-                    fontSize: 13,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -1691,7 +1699,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),
@@ -1923,43 +1931,6 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                 color: VaultColors.ink,
               ),
             ),
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: GestureDetector(
-                onTap: _connectWithSteam,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: VaultColors.card,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: VaultColors.hairline),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.security_rounded,
-                        size: 14,
-                        color: VaultColors.accent,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'SIGN IN',
-                        style: VaultTypography.mono(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: VaultColors.accent,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
           ],
         ],
       ),
@@ -2033,20 +2004,25 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                               const SizedBox(height: 10),
                               SizedBox(
                                 width: double.infinity,
-                                height: 36,
+                                height: 38,
                                 child: ElevatedButton.icon(
                                   onPressed: _connectWithSteam,
-                                  icon: const Icon(Icons.security_rounded, size: 15),
+                                  icon: const Icon(
+                                    Icons.security_rounded,
+                                    size: 15,
+                                    color: Colors.white,
+                                  ),
                                   label: Text(
                                     'Sign In to Unlock CS2 Items',
                                     style: VaultTypography.sans(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w600,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: VaultColors.accent,
-                                    foregroundColor: VaultColors.background,
+                                    backgroundColor: VaultColors.primaryButton,
+                                    foregroundColor: Colors.white,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
@@ -2115,32 +2091,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         const SizedBox(height: 16),
                       ],
 
-                      if (!_isConnected && _syncedItems.isEmpty) ...[
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton.icon(
-                            onPressed: _isLoading ? null : _connectWithSteam,
-                            icon: const Icon(Icons.security_rounded, size: 18),
-                            label: Text(
-                              'Sign In with Steam',
-                              style: VaultTypography.sans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: VaultColors.primaryButton,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+
                     ],
                   ),
                 ),

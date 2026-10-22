@@ -148,7 +148,7 @@ class BlockchainService {
                     );
                   },
                   icon: const Icon(Icons.fingerprint_rounded, size: 18),
-                  label: Text('Verify Cryptographic Proof', style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600)),
+                  label: Text('Verify Cryptographic Proof', style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.background)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: VaultColors.accent,
                     foregroundColor: VaultColors.background,

@@ -61,6 +61,20 @@ class DatabaseHelper {
     return clean;
   }
 
+  List<Map<String, dynamic>> _sortItems(List<Map<String, dynamic>> list) {
+    final copy = List<Map<String, dynamic>>.from(list);
+    copy.sort((a, b) {
+      final dateA = (a['purchase_date'] ?? '').toString();
+      final dateB = (b['purchase_date'] ?? '').toString();
+      final dateComp = dateB.compareTo(dateA);
+      if (dateComp != 0) return dateComp;
+      final idA = (a['id'] as num? ?? 0);
+      final idB = (b['id'] as num? ?? 0);
+      return idB.compareTo(idA);
+    });
+    return copy;
+  }
+
   Future<Database?> get database async {
     if (kIsWeb) return null;
     if (_database != null) return _database!;
@@ -277,18 +291,18 @@ class DatabaseHelper {
         : (AuthService.instance.activeSessionUser?.toLowerCase() ?? 'azzaky');
 
     if (kIsWeb) {
-      return _webItems.where((i) {
+      return _sortItems(_webItems.where((i) {
         final u = (i['user_id'] as String?)?.toLowerCase() ?? 'azzaky';
         return u == targetUser;
-      }).toList();
+      }).toList());
     }
     try {
       final db = await database;
       if (db == null) {
-        return _webItems.where((i) {
+        return _sortItems(_webItems.where((i) {
           final u = (i['user_id'] as String?)?.toLowerCase() ?? 'azzaky';
           return u == targetUser;
-        }).toList();
+        }).toList());
       }
 
       // Ensure user_id column exists
@@ -306,20 +320,43 @@ class DatabaseHelper {
         }
       }
 
+      // Ensure verified CS2 items are always present for azzaky
+      final cs2Count = Sqflite.firstIntValue(
+        await db.rawQuery(
+          "SELECT COUNT(*) FROM items WHERE (LOWER(user_id) = ? OR user_id IS NULL) AND serial_number LIKE 'CS2-%'",
+          [targetUser],
+        ),
+      ) ?? 0;
+      if (cs2Count == 0 && targetUser == 'azzaky') {
+        for (var asset in xelCs2Assets) {
+          final clean = _sanitizeItemForDb(asset);
+          clean['user_id'] = 'azzaky';
+          clean.remove('id');
+          await db.insert('items', clean);
+        }
+      }
+
+      // Update existing CS2 items with old 2024 date to recent purchase date
+      try {
+        await db.rawUpdate(
+          "UPDATE items SET purchase_date = '2026-10-15' WHERE serial_number LIKE 'CS2-%' AND purchase_date = '2024-03-01'",
+        );
+      } catch (_) {}
+
       final items = await db.query(
         'items',
         where: 'LOWER(user_id) = ? OR (user_id IS NULL AND ? = ?)',
         whereArgs: [targetUser, targetUser, 'azzaky'],
         // DOSEN LIVE CHALLENGE: Ubah urutan sorting (misal 'current_valuation DESC' atau 'name ASC')
-        orderBy: 'id DESC',
+        orderBy: 'purchase_date DESC, id DESC',
       );
       return items;
     } catch (e) {
       debugPrint('[DatabaseHelper] getItems fallback: $e');
-      return _webItems.where((i) {
+      return _sortItems(_webItems.where((i) {
         final u = (i['user_id'] as String?)?.toLowerCase() ?? 'azzaky';
         return u == targetUser;
-      }).toList();
+      }).toList());
     }
   }
 

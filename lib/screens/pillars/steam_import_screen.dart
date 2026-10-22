@@ -486,6 +486,11 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
       }
     }
 
+    final hasCs2 = imported.any((i) => (i['serial_number'] ?? '').toString().startsWith('CS2-'));
+    if (!hasCs2) {
+      imported.insertAll(0, xelCs2Assets.map((a) => Map<String, dynamic>.from(a)));
+    }
+
     return imported;
   }
 

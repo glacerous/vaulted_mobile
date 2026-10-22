@@ -53,6 +53,100 @@ class _InventoryScreenState extends State<InventoryScreen> {
     });
   }
 
+  void _showSortSheet() {
+    HapticFeedback.selectionClick();
+    const options = [
+      {'key': 'Highest', 'label': 'Highest Value', 'icon': Icons.arrow_downward_rounded},
+      {'key': 'Lowest', 'label': 'Lowest Value', 'icon': Icons.arrow_upward_rounded},
+      {'key': 'Name A-Z', 'label': 'Alphabetical (A - Z)', 'icon': Icons.sort_by_alpha_rounded},
+      {'key': 'Category', 'label': 'Category', 'icon': Icons.category_outlined},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: VaultColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: VaultColors.hairline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'SORT HARDWARE',
+                  style: VaultTypography.mono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                    color: VaultColors.accent,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...options.map((opt) {
+                  final key = opt['key'] as String;
+                  final label = opt['label'] as String;
+                  final icon = opt['icon'] as IconData;
+                  final isSel = _selectedSort == key;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    decoration: BoxDecoration(
+                      color: isSel ? VaultColors.cardHover : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSel ? VaultColors.accent : Colors.transparent,
+                      ),
+                    ),
+                    child: ListTile(
+                      dense: true,
+                      leading: Icon(
+                        icon,
+                        size: 18,
+                        color: isSel ? VaultColors.accent : VaultColors.ink2,
+                      ),
+                      title: Text(
+                        label,
+                        style: VaultTypography.sans(
+                          fontSize: 13.5,
+                          fontWeight: isSel ? FontWeight.w600 : FontWeight.w500,
+                          color: isSel ? VaultColors.ink : VaultColors.ink2,
+                        ),
+                      ),
+                      trailing: isSel
+                          ? const Icon(Icons.check_rounded, size: 18, color: VaultColors.accent)
+                          : null,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _selectedSort = key);
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  );
+                }),
+                const SizedBox(height: 4),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   List<Map<String, dynamic>> get _items {
     // InventoryScreen is dedicated purely to physical Hardware, Tech & Devices.
     // Steam collectibles are managed in the Steam & Gaming Vault.
@@ -445,61 +539,45 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Interactive Sort Bar
+              // Sort button — tap to open bottom sheet (consistent with Steam Vault)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'SORT BY',
+                    'HARDWARE & DEVICES',
                     style: VaultTypography.mono(
                       fontSize: 9.5,
                       letterSpacing: 1.1,
                       color: VaultColors.ink2,
                     ),
                   ),
-                  Row(
-                    children: ['Highest', 'Lowest', 'Name A-Z', 'Category']
-                        .map((sortKey) {
-                          final isSelected = _selectedSort == sortKey;
-                          return GestureDetector(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _selectedSort = sortKey);
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 6),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 3.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? VaultColors.accent
-                                    : VaultColors.card,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? VaultColors.accent
-                                      : VaultColors.hairline,
-                                  width: 0.8,
-                                ),
-                              ),
-                              child: Text(
-                                sortKey,
-                                style: VaultTypography.mono(
-                                  fontSize: 9,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
-                                  color: isSelected
-                                      ? VaultColors.background
-                                      : VaultColors.ink2,
-                                ),
-                              ),
+                  GestureDetector(
+                    onTap: _showSortSheet,
+                    child: Container(
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: VaultColors.card,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: VaultColors.hairline),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.sort_rounded, size: 14, color: VaultColors.accent),
+                          const SizedBox(width: 6),
+                          Text(
+                            _selectedSort,
+                            style: VaultTypography.mono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: VaultColors.ink,
                             ),
-                          );
-                        })
-                        .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

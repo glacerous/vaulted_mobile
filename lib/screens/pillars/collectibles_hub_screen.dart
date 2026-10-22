@@ -17,29 +17,7 @@ class CollectiblesHubScreen extends StatefulWidget {
 class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
   List<Map<String, dynamic>> _steamItems = [];
   double _steamTotal = 0.0;
-  String _steamSort = 'Highest';
   bool _isSyncingSteam = false;
-
-  List<Map<String, dynamic>> get _sortedSteamItems {
-    final list = List<Map<String, dynamic>>.from(_steamItems);
-    switch (_steamSort) {
-      case 'Highest':
-        list.sort((a, b) => ((b['current_valuation'] as num?)?.toDouble() ?? 0.0)
-            .compareTo((a['current_valuation'] as num?)?.toDouble() ?? 0.0));
-        break;
-      case 'Lowest':
-        list.sort((a, b) => ((a['current_valuation'] as num?)?.toDouble() ?? 0.0)
-            .compareTo((b['current_valuation'] as num?)?.toDouble() ?? 0.0));
-        break;
-      case 'Name A-Z':
-        list.sort((a, b) => (a['name'] as String? ?? '').toLowerCase().compareTo((b['name'] as String? ?? '').toLowerCase()));
-        break;
-      case 'Game':
-        list.sort((a, b) => (a['category'] as String? ?? '').toLowerCase().compareTo((b['category'] as String? ?? '').toLowerCase()));
-        break;
-    }
-    return list;
-  }
 
   @override
   void initState() {
@@ -202,49 +180,6 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-
-              // Interactive Thumb-Zone Sort Bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'SORT BY',
-                    style: VaultTypography.mono(fontSize: 9.5, letterSpacing: 1.1, color: VaultColors.ink2),
-                  ),
-                  Row(
-                    children: ['Highest', 'Lowest', 'Name A-Z', 'Game'].map((sortKey) {
-                      final isSelected = _steamSort == sortKey;
-                      return GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _steamSort = sortKey);
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(left: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: isSelected ? VaultColors.accent : VaultColors.cardHover,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: isSelected ? VaultColors.accent : VaultColors.hairline,
-                              width: 0.8,
-                            ),
-                          ),
-                          child: Text(
-                            sortKey,
-                            style: VaultTypography.mono(
-                              fontSize: 9,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                              color: isSelected ? VaultColors.background : VaultColors.ink2,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
               const SizedBox(height: 12),
 
               // Real preview thumbnails
@@ -252,7 +187,7 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 child: Row(
-                  children: _sortedSteamItems.map((item) {
+                  children: _steamItems.map((item) {
                     final imgUrl = vaultImageUrl(item['image_url'] as String?);
                     return Container(
                       margin: const EdgeInsets.only(right: 12),

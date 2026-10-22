@@ -190,7 +190,7 @@ class _CollectiblesHubScreenState extends State<CollectiblesHubScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              hasItems ? '${_steamItems.length} items · Synced with @xel' : 'Community Cards · Avatars · In-game Items',
+              hasItems ? '${_steamItems.length} items · Synced with Steam' : 'Community Cards · Avatars · In-game Items',
               style: VaultTypography.cardSub,
             ),
             const SizedBox(height: 12),

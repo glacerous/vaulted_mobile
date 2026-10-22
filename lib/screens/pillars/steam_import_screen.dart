@@ -11,6 +11,7 @@ import '../../core/database/database_helper.dart';
 import '../../core/data/real_steam_assets.dart';
 import '../../core/utils/image_utils.dart';
 import '../../core/widgets/gyro_tilt.dart';
+import 'steam_auth_sheet.dart';
 
 class SteamImportScreen extends StatefulWidget {
   const SteamImportScreen({super.key});
@@ -20,18 +21,11 @@ class SteamImportScreen extends StatefulWidget {
 }
 
 class _SteamImportScreenState extends State<SteamImportScreen> {
-  final TextEditingController _urlController = TextEditingController(
-    text: 'https://steamcommunity.com/profiles/76561199089584380/',
-  );
-
   bool _isDetecting = true;
   bool _isLoading = false;
-  bool _showManualInput = false;
   bool _hasCsPrivateWarning = false;
   int _csPrivateCount = 0;
 
-  // DOSEN LIVE CHALLENGE: DEFAULT STEAM ACCOUNT & SORTING
-  // Ganti persona, steamId, atau default sort order di bawah jika diminta demo akun lain:
   String _detectedPersona = 'xel';
   String _currentSteamId = '76561199089584380';
   String _detectedAvatar =
@@ -151,53 +145,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     }
   }
 
-  Future<String?> _resolveSteamId(String rawInput) async {
-    final input = rawInput.trim();
-    if (input.isEmpty) return null;
 
-    final idMatch = RegExp(r'\b(7656119[0-9]{10})\b').firstMatch(input);
-    if (idMatch != null) {
-      return idMatch.group(1);
-    }
 
-    final vanityMatch = RegExp(r'steamcommunity\.com\/id\/([a-zA-Z0-9_\-]+)')
-        .firstMatch(input);
-    final vanity = vanityMatch != null
-        ? vanityMatch.group(1)
-        : (!input.contains('/') ? input : null);
-
-    if (vanity != null) {
-      final apiKey = VaultConfig.steamApiKey;
-      if (apiKey.isNotEmpty && !apiKey.contains('your_steam_api_key')) {
-        try {
-          final res = await http
-              .get(
-                Uri.parse(
-                  'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/?key=$apiKey&vanityurl=$vanity',
-                ),
-              )
-              .timeout(const Duration(seconds: 5));
-          if (res.statusCode == 200) {
-            final data = jsonDecode(res.body);
-            if (data['response']?['success'] == 1 &&
-                data['response']?['steamid'] != null) {
-              return data['response']['steamid'].toString();
-            }
-          }
-        } catch (e) {
-          debugPrint('Resolve vanity notice: $e');
-        }
-      }
-    }
-
-    return null;
-  }
-
-  Future<void> _syncSteam({String? targetSteamId}) async {
+  Future<void> _syncSteam() async {
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
 
-    final steamId = targetSteamId ?? _currentSteamId;
+    final steamId = _currentSteamId;
     _currentSteamId = steamId;
 
     final List<Map<String, dynamic>> imported = [];
@@ -279,11 +233,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
             }
           } else if (count > 0) {
             // Steam reports user has $count CS2 items, but Valve restricted item metadata (rwgrsn: -2)
-            if (steamId == '76561199089584380' || steamId == _currentSteamId) {
-              imported.addAll(xelCs2Assets.map((a) => Map<String, dynamic>.from(a)));
-            } else {
-              csHidden = true;
-            }
+            csHidden = true;
           }
         }
       } catch (e) {
@@ -431,39 +381,165 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     }
   }
 
-  Future<void> _importCustomUrl() async {
-    final raw = _urlController.text.trim();
-    if (raw.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: VaultColors.card,
-          behavior: SnackBarBehavior.floating,
-          content: Text(
-            'Please enter a Steam profile link or 17-digit SteamID.',
-            style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
-          ),
-        ),
-      );
-      return;
+  List<Map<String, dynamic>> _parseInventoryPayload({
+    Map<String, dynamic>? cs2Data,
+    Map<String, dynamic>? steamData,
+  }) {
+    final List<Map<String, dynamic>> imported = [];
+
+    // Dynamic CS2 Items from authenticated session
+    if (cs2Data != null) {
+      final descriptions = cs2Data['descriptions'] as List?;
+      if (descriptions != null && descriptions.isNotEmpty) {
+        for (var desc in descriptions) {
+          final String name = desc['name'] as String? ?? 'Counter-Strike 2 Item';
+          final String type = desc['type'] as String? ?? 'CS2 Skin';
+          final String marketHash = desc['market_hash_name'] as String? ?? name;
+          final String? iconUrl = desc['icon_url_large'] as String? ?? desc['icon_url'] as String?;
+          final String classid = desc['classid'] as String? ?? '${DateTime.now().millisecondsSinceEpoch}';
+
+          double valuation = 2.50;
+          if (name.contains('Case')) {
+            valuation = 0.85;
+          } else if (name.contains('Covert') || name.contains('Knife') || name.contains('Gloves')) {
+            valuation = 125.00;
+          } else if (name.contains('Classified')) {
+            valuation = 22.50;
+          } else if (name.contains('Restricted')) {
+            valuation = 5.80;
+          }
+
+          imported.add({
+            'name': name,
+            'category': 'Steam / $type',
+            'purchase_price': valuation * 0.9,
+            'current_valuation': valuation,
+            'purchase_date': DateTime.now().toIso8601String().split('T').first,
+            'warranty_expiry_date': null,
+            'serial_number': 'CS2-730-$classid',
+            'image_url': iconUrl != null && iconUrl.isNotEmpty
+                ? 'https://community.steamstatic.com/economy/image/$iconUrl'
+                : 'https://community.cloudflare.steamstatic.com/public/images/apps/730/default.png',
+            'is_collectible': 1,
+            'is_marketable': desc['marketable'] == 1 ? 1 : 0,
+            'market_hash_name': marketHash,
+            'blockchain_hash': '0xcs2${classid.hashCode.abs().toRadixString(16)}',
+          });
+        }
+      }
     }
 
-    final resolvedId = await _resolveSteamId(raw);
-    if (!mounted) return;
-    if (resolvedId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: VaultColors.card,
-          behavior: SnackBarBehavior.floating,
-          content: Text(
-            'Could not parse SteamID. Use format: https://steamcommunity.com/profiles/<17-digits>',
-            style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
-          ),
-        ),
-      );
-      return;
+    // Dynamic Steam Community Items
+    if (steamData != null) {
+      final descriptions = steamData['descriptions'] as List?;
+      if (descriptions != null && descriptions.isNotEmpty) {
+        for (var desc in descriptions) {
+          final String name = desc['name'] as String? ?? 'Steam Collectible';
+          final String type = desc['type'] as String? ?? 'Steam Trading Card';
+          final String? iconUrl = desc['icon_url_large'] as String? ?? desc['icon_url'] as String?;
+          final String classid = desc['classid'] as String? ?? '${DateTime.now().millisecondsSinceEpoch}';
+
+          double valuation = 0.45;
+          if (name.contains('Hornet') || name.contains('Silksong') || name.contains('Zote')) {
+            valuation = 1.35;
+          } else if (name.contains('Avatar') || name.contains('Frame') || name.contains('Background')) {
+            valuation = 2.50;
+          } else if (name.contains('Witch') || name.contains('Tank') || name.contains('Guide')) {
+            valuation = 0.85;
+          }
+
+          imported.add({
+            'name': name,
+            'category': 'Steam / $type',
+            'purchase_price': 0.10,
+            'current_valuation': valuation,
+            'purchase_date': DateTime.now().toIso8601String().split('T').first,
+            'warranty_expiry_date': null,
+            'serial_number': 'STEAM-753-$classid',
+            'image_url': iconUrl != null && iconUrl.isNotEmpty
+                ? 'https://community.steamstatic.com/economy/image/$iconUrl'
+                : 'https://community.cloudflare.steamstatic.com/public/images/apps/753/default.png',
+            'is_collectible': 1,
+            'is_marketable': desc['marketable'] == 1 ? 1 : 0,
+            'market_hash_name': desc['market_hash_name'] as String? ?? name,
+            'blockchain_hash': '0xsteam753${classid.hashCode.abs().toRadixString(16)}',
+          });
+        }
+      }
     }
 
-    await _syncSteam(targetSteamId: resolvedId);
+    return imported;
+  }
+
+  Future<void> _connectWithSteam() async {
+    HapticFeedback.selectionClick();
+    final res = await SteamAuthSheet.show(context);
+    if (res != null) {
+      setState(() => _isLoading = true);
+      try {
+        _currentSteamId = res.steamId;
+        await _fetchPlayerSummary(res.steamId);
+
+        final imported = _parseInventoryPayload(
+          cs2Data: res.cs2Data,
+          steamData: res.steamData,
+        );
+
+        if (imported.isNotEmpty) {
+          await DatabaseHelper.instance.replaceSteamItems(imported);
+        }
+
+        final all = await DatabaseHelper.instance.getItems();
+        final steamOnly = all
+            .where((i) => i['category'].toString().startsWith('Steam'))
+            .toList();
+
+        final double totalVal = steamOnly.fold(
+          0.0,
+          (sum, i) => sum + (i['current_valuation'] as num).toDouble(),
+        );
+
+        if (mounted) {
+          setState(() {
+            _isConnected = true;
+            _syncedItems = steamOnly;
+            _lastSyncTime = DateTime.now();
+            _hasCsPrivateWarning = false;
+            _csPrivateCount = 0;
+            _isLoading = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: VaultColors.card,
+              behavior: SnackBarBehavior.floating,
+              content: Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: VaultColors.pos,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Steam authenticated. ${steamOnly.length} items synced from Valve (\$${totalVal.toStringAsFixed(2)}).',
+                      style: VaultTypography.sans(
+                        fontSize: 12.5,
+                        color: VaultColors.ink,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) setState(() => _isLoading = false);
+        debugPrint('Sync after Steam auth notice: $e');
+      }
+    }
   }
 
   Future<void> _disconnectSteam() async {
@@ -840,159 +916,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
     );
   }
 
-  void _showOpenIdSheet() {
-    HapticFeedback.selectionClick();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: VaultColors.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 22,
-            right: 22,
-            top: 24,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 28,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: VaultColors.hairline,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: VaultColors.accent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.security_rounded,
-                          color: VaultColors.accent,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'STEAM OPENID 2.0 AUTH',
-                            style: VaultTypography.mono(
-                              fontSize: 10,
-                              letterSpacing: 1.2,
-                              color: VaultColors.accent,
-                            ),
-                          ),
-                          Text(
-                            'Secure Valve Handshake',
-                            style: VaultTypography.sans(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      color: VaultColors.ink2,
-                    ),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: VaultColors.background,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: VaultColors.hairline),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.lock_outline_rounded,
-                          size: 16,
-                          color: VaultColors.pos,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Valve OpenID Realm: vaulted.local',
-                          style: VaultTypography.mono(
-                            fontSize: 11,
-                            color: VaultColors.ink2,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'VAULTED will not receive your Steam password or payment details. Steam authenticates your public SteamID64 token directly.',
-                      style: VaultTypography.sans(
-                        fontSize: 12,
-                        height: 1.4,
-                        color: VaultColors.body,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 22),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _syncSteam();
-                  },
-                  icon: const Icon(Icons.sports_esports_rounded, size: 20),
-                  label: Text(
-                    'Authorize Steam Connection',
-                    style: VaultTypography.sans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B2838),
-                    foregroundColor: VaultColors.ink,
-                    side: const BorderSide(
-                      color: Color(0xFF66C0F4),
-                      width: 0.8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
 
   void _showSortBottomSheet() {
     HapticFeedback.selectionClick();
@@ -1753,18 +1677,18 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
               width: double.infinity,
               height: 44,
               child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : () => _syncSteam(),
-                icon: const Icon(Icons.bolt_rounded, size: 18),
+                onPressed: _isLoading ? null : _connectWithSteam,
+                icon: const Icon(Icons.security_rounded, size: 18),
                 label: Text(
-                  '1-Tap Connect as @$_detectedPersona',
+                  'Sign In with Steam',
                   style: VaultTypography.sans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: VaultColors.accent,
-                  foregroundColor: VaultColors.background,
+                  backgroundColor: VaultColors.primaryButton,
+                  foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2003,7 +1927,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: GestureDetector(
-                onTap: _showOpenIdSheet,
+                onTap: _connectWithSteam,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -2018,13 +1942,13 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(
-                        Icons.link_rounded,
+                        Icons.security_rounded,
                         size: 14,
                         color: VaultColors.accent,
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        'OPENID',
+                        'SIGN IN',
                         style: VaultTypography.mono(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -2086,7 +2010,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'VALVE CS2 PRIVACY RESTRICTION ($_csPrivateCount ITEMS)',
+                                      'VALVE CS2 RESTRICTION ($_csPrivateCount ITEMS)',
                                       style: VaultTypography.mono(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700,
@@ -2099,7 +2023,7 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Valve detected $_csPrivateCount CS2 items in this account, but hid skin names/cases. Set Steam Inventory to "Public", then tap sync icon.',
+                                'Valve requires an active Steam session to reveal CS2 skin & case metadata. Sign in via Steam to unlock them dynamically.',
                                 style: VaultTypography.sans(
                                   fontSize: 11.5,
                                   height: 1.4,
@@ -2111,10 +2035,10 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                                 width: double.infinity,
                                 height: 36,
                                 child: ElevatedButton.icon(
-                                  onPressed: _showAddCsItemDialog,
-                                  icon: const Icon(Icons.add_rounded, size: 15),
+                                  onPressed: _connectWithSteam,
+                                  icon: const Icon(Icons.security_rounded, size: 15),
                                   label: Text(
-                                    'Log My CS Skin / Case Manually',
+                                    'Sign In to Unlock CS2 Items',
                                     style: VaultTypography.sans(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w600,
@@ -2191,125 +2115,31 @@ class _SteamImportScreenState extends State<SteamImportScreen> {
                         const SizedBox(height: 16),
                       ],
 
-                      // Alternative Sign-in Methods (only visible when disconnected)
-                      if (!_isConnected) ...[
-                        // Sign in with Steam OpenID Button
+                      if (!_isConnected && _syncedItems.isEmpty) ...[
+                        const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
-                          height: 46,
-                          child: OutlinedButton.icon(
-                            onPressed: _showOpenIdSheet,
-                            icon: const Icon(
-                              Icons.language_rounded,
-                              size: 17,
-                              color: VaultColors.ink2,
-                            ),
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            onPressed: _isLoading ? null : _connectWithSteam,
+                            icon: const Icon(Icons.security_rounded, size: 18),
                             label: Text(
-                              'Sign In via Steam OpenID Portal',
+                              'Sign In with Steam',
                               style: VaultTypography.sans(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: VaultColors.ink,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                color: VaultColors.hairline,
-                              ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: VaultColors.primaryButton,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-
-                        // Expandable Manual Link Option
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            setState(
-                              () => _showManualInput = !_showManualInput,
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  _showManualInput
-                                      ? 'Hide custom profile link'
-                                      : 'Or paste another Steam profile link',
-                                  style: VaultTypography.mono(
-                                    fontSize: 11,
-                                    color: VaultColors.ink2,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  _showManualInput
-                                      ? Icons.keyboard_arrow_up_rounded
-                                      : Icons.keyboard_arrow_down_rounded,
-                                  size: 16,
-                                  color: VaultColors.ink2,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        if (_showManualInput) ...[
-                          const SizedBox(height: 10),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            decoration: BoxDecoration(
-                              color: VaultColors.card,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: VaultColors.hairline),
-                            ),
-                            child: TextField(
-                              controller: _urlController,
-                              style: VaultTypography.mono(
-                                fontSize: 12,
-                                color: VaultColors.ink,
-                              ),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText:
-                                    'https://steamcommunity.com/profiles/...',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            height: 38,
-                            child: ElevatedButton.icon(
-                              onPressed: _isLoading ? null : _importCustomUrl,
-                              icon: const Icon(Icons.sync_rounded, size: 16),
-                              label: Text(
-                                'Sync Custom Profile',
-                                style: VaultTypography.sans(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: VaultColors.cardHover,
-                                foregroundColor: VaultColors.accent,
-                                side: BorderSide(
-                                  color: VaultColors.accent.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ],
                   ),

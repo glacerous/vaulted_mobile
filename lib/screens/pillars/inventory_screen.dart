@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/typography.dart';
 import '../../core/database/database_helper.dart';
+import '../../core/services/supabase_service.dart';
 
 import '../../core/services/blockchain_service.dart';
 import '../../core/widgets/vault_thumbnail.dart';
@@ -37,6 +38,39 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void initState() {
     super.initState();
     _loadItems();
+    _syncCloudInBackground();
+  }
+
+  Future<void> _syncCloudInBackground() async {
+    try {
+      final res = await SupabaseService.instance.syncTwoWay();
+      if ((res['pulled'] as int? ?? 0) > 0 && mounted) {
+        _loadItems();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _handleRefresh() async {
+    HapticFeedback.lightImpact();
+    try {
+      final res = await SupabaseService.instance.syncTwoWay();
+      await _loadItems();
+      if (mounted) {
+        final pulled = res['pulled'] as int? ?? 0;
+        if (pulled > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: VaultColors.card,
+              behavior: SnackBarBehavior.floating,
+              content: Text(
+                'Cloud Sync: $pulled new asset(s) retrieved.',
+                style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -700,7 +734,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 )
               else
                 Expanded(
-                  child: ListView.separated(
+                  child: RefreshIndicator(
+                    color: VaultColors.accent,
+                    backgroundColor: VaultColors.card,
+                    onRefresh: _handleRefresh,
+                    child: ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
                     itemCount: _items.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (ctx, idx) {
@@ -821,6 +862,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     },
                   ),
                 ),
+              ),
             ],
           ),
         ),

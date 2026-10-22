@@ -140,7 +140,12 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
         _recentItems = items.take(4).toList();
       });
       // Automatic background sync to Supabase PostgreSQL
-      SupabaseService.instance.autoSyncInBackground();
+      SupabaseService.instance.autoSyncInBackground().then((res) {
+        final pulled = res['pulled'] as int? ?? 0;
+        if (pulled > 0 && mounted) {
+          _loadVaultData();
+        }
+      });
     }
   }
 

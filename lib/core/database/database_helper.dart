@@ -367,7 +367,7 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> insertItem(Map<String, dynamic> item) async {
+  Future<int> insertItem(Map<String, dynamic> item, {bool pushToCloud = true}) async {
     final mutableItem = Map<String, dynamic>.from(item);
     if (!mutableItem.containsKey('user_id') || mutableItem['user_id'] == null) {
       mutableItem['user_id'] = AuthService.instance.activeSessionUser ?? 'azzaky';
@@ -376,23 +376,23 @@ class DatabaseHelper {
 
     if (kIsWeb) {
       _webItems.add(clean);
-      SupabaseService.instance.pushSingleItemOnline(clean);
+      if (pushToCloud) SupabaseService.instance.pushSingleItemOnline(clean);
       return _webItems.length;
     }
     try {
       final db = await database;
       if (db == null) {
         _webItems.add(clean);
-        SupabaseService.instance.pushSingleItemOnline(clean);
+        if (pushToCloud) SupabaseService.instance.pushSingleItemOnline(clean);
         return _webItems.length;
       }
       final id = await db.insert('items', clean);
-      SupabaseService.instance.pushSingleItemOnline(clean);
+      if (pushToCloud) SupabaseService.instance.pushSingleItemOnline(clean);
       return id;
     } catch (e) {
       debugPrint('[DatabaseHelper] insertItem fallback: $e');
       _webItems.add(clean);
-      SupabaseService.instance.pushSingleItemOnline(clean);
+      if (pushToCloud) SupabaseService.instance.pushSingleItemOnline(clean);
       return _webItems.length;
     }
   }

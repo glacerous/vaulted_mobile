@@ -263,7 +263,7 @@ CREATE POLICY "Allow all for demo" ON vault_items
             'is_collectible': item['is_collectible'] ?? 0,
           };
           try {
-            await DatabaseHelper.instance.insertItem(map);
+            await DatabaseHelper.instance.insertItem(map, pushToCloud: false);
             inserted++;
           } catch (_) {}
         }
@@ -295,10 +295,19 @@ CREATE POLICY "Allow all for demo" ON vault_items
 
   bool _isAutoSyncing = false;
 
-  /// Silently keeps local SQLite and Supabase PostgreSQL in sync in the background
-  Future<void> autoSyncInBackground() async {
-    if (!VaultConfig.hasSupabase || _isAutoSyncing) return;
-    _isAutoSyncing = true;
+  /// Two-way delta sync between local SQLite and Supabase PostgreSQL.
+  /// Merges new assets from cloud into local SQLite without duplicates,
+  /// and pushes new local assets to cloud.
+  Future<Map<String, dynamic>> syncTwoWay() async {
+    if (!VaultConfig.hasSupabase) {
+      return {
+        'success': false,
+        'pulled': 0,
+        'pushed': 0,
+        'message': 'Supabase not configured in .env',
+      };
+    }
+
     try {
       final activeUser = AuthService.instance.activeSessionUser ?? 'azzaky';
       final localItems = await DatabaseHelper.instance.getItems(activeUser);
@@ -308,24 +317,119 @@ CREATE POLICY "Allow all for demo" ON vault_items
       );
       final response = await http
           .get(endpoint, headers: _headers())
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        final List<dynamic> cloudItems = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        return {
+          'success': false,
+          'pulled': 0,
+          'pushed': 0,
+          'message': 'Failed to reach Supabase: ${response.statusCode}',
+        };
+      }
 
-        // If cloud is empty but local has items, automatically push local items to cloud
-        if (cloudItems.isEmpty && localItems.isNotEmpty) {
-          await syncToCloud();
-        } else if (cloudItems.isNotEmpty && localItems.isEmpty) {
-          // If local is empty but cloud has items (e.g. logged in on new device), automatically pull
-          await restoreFromCloud();
-        } else if (localItems.length > cloudItems.length) {
-          // Sync any new items added locally
-          await syncToCloud();
+      final List<dynamic> cloudItems = jsonDecode(response.body);
+      int pulledCount = 0;
+      int pushedCount = 0;
+
+      // 1. Pull: Find items in Cloud that do NOT exist in Local SQLite
+      for (final rawCloud in cloudItems) {
+        if (rawCloud is! Map) continue;
+        final cloudItem = Map<String, dynamic>.from(rawCloud);
+
+        final alreadyExists = localItems.any((local) => _isSameItem(local, cloudItem));
+        if (!alreadyExists) {
+          final toInsert = {
+            'user_id': cloudItem['user_id'] ?? activeUser,
+            'name': cloudItem['name'],
+            'category': cloudItem['category'],
+            'purchase_price': (cloudItem['purchase_price'] as num?)?.toDouble() ?? 0.0,
+            'current_valuation': (cloudItem['current_valuation'] as num?)?.toDouble() ?? 0.0,
+            'purchase_date': cloudItem['purchase_date'],
+            'warranty_expiry_date': cloudItem['warranty_expiry_date'],
+            'serial_number': cloudItem['serial_number'],
+            'blockchain_hash': cloudItem['blockchain_hash'],
+            'image_url': cloudItem['image_url'],
+            'is_collectible': cloudItem['is_collectible'] ?? 0,
+          };
+          try {
+            await DatabaseHelper.instance.insertItem(toInsert, pushToCloud: false);
+            pulledCount++;
+          } catch (e) {
+            debugPrint('[SupabaseService] Error inserting pulled item: $e');
+          }
         }
       }
+
+      // 2. Push: Find items in Local SQLite that do NOT exist in Cloud
+      for (final localItem in localItems) {
+        final existsInCloud = cloudItems.any((c) {
+          if (c is! Map) return false;
+          return _isSameItem(localItem, Map<String, dynamic>.from(c));
+        });
+
+        if (!existsInCloud) {
+          try {
+            await pushSingleItemOnline(localItem);
+            pushedCount++;
+          } catch (e) {
+            debugPrint('[SupabaseService] Error pushing delta item: $e');
+          }
+        }
+      }
+
+      _lastSyncTime = DateTime.now();
+      return {
+        'success': true,
+        'pulled': pulledCount,
+        'pushed': pushedCount,
+        'message': 'Synced: $pulledCount pulled from cloud, $pushedCount pushed to cloud.',
+      };
+    } catch (e) {
+      debugPrint('[SupabaseService] syncTwoWay notice: $e');
+      return {
+        'success': false,
+        'pulled': 0,
+        'pushed': 0,
+        'message': 'Sync notice: $e',
+      };
+    }
+  }
+
+  bool _isSameItem(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final aHash = a['blockchain_hash']?.toString().trim();
+    final bHash = b['blockchain_hash']?.toString().trim();
+    if (aHash != null && aHash.isNotEmpty && bHash != null && bHash.isNotEmpty) {
+      if (aHash == bHash) return true;
+    }
+
+    final aSn = a['serial_number']?.toString().trim();
+    final bSn = b['serial_number']?.toString().trim();
+    if (aSn != null && aSn.isNotEmpty && bSn != null && bSn.isNotEmpty) {
+      if (aSn == bSn) return true;
+    }
+
+    final aName = a['name']?.toString().trim().toLowerCase();
+    final bName = b['name']?.toString().trim().toLowerCase();
+    final aDate = a['purchase_date']?.toString().trim();
+    final bDate = b['purchase_date']?.toString().trim();
+    final aCat = a['category']?.toString().trim().toLowerCase();
+    final bCat = b['category']?.toString().trim().toLowerCase();
+
+    return aName == bName && aDate == bDate && aCat == bCat;
+  }
+
+  /// Silently keeps local SQLite and Supabase PostgreSQL in sync in the background
+  Future<Map<String, dynamic>> autoSyncInBackground() async {
+    if (!VaultConfig.hasSupabase || _isAutoSyncing) {
+      return {'pulled': 0, 'pushed': 0};
+    }
+    _isAutoSyncing = true;
+    try {
+      return await syncTwoWay();
     } catch (e) {
       debugPrint('[SupabaseService] autoSyncInBackground notice: $e');
+      return {'pulled': 0, 'pushed': 0};
     } finally {
       _isAutoSyncing = false;
     }

@@ -25,7 +25,7 @@ class VaultConfig {
   static const double upnLatitude = -7.7618;
   static const double upnLongitude = 110.4091;
 
-  static const String _defaultPolygonRpc = 'https://rpc-amoy.polygon.technology';
+  static const String _defaultPolygonRpc = 'https://polygon-amoy-bor-rpc.publicnode.com';
   static const String _defaultExchangeRateUrl = 'https://open.er-api.com/v6/latest/USD';
 
   /// Initialize dotenv safely with clear logging

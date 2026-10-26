@@ -12,7 +12,7 @@ import '../core/security/auth_service.dart';
 import 'login_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ProfileScreen — Halaman Profil Aplikasi VAULTED (Clean & Simple)
+// ProfileScreen — Halaman Profil Aplikasi VAULTED (Mobile Native UI/UX)
 // ─────────────────────────────────────────────────────────────────────────────
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -228,6 +228,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: VaultColors.background,
+      appBar: AppBar(
+        backgroundColor: VaultColors.background,
+        elevation: 0,
+        centerTitle: false,
+        title: Text(
+          'Profil',
+          style: VaultTypography.sans(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+            color: VaultColors.ink,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: _loading
             ? const Center(
@@ -245,207 +259,206 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
-                    vertical: 16,
+                    vertical: 8,
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // ── Header Title ──────────────────────────────────────
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'PROFIL',
-                            style: VaultTypography.mono(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.2,
-                              color: VaultColors.ink,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: _openEditProfile,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: VaultColors.card,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: VaultColors.hairline),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.edit_outlined,
-                                    size: 14,
-                                    color: VaultColors.ink,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    'Edit',
-                                    style: VaultTypography.sans(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: VaultColors.ink,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 12),
 
-                      // ── Profile Card ──────────────────────────────────────
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: VaultColors.card,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: VaultColors.hairline),
-                        ),
-                        child: Column(
+                      // ── 1. Hero Avatar (Mobile Native Header) ─────────────
+                      GestureDetector(
+                        onTap: _openEditProfile,
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
                           children: [
-                            // Avatar
-                            GestureDetector(
-                              onTap: _openEditProfile,
-                              child: Stack(
-                                alignment: Alignment.bottomRight,
-                                children: [
-                                  Container(
-                                    width: 82,
-                                    height: 82,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: VaultColors.cardHover,
-                                      border: Border.all(
-                                        color: VaultColors.accent,
-                                        width: 2,
-                                      ),
-                                      image: avatarImage != null
-                                          ? DecorationImage(
-                                              image: avatarImage,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : null,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: avatarImage == null
-                                        ? Text(
-                                            initials,
-                                            style: VaultTypography.mono(
-                                              fontSize: 28,
-                                              fontWeight: FontWeight.w700,
-                                              color: VaultColors.accent,
-                                            ),
-                                          )
-                                        : null,
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.all(5),
-                                    decoration: BoxDecoration(
-                                      color: VaultColors.accent,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: VaultColors.card,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: const Icon(
-                                      Icons.camera_alt_rounded,
-                                      size: 12,
-                                      color: Colors.white,
-                                    ),
+                            Container(
+                              width: 92,
+                              height: 92,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: VaultColors.cardHover,
+                                border: Border.all(
+                                  color: VaultColors.accent,
+                                  width: 2.5,
+                                ),
+                                image: avatarImage != null
+                                    ? DecorationImage(
+                                        image: avatarImage,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF141413)
+                                        .withValues(alpha: 0.06),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
+                              alignment: Alignment.center,
+                              child: avatarImage == null
+                                  ? Text(
+                                      initials,
+                                      style: VaultTypography.mono(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.w700,
+                                        color: VaultColors.accent,
+                                      ),
+                                    )
+                                  : null,
                             ),
-                            const SizedBox(height: 14),
-
-                            // Name & Username
-                            Text(
-                              fullName,
-                              style: VaultTypography.sans(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: VaultColors.ink,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '@$username',
-                              style: VaultTypography.mono(
-                                fontSize: 12,
-                                color: VaultColors.ink2,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-
-                            // Bio (if filled)
-                            if (bio.isNotEmpty) ...[
-                              const SizedBox(height: 12),
-                              Text(
-                                bio,
-                                style: VaultTypography.sans(
-                                  fontSize: 13,
-                                  height: 1.4,
-                                  color: VaultColors.ink2,
+                            Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: VaultColors.primaryButton,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: VaultColors.card,
+                                  width: 2,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
-                            ],
+                              child: const Icon(
+                                Icons.camera_alt_rounded,
+                                size: 13,
+                                color: Colors.white,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 14),
 
-                      // ── Informasi Akun (Account Details) ──────────────────
+                      // ── 2. Nama & Handle ──────────────────────────────────
                       Text(
-                        'INFORMASI AKUN',
-                        style: VaultTypography.mono(
-                          fontSize: 10,
+                        fullName,
+                        style: VaultTypography.sans(
+                          fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
+                          letterSpacing: -0.3,
+                          color: VaultColors.ink,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '@$username',
+                        style: VaultTypography.mono(
+                          fontSize: 13,
                           color: VaultColors.ink2,
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 8),
+
+                      // Bio (jika diisi)
+                      if (bio.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            bio,
+                            style: VaultTypography.sans(
+                              fontSize: 13,
+                              height: 1.4,
+                              color: VaultColors.ink2,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+
+                      // ── 3. Tombol "Edit Profil" Terlihat Jelas (Thumb Zone)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 42,
+                        child: OutlinedButton.icon(
+                          onPressed: _openEditProfile,
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            size: 16,
+                            color: VaultColors.ink,
+                          ),
+                          label: Text(
+                            'Edit Profil',
+                            style: VaultTypography.sans(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: VaultColors.ink,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: VaultColors.card,
+                            side: const BorderSide(color: VaultColors.hairline),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+
+                      // ── 4. Informasi Akun (Grouped Mobile List) ────────────
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'INFORMASI AKUN',
+                          style: VaultTypography.mono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                            color: VaultColors.ink2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
 
                       Container(
                         decoration: BoxDecoration(
                           color: VaultColors.card,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: VaultColors.hairline),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF141413)
+                                  .withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
                             _InfoTile(
-                              icon: Icons.person_outline_rounded,
+                              icon: Icons.badge_outlined,
                               label: 'Nama Lengkap',
                               value: fullName,
+                              onTap: _openEditProfile,
                             ),
                             const Divider(
-                                color: VaultColors.hairline, height: 1, indent: 50),
+                                color: VaultColors.hairline,
+                                height: 1,
+                                indent: 52),
                             _InfoTile(
                               icon: Icons.alternate_email_rounded,
                               label: 'Username',
                               value: username,
                             ),
                             const Divider(
-                                color: VaultColors.hairline, height: 1, indent: 50),
+                                color: VaultColors.hairline,
+                                height: 1,
+                                indent: 52),
                             _InfoTile(
                               icon: Icons.inventory_2_outlined,
-                              label: 'Total Koleksi Aset',
+                              label: 'Total Aset di Vault',
                               value: '$_itemCount Item',
                             ),
                             const Divider(
-                                color: VaultColors.hairline, height: 1, indent: 50),
+                                color: VaultColors.hairline,
+                                height: 1,
+                                indent: 52),
                             _InfoTile(
                               icon: Icons.calendar_today_outlined,
                               label: 'Bergabung Sejak',
@@ -456,15 +469,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // ── Tombol Log Out ────────────────────────────────────
+                      // ── 5. Tombol Keluar dari Akun ────────────────────────
                       SizedBox(
                         width: double.infinity,
                         height: 48,
-                        child: OutlinedButton.icon(
+                        child: TextButton.icon(
                           onPressed: _showLogoutConfirmation,
                           icon: const Icon(
                             Icons.logout_rounded,
-                            size: 16,
+                            size: 17,
                             color: VaultColors.neg,
                           ),
                           label: Text(
@@ -475,15 +488,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: VaultColors.neg,
                             ),
                           ),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: VaultColors.hairline),
+                          style: TextButton.styleFrom(
+                            backgroundColor:
+                                VaultColors.neg.withValues(alpha: 0.06),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -494,51 +508,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _InfoTile — Baris informasi akun bersih
+// _InfoTile — Baris Informasi Mobile Native
 // ─────────────────────────────────────────────────────────────────────────────
 class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   const _InfoTile({
     required this.icon,
     required this.label,
     required this.value,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: VaultColors.ink2),
-          const SizedBox(width: 14),
-          Text(
-            label,
-            style: VaultTypography.sans(
-              fontSize: 13,
-              color: VaultColors.ink2,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: VaultColors.background,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 16, color: VaultColors.ink2),
             ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: VaultTypography.sans(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: VaultColors.ink,
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: VaultTypography.sans(
+                fontSize: 13,
+                color: VaultColors.ink2,
+              ),
             ),
-          ),
-        ],
+            const Spacer(),
+            Text(
+              value,
+              style: VaultTypography.sans(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: VaultColors.ink,
+              ),
+            ),
+            if (onTap != null) ...[
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: VaultColors.ink3,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _EditProfileScreen — Form edit profil simpel (Foto, Nama, Bio)
+// _EditProfileScreen — Form edit profil simpel & modern
 // ─────────────────────────────────────────────────────────────────────────────
 class _EditProfileScreen extends StatefulWidget {
   final Map<String, dynamic> profile;
@@ -754,18 +790,14 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
         backgroundColor: VaultColors.background,
         elevation: 0,
         centerTitle: true,
-        leading: TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Batal',
-            style: VaultTypography.sans(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w600,
-              color: VaultColors.ink2,
-            ),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: VaultColors.ink,
           ),
+          onPressed: () => Navigator.pop(context),
         ),
-        leadingWidth: 70,
         title: Text(
           'Edit Profil',
           style: VaultTypography.sans(
@@ -817,15 +849,15 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 12),
-              // Avatar
+              // Avatar dengan tombol kamera
               GestureDetector(
                 onTap: _pickPhoto,
                 child: Stack(
                   alignment: Alignment.bottomRight,
                   children: [
                     Container(
-                      width: 84,
-                      height: 84,
+                      width: 88,
+                      height: 88,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: VaultColors.cardHover,
@@ -842,7 +874,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                           ? Text(
                               initials,
                               style: VaultTypography.mono(
-                                fontSize: 28,
+                                fontSize: 30,
                                 fontWeight: FontWeight.w700,
                                 color: VaultColors.accent,
                               ),
@@ -850,7 +882,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                           : null,
                     ),
                     Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
                         color: VaultColors.accent,
                         shape: BoxShape.circle,
@@ -865,12 +897,16 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Ubah Foto Profil',
-                style: VaultTypography.sans(
-                  fontSize: 12,
-                  color: VaultColors.ink2,
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: _pickPhoto,
+                child: Text(
+                  'Ubah Foto Profil',
+                  style: VaultTypography.sans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: VaultColors.accent,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),

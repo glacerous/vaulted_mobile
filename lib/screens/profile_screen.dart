@@ -12,7 +12,7 @@ import '../core/security/auth_service.dart';
 import 'login_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ProfileScreen — Halaman Profil Aplikasi VAULTED (Mobile Native UI/UX)
+// ProfileScreen — VAULTED Account Profile (Mobile Native UI/UX)
 // ─────────────────────────────────────────────────────────────────────────────
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -92,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Konfirmasi Keluar',
+                        'Confirm Sign Out',
                         style: VaultTypography.sans(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -100,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       Text(
-                        'Mengakhiri sesi akun',
+                        'End authenticated session',
                         style: VaultTypography.mono(
                           fontSize: 10,
                           color: VaultColors.ink2,
@@ -112,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 14),
               Text(
-                'Apakah Anda yakin ingin keluar dari akun Vaulted? Anda perlu masuk kembali untuk mengakses vault Anda.',
+                'Are you sure you want to sign out of Vaulted? You will need to sign in again to access your assets.',
                 style: VaultTypography.sans(
                   fontSize: 13,
                   height: 1.45,
@@ -133,7 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       child: Text(
-                        'Batal',
+                        'Cancel',
                         style: VaultTypography.sans(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -163,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: Colors.white,
                       ),
                       label: Text(
-                        'Keluar',
+                        'Sign Out',
                         style: VaultTypography.sans(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -194,10 +194,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final dt = DateTime.parse(raw);
       const months = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
       ];
-      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+      return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
     } catch (_) {
       return raw;
     }
@@ -205,7 +205,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final fullName = (_profile?['full_name'] as String?) ?? 'Pengguna Vaulted';
+    final fullName = (_profile?['full_name'] as String?) ?? 'Vaulted User';
     final username = (_profile?['username'] as String?) ?? 'azzaky';
     final bio = (_profile?['bio'] as String?) ?? '';
     final createdAt = _formatDate(_profile?['created_at'] as String?);
@@ -233,7 +233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
         centerTitle: false,
         title: Text(
-          'Profil',
+          'Profile',
           style: VaultTypography.sans(
             fontSize: 22,
             fontWeight: FontWeight.w800,
@@ -266,7 +266,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       const SizedBox(height: 12),
 
-                      // ── 1. Hero Avatar (Mobile Native Header) ─────────────
+                      // ── 1. Hero Avatar ────────────────────────────────────
                       GestureDetector(
                         onTap: _openEditProfile,
                         child: Stack(
@@ -330,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // ── 2. Nama & Handle ──────────────────────────────────
+                      // ── 2. Name & Handle ──────────────────────────────────
                       Text(
                         fullName,
                         style: VaultTypography.sans(
@@ -351,7 +351,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         textAlign: TextAlign.center,
                       ),
 
-                      // Bio (jika diisi)
+                      // Bio (if set)
                       if (bio.isNotEmpty) ...[
                         const SizedBox(height: 10),
                         Padding(
@@ -369,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                       const SizedBox(height: 16),
 
-                      // ── 3. Tombol "Edit Profil" Terlihat Jelas (Thumb Zone)
+                      // ── 3. Edit Profile Button ────────────────────────────
                       SizedBox(
                         width: double.infinity,
                         height: 42,
@@ -381,7 +381,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             color: VaultColors.ink,
                           ),
                           label: Text(
-                            'Edit Profil',
+                            'Edit Profile',
                             style: VaultTypography.sans(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
@@ -400,11 +400,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // ── 4. Informasi Akun (Grouped Mobile List) ────────────
+                      // ── 4. Account Information ────────────────────────────
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'INFORMASI AKUN',
+                          'ACCOUNT INFORMATION',
                           style: VaultTypography.mono(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -433,7 +433,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: [
                             _InfoTile(
                               icon: Icons.badge_outlined,
-                              label: 'Nama Lengkap',
+                              label: 'Full Name',
                               value: fullName,
                               onTap: _openEditProfile,
                             ),
@@ -452,8 +452,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 indent: 52),
                             _InfoTile(
                               icon: Icons.inventory_2_outlined,
-                              label: 'Total Aset di Vault',
-                              value: '$_itemCount Item',
+                              label: 'Total Vault Assets',
+                              value: '$_itemCount Items',
                             ),
                             const Divider(
                                 color: VaultColors.hairline,
@@ -461,7 +461,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 indent: 52),
                             _InfoTile(
                               icon: Icons.calendar_today_outlined,
-                              label: 'Bergabung Sejak',
+                              label: 'Member Since',
                               value: createdAt,
                             ),
                           ],
@@ -469,7 +469,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // ── 5. Tombol Keluar dari Akun ────────────────────────
+                      // ── 5. Sign Out Button ────────────────────────────────
                       SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -481,7 +481,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             color: VaultColors.neg,
                           ),
                           label: Text(
-                            'Keluar dari Akun',
+                            'Sign Out of Vault',
                             style: VaultTypography.sans(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
@@ -508,7 +508,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _InfoTile — Baris Informasi Mobile Native
+// _InfoTile — Native Mobile Info Row
 // ─────────────────────────────────────────────────────────────────────────────
 class _InfoTile extends StatelessWidget {
   final IconData icon;
@@ -574,7 +574,7 @@ class _InfoTile extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _EditProfileScreen — Form edit profil simpel & modern
+// _EditProfileScreen — Profile Editor (Photo, Name, Bio)
 // ─────────────────────────────────────────────────────────────────────────────
 class _EditProfileScreen extends StatefulWidget {
   final Map<String, dynamic> profile;
@@ -612,7 +612,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
 
   Future<void> _pickPhoto() async {
     if (kIsWeb) {
-      _toast('Ganti foto tidak tersedia di versi web.', icon: Icons.info_outline);
+      _toast('Photo upload is not available on web.', icon: Icons.info_outline);
       return;
     }
     final picker = ImagePicker();
@@ -652,7 +652,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                 ),
               ),
               Text(
-                'Pilih Sumber Foto',
+                'Choose Photo Source',
                 style: VaultTypography.sans(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -666,7 +666,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                   color: VaultColors.accent,
                 ),
                 title: Text(
-                  'Kamera',
+                  'Camera',
                   style: VaultTypography.sans(
                     fontSize: 14,
                     color: VaultColors.ink,
@@ -680,7 +680,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                   color: VaultColors.accent,
                 ),
                 title: Text(
-                  'Galeri',
+                  'Gallery',
                   style: VaultTypography.sans(
                     fontSize: 14,
                     color: VaultColors.ink,
@@ -698,7 +698,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
   Future<void> _save() async {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
-      _toast('Nama lengkap tidak boleh kosong.', icon: Icons.warning_rounded);
+      _toast('Full name cannot be empty.', icon: Icons.warning_rounded);
       return;
     }
     setState(() => _saving = true);
@@ -717,7 +717,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
       HapticFeedback.lightImpact();
       if (!mounted) return;
       _toast(
-        'Profil berhasil diperbarui',
+        'Profile updated successfully',
         icon: Icons.check_circle_rounded,
         iconColor: VaultColors.pos,
       );
@@ -726,7 +726,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
     } else {
       if (!mounted) return;
       _toast(
-        'Gagal menyimpan perubahan.',
+        'Failed to save changes. Please try again.',
         icon: Icons.error_outline_rounded,
         iconColor: VaultColors.neg,
       );
@@ -799,7 +799,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Edit Profil',
+          'Edit Profile',
           style: VaultTypography.sans(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -829,7 +829,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                       ),
                     )
                   : Text(
-                      'Simpan',
+                      'Save',
                       style: VaultTypography.sans(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -849,7 +849,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 12),
-              // Avatar dengan tombol kamera
+              // Avatar with camera button
               GestureDetector(
                 onTap: _pickPhoto,
                 child: Stack(
@@ -901,7 +901,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
               GestureDetector(
                 onTap: _pickPhoto,
                 child: Text(
-                  'Ubah Foto Profil',
+                  'Change Profile Photo',
                   style: VaultTypography.sans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -929,7 +929,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'NAMA LENGKAP *',
+                            'FULL NAME *',
                             style: VaultTypography.mono(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
@@ -945,7 +945,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                               color: VaultColors.ink,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Masukkan nama lengkap',
+                              hintText: 'Enter full name',
                               hintStyle: VaultTypography.sans(
                                 fontSize: 13.5,
                                 color: VaultColors.ink3,
@@ -986,7 +986,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                               color: VaultColors.ink,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Tulis bio singkat...',
+                              hintText: 'Write a brief bio...',
                               hintStyle: VaultTypography.sans(
                                 fontSize: 13.5,
                                 color: VaultColors.ink3,

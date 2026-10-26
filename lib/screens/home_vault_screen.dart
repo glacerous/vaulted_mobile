@@ -1028,7 +1028,7 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                             icon: Icons.monetization_on_outlined,
                             iconColor: VaultColors.accent,
                             title: "Valto's Vault Rush",
-                            subtitle: 'Tangkap aset, hindari scam',
+                            subtitle: 'Catch assets, dodge traps & scams',
                             value: 'Play',
                             isAction: true,
                             onTap: () {

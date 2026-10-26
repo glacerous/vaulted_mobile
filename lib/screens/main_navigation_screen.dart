@@ -23,20 +23,17 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   // =========================================================================
-  // DOSEN LIVE CHALLENGE: SENSOR & NAVIGATION SETTINGS
-  // - Accelerometer: Goyang HP kencang (Emergency Shake) untuk Kunci Otomatis (Auto Lock)
-  // - Gyroscope: Efek Kemiringan 3D Hologram pada Kartu Koleksi (GyroTilt)
+  // SENSOR & NAVIGATION SETTINGS
+  // - Accelerometer: Emergency Shake to Auto Lock
+  // - Gyroscope: 3D Hologram Tilt on Collection Cards (GyroTilt)
   // =========================================================================
-  static const double shakeSensitivity = 17.0;     // Ambang batas guncangan accelerometer m/s²
-  static const int sensorCooldownSeconds = 2;       // Jeda waktu antar deteksi (detik)
+  static const double shakeSensitivity = 17.0;     // Accelerometer shake threshold m/s²
+  static const int sensorCooldownSeconds = 2;       // Cooldown seconds between detections
 
   int _currentIndex = 0;
   StreamSubscription? _accelerometerSubscription;
   DateTime _lastShakeTime = DateTime.now();
 
-  // Slide Requirement:
-  // "Terdapat menu buttom navigation: menu profil (ada gambar) dan
-  // menu saran dan kesan mata kuliah Pemrograman Aplikasi Mobile dan menu logout"
   final List<Widget> _pages = const [
     HomeVaultScreen(),
     SearchRadarScreen(),
@@ -73,7 +70,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               context,
               icon: Icons.lock_outline_rounded,
               iconColor: VaultColors.warn,
-              message: 'Accelerometer: Emergency Shake Terdeteksi! Vault Dikunci.',
+              message: 'Accelerometer: Emergency Shake Detected! Vault Locked.',
             );
             Navigator.pushAndRemoveUntil(
               context,
@@ -123,11 +120,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Konfirmasi Log Out',
+                          'Confirm Sign Out',
                           style: VaultTypography.sans(fontSize: 16, fontWeight: FontWeight.w700, color: VaultColors.ink),
                         ),
                         Text(
-                          'Mengakhiri sesi akses Vaulted',
+                          'End authenticated vault session',
                           style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2),
                         ),
                       ],
@@ -136,7 +133,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Apakah Anda yakin ingin keluar dari akun Vaulted? Sesi otentikasi lokal Anda akan diakhiri. Data aset SQLite tetap aman di perangkat Anda.',
+                  'Are you sure you want to sign out of Vaulted? Your local authentication session will end safely.',
                   style: VaultTypography.sans(fontSize: 12.5, height: 1.5, color: VaultColors.ink2),
                 ),
                 const SizedBox(height: 24),
@@ -151,7 +148,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: Text(
-                          'Batal',
+                          'Cancel',
                           style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.ink),
                         ),
                       ),
@@ -171,7 +168,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                         },
                         icon: const Icon(Icons.logout_rounded, size: 16, color: Colors.white),
                         label: Text(
-                          'Keluar',
+                          'Sign Out',
                           style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -280,7 +277,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 ),
                 _buildTabItem(
                   index: 2,
-                  label: 'Profil',
+                  label: 'Profile',
                   icon: Icons.person_outline_rounded,
                   activeIcon: Icons.person_rounded,
                 ),

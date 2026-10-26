@@ -1140,7 +1140,7 @@ class _GameScreenState extends State<GameScreen>
         ),
         const SizedBox(height: 4),
         Text(
-          'Tangkap Aset, Hindari Jebakan!',
+          'Catch Assets, Dodge Traps!',
           style: VaultTypography.sans(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -1150,15 +1150,15 @@ class _GameScreenState extends State<GameScreen>
         const SizedBox(height: 14),
         _legendRow(
           kinds: [DropKind.gold, DropKind.gem, DropKind.card, DropKind.cash],
-          text: 'Aset: Emas, Gem, Skin Card (+Skor)',
+          text: 'Assets: Gold, Gem, Skin Card (+Score)',
         ),
         _legendRow(
           kinds: [DropKind.heart, DropKind.magnet, DropKind.slow],
-          text: 'Power-up: Extra Life, Magnet, Slow-Mo',
+          text: 'Power-ups: Extra Life, Magnet, Slow-Mo',
         ),
         _legendRow(
           kinds: [DropKind.bomb, DropKind.scam],
-          text: 'Jebakan: Bom & Scam Rug-Pull (-1 Nyawa)',
+          text: 'Traps: Bomb & Scam Rug-Pull (-1 Life)',
           isDanger: true,
         ),
         const SizedBox(height: 18),
@@ -1175,7 +1175,7 @@ class _GameScreenState extends State<GameScreen>
               ),
             ),
             child: Text(
-              'MULAI MAIN',
+              'START GAME',
               style: VaultTypography.sans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -1202,7 +1202,7 @@ class _GameScreenState extends State<GameScreen>
         ),
         const SizedBox(height: 4),
         Text(
-          'Skor Sementara: $_score',
+          'Current Score: $_score',
           style: VaultTypography.sans(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -1224,7 +1224,7 @@ class _GameScreenState extends State<GameScreen>
                   ),
                 ),
                 child: Text(
-                  'Keluar',
+                  'Exit',
                   style: VaultTypography.sans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -1357,11 +1357,11 @@ class _GameScreenState extends State<GameScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _stat('TERTANGKAP', '$_caught'),
+              _stat('CAUGHT', '$_caught'),
               Container(width: 1, height: 24, color: VaultColors.hairline),
-              _stat('TERLEWAT', '$_missed'),
+              _stat('MISSED', '$_missed'),
               Container(width: 1, height: 24, color: VaultColors.hairline),
-              _stat('AKURASI', '$accuracy%'),
+              _stat('ACCURACY', '$accuracy%'),
               Container(width: 1, height: 24, color: VaultColors.hairline),
               _stat(
                 'MAX COMBO',
@@ -1385,7 +1385,7 @@ class _GameScreenState extends State<GameScreen>
                   ),
                 ),
                 child: Text(
-                  'Keluar',
+                  'Exit',
                   style: VaultTypography.sans(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -1405,7 +1405,7 @@ class _GameScreenState extends State<GameScreen>
                   color: Colors.white,
                 ),
                 label: Text(
-                  'MAIN LAGI',
+                  'PLAY AGAIN',
                   style: VaultTypography.sans(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,

@@ -52,9 +52,9 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
   };
 
   final Map<String, String> _zoneNames = {
-    'WIB': 'Waktu Indonesia Barat (Jakarta)',
-    'WITA': 'Waktu Indonesia Tengah (Bali/Makassar)',
-    'WIT': 'Waktu Indonesia Timur (Jayapura)',
+    'WIB': 'Western Indonesia Time (Jakarta)',
+    'WITA': 'Central Indonesia Time (Bali/Makassar)',
+    'WIT': 'Eastern Indonesia Time (Jayapura)',
     'London': 'Greenwich Mean Time (London, UK)',
   };
 
@@ -129,9 +129,9 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
 
   String _getTimeDiffNote(String targetZone) {
     final diff = (_utcOffsets[targetZone] ?? 0) - (_utcOffsets[_sourceZone] ?? 0);
-    if (diff == 0) return 'Zona waktu acuan saat ini';
-    if (diff > 0) return '+$diff jam lebih cepat dari $_sourceZone';
-    return '${diff.abs()} jam lebih lambat dari $_sourceZone';
+    if (diff == 0) return 'Reference time zone';
+    if (diff > 0) return '+$diff hrs ahead of $_sourceZone';
+    return '${diff.abs()} hrs behind $_sourceZone';
   }
 
   @override
@@ -186,11 +186,11 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
           tabs: const [
             Tab(
               icon: Icon(Icons.currency_exchange_rounded, size: 18),
-              text: 'Mata Uang (Valuta)',
+              text: 'Currency (Forex)',
             ),
             Tab(
               icon: Icon(Icons.schedule_rounded, size: 18),
-              text: 'Waktu (Zona Global)',
+              text: 'Time (Global Zones)',
             ),
           ],
         ),
@@ -260,7 +260,7 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
 
           // Input Card
           Text(
-            'MASUKKAN NOMINAL & VALUTA ASAL',
+            'ENTER AMOUNT & BASE CURRENCY',
             style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.1, color: VaultColors.accent),
           ),
           const SizedBox(height: 8),
@@ -381,7 +381,7 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
 
           // Output Section
           Text(
-            'HASIL KONVERSI KE VALUTA LAIN',
+            'MULTI-CURRENCY VALUATION RESULTS',
             style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.1, color: VaultColors.accent),
           ),
           const SizedBox(height: 10),
@@ -493,12 +493,12 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sinkronisasi Waktu Global Asset Drop',
+                        'Global Asset Drop Time Sync',
                         style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w700, color: VaultColors.ink),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Sinkronkan jam lelang internasional (London/UTC) dengan seluruh zona waktu Indonesia.',
+                        'Synchronize global auction drop times (London/UTC) with all Indonesian time zones.',
                         style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink2),
                       ),
                     ],
@@ -511,7 +511,7 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
 
           // Source Time Picker Card
           Text(
-            'TENTUKAN WAKTU & ZONA ASAL',
+            'SET SOURCE TIME & TIME ZONE',
             style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.1, color: VaultColors.accent),
           ),
           const SizedBox(height: 8),
@@ -566,7 +566,7 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'WAKTU INPUT ($_sourceZone)',
+                          'INPUT TIME ($_sourceZone)',
                           style: VaultTypography.mono(fontSize: 9.5, color: VaultColors.ink2),
                         ),
                         const SizedBox(height: 4),
@@ -605,7 +605,7 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
                       },
                       icon: const Icon(Icons.edit_calendar_rounded, size: 16, color: Color(0xFF131312)),
                       label: Text(
-                        'Ubah Jam',
+                        'Pick Time',
                         style: VaultTypography.sans(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF131312)),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -624,9 +624,9 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
                   children: [
                     Text('Cepat: ', style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2)),
                     const SizedBox(width: 4),
-                    _buildHourAdjustChip('-1 Jam', -1),
+                    _buildHourAdjustChip('-1 Hour', -1),
                     const SizedBox(width: 4),
-                    _buildHourAdjustChip('+1 Jam', 1),
+                    _buildHourAdjustChip('+1 Hour', 1),
                     const SizedBox(width: 4),
                     _buildNowChip(),
                   ],
@@ -638,7 +638,7 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
 
           // Output Cards for all 4 zones
           Text(
-            'HASIL KONVERSI 4 ZONA WAKTU LENGKAP',
+            'SYNCHRONIZED 4 GLOBAL TIME ZONES',
             style: VaultTypography.mono(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 1.1, color: VaultColors.accent),
           ),
           const SizedBox(height: 10),
@@ -770,7 +770,7 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
           borderRadius: BorderRadius.circular(6),
           border: Border.all(color: VaultColors.accent.withValues(alpha: 0.4)),
         ),
-        child: Text('Jam Sekarang', style: VaultTypography.mono(fontSize: 9.5, fontWeight: FontWeight.w600, color: VaultColors.accent)),
+        child: Text('Current Time', style: VaultTypography.mono(fontSize: 9.5, fontWeight: FontWeight.w600, color: VaultColors.accent)),
       ),
     );
   }

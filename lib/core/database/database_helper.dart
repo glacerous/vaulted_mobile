@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -544,5 +544,75 @@ class DatabaseHelper {
     if (db == null) return 0;
     return await db.insert('subscriptions', sub);
   }
-}
 
+  // ─── Profile helpers ───────────────────────────────────────────────────────
+
+  /// Get full profile row for a given username.
+  Future<Map<String, dynamic>?> getUserProfile(String username) async {
+    final key = username.trim().toLowerCase();
+    if (kIsWeb) {
+      return _webUsers[key];
+    }
+    try {
+      final db = await database;
+      if (db == null) return _webUsers[key];
+      final rows = await db.query(
+        'users',
+        where: 'LOWER(username) = ?',
+        whereArgs: [key],
+      );
+      return rows.isNotEmpty ? rows.first : null;
+    } catch (e) {
+      debugPrint('[DatabaseHelper] getUserProfile error: $e');
+      return _webUsers[key];
+    }
+  }
+
+  /// Update editable profile fields: full_name, bio, photo_path, nim, prodi.
+  Future<bool> updateUserProfile(
+    String username,
+    Map<String, dynamic> updates,
+  ) async {
+    final key = username.trim().toLowerCase();
+    final allowed = {'full_name', 'bio', 'photo_path', 'nim', 'prodi'};
+    final clean = <String, dynamic>{
+      for (final e in updates.entries)
+        if (allowed.contains(e.key)) e.key: e.value,
+    };
+    if (clean.isEmpty) return false;
+
+    if (kIsWeb) {
+      final user = _webUsers[key];
+      if (user == null) return false;
+      _webUsers[key] = {...user, ...clean};
+      return true;
+    }
+
+    try {
+      final db = await database;
+      if (db == null) {
+        final user = _webUsers[key];
+        if (user == null) return false;
+        _webUsers[key] = {...user, ...clean};
+        return true;
+      }
+
+      for (final col in ['bio', 'photo_path', 'nim', 'prodi']) {
+        try {
+          await db.execute('ALTER TABLE users ADD COLUMN $col TEXT');
+        } catch (_) {}
+      }
+
+      final count = await db.update(
+        'users',
+        clean,
+        where: 'LOWER(username) = ?',
+        whereArgs: [key],
+      );
+      return count > 0;
+    } catch (e) {
+      debugPrint('[DatabaseHelper] updateUserProfile error: $e');
+      return false;
+    }
+  }
+}

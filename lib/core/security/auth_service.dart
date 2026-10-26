@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -252,5 +252,23 @@ class AuthService {
         await _storage.delete(key: _userNameKey).timeout(const Duration(seconds: 2));
       } catch (_) {}
     }
+  }
+
+  /// Update profile data in DB and sync in-memory name / secure storage.
+  Future<bool> updateProfile(Map<String, dynamic> updates) async {
+    if (_activeSessionUser == null) return false;
+    final ok = await DatabaseHelper.instance.updateUserProfile(
+      _activeSessionUser!,
+      updates,
+    );
+    if (ok && updates.containsKey('full_name')) {
+      _activeFullName = updates['full_name'] as String?;
+      if (!kIsWeb) {
+        try {
+          await _storage.write(key: _userNameKey, value: _activeFullName);
+        } catch (_) {}
+      }
+    }
+    return ok;
   }
 }

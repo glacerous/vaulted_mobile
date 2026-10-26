@@ -1027,8 +1027,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
                           _buildPillarRow(
                             icon: Icons.monetization_on_outlined,
                             iconColor: VaultColors.accent,
-                            title: "Valto's Appraisal Challenge",
-                            subtitle: 'Market valuation mini-trial',
+                            title: "Valto's Vault Rush",
+                            subtitle: 'Tangkap aset, hindari scam',
                             value: 'Play',
                             isAction: true,
                             onTap: () {

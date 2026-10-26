@@ -155,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onPressed: () async {
                         Navigator.pop(ctx);
                         await AuthService.instance.logout();
-                        if (!context.mounted) return;
+                        if (!mounted) return;
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(

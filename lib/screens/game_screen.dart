@@ -19,17 +19,17 @@ import '../core/constants/typography.dart';
 /// ============================================================================
 class GameConfig {
   static const int startingLives = 3;
-  static const int comboForMultiplier = 5; // tiap N tangkapan beruntun, x naik
+  static const int comboForMultiplier = 4; // tiap 4 tangkapan beruntun, x naik
   static const int maxMultiplier = 5;
-  static const double baseFallSpeed = 210; // px/detik
-  static const double maxFallSpeed = 520;
-  static const double baseSpawnInterval = 0.85; // detik
-  static const double minSpawnInterval = 0.38;
+  static const double baseFallSpeed = 290; // px/detik (lebih kencang & menantang)
+  static const double maxFallSpeed = 720;
+  static const double baseSpawnInterval = 0.62; // detik (tempo lebih rapat)
+  static const double minSpawnInterval = 0.22;
   static const double difficultyRampSeconds =
-      90; // waktu sampai kesulitan penuh
-  static const double invulnSeconds = 1.1; // kebal sesaat setelah kena
-  static const double magnetSeconds = 6;
-  static const double slowSeconds = 5;
+      48; // waktu sampai kesulitan puncak (48 detik)
+  static const double invulnSeconds = 0.75; // kebal sesaat setelah kena
+  static const double magnetSeconds = 4.0;
+  static const double slowSeconds = 4.0;
 }
 
 enum DropKind { gold, gem, cash, card, heart, magnet, slow, bomb, scam }
@@ -54,6 +54,278 @@ const Map<DropKind, _DropSpec> _specs = {
   DropKind.bomb: _DropSpec('BOMB', '✹', 0, Color(0xFF141413), true),
   DropKind.scam: _DropSpec('SCAM', '☠', 0, Color(0xFF7F1D1D), true),
 };
+
+/// Engine renderer sprite pixel art 8x8 yang tajam dan stylish untuk Valto's Vault Rush
+class PixelSprite {
+  PixelSprite._();
+
+  static const Map<DropKind, List<String>> _matrices = {
+    DropKind.gold: [
+      '..BBBB..',
+      '.BYYYYB.',
+      'BYWYYYGB',
+      'BGGVGGGB',
+      'BGGVGGGB',
+      'BDGGGGDB',
+      '.BBBBBB.',
+      '........',
+    ],
+    DropKind.cash: [
+      '.BBBBBB.',
+      'BLLEELLB',
+      'BLEWWELL',
+      'BLEEWELB',
+      'BLEWWELL',
+      'BLEWEELB',
+      'BLLEELLB',
+      '.BBBBBB.',
+    ],
+    DropKind.gem: [
+      '..BBBB..',
+      '.BCCCCB.',
+      'BCWCCCCB',
+      'BDCCCCDB',
+      '.BDCCDB.',
+      '..BEEB..',
+      '...BB...',
+      '........',
+    ],
+    DropKind.card: [
+      '.BBBBBB.',
+      'BPPPPPPB',
+      'BPVYVPB.',
+      'BPYYYYPB',
+      'BPYYYYPB',
+      'BPVYVPB.',
+      'BPPPPPPB',
+      '.BBBBBB.',
+    ],
+    DropKind.heart: [
+      '.BB..BB.',
+      'BRWB.BRRB',
+      'BRWRRRRD',
+      'BRRRRRRD',
+      '.BRRRRD.',
+      '..BRRD..',
+      '...BB...',
+      '........',
+    ],
+    DropKind.magnet: [
+      'LW....WL',
+      'BR....RB',
+      'BR....RB',
+      'BS....SB',
+      'BS....SB',
+      '.BSSSSB.',
+      '..BBBB..',
+      '........',
+    ],
+    DropKind.slow: [
+      'BGGGGGGB',
+      '.BCCCCB.',
+      '..BCCB..',
+      '...BB...',
+      '..BCCB..',
+      '.BCWWCB.',
+      'BGGGGGGB',
+      '.BBBBBB.',
+    ],
+    DropKind.bomb: [
+      '.....SSF',
+      '....FF..',
+      '..BBBB..',
+      '.BKWKB..',
+      'BKKKKKKB',
+      'BKKKKKKB',
+      '.BKKKKB.',
+      '..BBBB..',
+    ],
+    DropKind.scam: [
+      '..BBBB..',
+      '.BWWWWWB.',
+      'BWRWWRWB',
+      'BWRWWRWB',
+      'BWWBBWWB',
+      '.BWWWWWB.',
+      '..BKBKB..',
+      '..BBBBB..',
+    ],
+  };
+
+  static Map<String, Color> _getPalette(DropKind kind, {double anim = 0}) {
+    switch (kind) {
+      case DropKind.gold:
+        return {
+          'B': const Color(0xFF6B4E12),
+          'Y': const Color(0xFFFDE047),
+          'W': const Color(0xFFFFFBEB),
+          'G': const Color(0xFFEAB308),
+          'D': const Color(0xFFCA8A04),
+          'V': const Color(0xFF854D0E),
+        };
+      case DropKind.cash:
+        return {
+          'B': const Color(0xFF064E3B),
+          'L': const Color(0xFF86EFAC),
+          'E': const Color(0xFF16A34A),
+          'W': const Color(0xFFFFFFFF),
+        };
+      case DropKind.gem:
+        return {
+          'B': const Color(0xFF075985),
+          'W': const Color(0xFFFFFFFF),
+          'C': const Color(0xFF38BDF8),
+          'D': const Color(0xFF0284C7),
+          'E': const Color(0xFF0C4A6E),
+        };
+      case DropKind.card:
+        return {
+          'B': const Color(0xFFFBBF24),
+          'P': const Color(0xFF6B21A8),
+          'V': const Color(0xFFA855F7),
+          'Y': const Color(0xFFFDE047),
+        };
+      case DropKind.heart:
+        return {
+          'B': const Color(0xFF581C1C),
+          'R': const Color(0xFFEF4444),
+          'W': const Color(0xFFFFFFFF),
+          'D': const Color(0xFFB91C1C),
+        };
+      case DropKind.magnet:
+        final spark = (math.sin(anim * 14) > 0)
+            ? const Color(0xFF60A5FA)
+            : const Color(0xFF93C5FD);
+        return {
+          'B': const Color(0xFF0F172A),
+          'R': const Color(0xFFEF4444),
+          'S': const Color(0xFFCBD5E1),
+          'L': spark,
+          'W': const Color(0xFFFFFFFF),
+        };
+      case DropKind.slow:
+        return {
+          'B': const Color(0xFF0C4A6E),
+          'G': const Color(0xFFC0A85C),
+          'C': const Color(0xFF38BDF8),
+          'W': const Color(0xFFE0F2FE),
+        };
+      case DropKind.bomb:
+        final sparkColor = (math.sin(anim * 22) > 0)
+            ? const Color(0xFFF59E0B)
+            : const Color(0xFFEF4444);
+        return {
+          'S': sparkColor,
+          'F': const Color(0xFF92400E),
+          'B': const Color(0xFF09090B),
+          'K': const Color(0xFF27272A),
+          'W': const Color(0xFF71717A),
+        };
+      case DropKind.scam:
+        final eyeGlow = (math.sin(anim * 10) > 0)
+            ? const Color(0xFFEF4444)
+            : const Color(0xFFB91C1C);
+        return {
+          'B': const Color(0xFF7F1D1D),
+          'W': const Color(0xFFF8FAFC),
+          'R': eyeGlow,
+          'K': const Color(0xFF450A0A),
+        };
+    }
+  }
+
+  static void paint(
+    Canvas canvas,
+    Offset center,
+    DropKind kind,
+    double size, {
+    double anim = 0,
+    double opacity = 1.0,
+  }) {
+    final matrix = _matrices[kind]!;
+    final palette = _getPalette(kind, anim: anim);
+    final pixelSize = size / 8.0;
+    final startX = center.dx - size / 2.0;
+    final startY = center.dy - size / 2.0;
+
+    for (int y = 0; y < 8; y++) {
+      final row = matrix[y];
+      for (int x = 0; x < 8; x++) {
+        final char = row[x];
+        if (char == '.') continue;
+        final color = palette[char];
+        if (color == null) continue;
+        final paint = Paint()
+          ..color = opacity < 1.0
+              ? color.withValues(alpha: color.a * opacity)
+              : color
+          ..style = PaintingStyle.fill;
+        canvas.drawRect(
+          Rect.fromLTWH(
+            startX + x * pixelSize,
+            startY + y * pixelSize,
+            pixelSize + 0.35,
+            pixelSize + 0.35,
+          ),
+          paint,
+        );
+      }
+    }
+  }
+}
+
+class PixelSpriteWidget extends StatelessWidget {
+  final DropKind kind;
+  final double size;
+  final double opacity;
+  final double anim;
+
+  const PixelSpriteWidget({
+    super.key,
+    required this.kind,
+    this.size = 24,
+    this.opacity = 1.0,
+    this.anim = 0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _PixelWidgetPainter(kind: kind, opacity: opacity, anim: anim),
+    );
+  }
+}
+
+class _PixelWidgetPainter extends CustomPainter {
+  final DropKind kind;
+  final double opacity;
+  final double anim;
+
+  _PixelWidgetPainter({
+    required this.kind,
+    required this.opacity,
+    required this.anim,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    PixelSprite.paint(
+      canvas,
+      Offset(size.width / 2, size.height / 2),
+      kind,
+      size.width,
+      opacity: opacity,
+      anim: anim,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _PixelWidgetPainter oldDelegate) =>
+      oldDelegate.kind != kind ||
+      oldDelegate.opacity != opacity ||
+      oldDelegate.anim != anim;
+}
 
 class _Drop {
   DropKind kind;
@@ -265,12 +537,18 @@ class _GameScreenState extends State<GameScreen>
       drop.y += drop.vy * slowFactor * dt;
       drop.spin += dt * (drop.kind == DropKind.bomb ? 3 : 1.4);
 
+      // Pada tingkat kesulitan menengah-tinggi, bom & scam bergeser zig-zag
+      if (_specs[drop.kind]!.bad && d > 0.25) {
+        drop.x += math.sin(_elapsed * 4.2 + drop.phase) * (36.0 * d) * dt;
+        drop.x = drop.x.clamp(drop.radius + 6, _arena.width - drop.radius - 6);
+      }
+
       // Magnet menarik item bagus ke arah Valto
       if (_magnet > 0 && !_specs[drop.kind]!.bad) {
         final dx = _playerX - drop.x;
         final dist = (dx).abs() + (playerTop - drop.y).abs();
-        if (dist < 330) {
-          drop.x += dx * dt * 5.5;
+        if (dist < 260) {
+          drop.x += dx * dt * 4.8;
         }
       }
 
@@ -294,7 +572,12 @@ class _GameScreenState extends State<GameScreen>
           _missed++;
           if (_combo > 0) {
             _combo = 0; // aset terlewat = combo putus
-            _floatText(drop.x, _arena.height - 40, 'MISS', VaultColors.ink3);
+            _floatText(drop.x, _arena.height - 40, 'MISS!', VaultColors.ink3);
+          }
+          if (drop.kind == DropKind.card || drop.kind == DropKind.gem) {
+            final penalty = drop.kind == DropKind.card ? 25 : 15;
+            _score = math.max(0, _score - penalty);
+            _floatText(drop.x, _arena.height - 58, '-$penalty', VaultColors.neg);
           }
         }
       }
@@ -307,31 +590,35 @@ class _GameScreenState extends State<GameScreen>
     final d = _difficulty;
     final r = _rng.nextDouble();
 
-    // Peluang jebakan naik seiring waktu
-    final badChance = 0.16 + d * 0.22;
+    // Peluang jebakan lebih tinggi & progresif (22% hingga 46%)
+    final badChance = 0.22 + d * 0.24;
     DropKind kind;
     if (r < badChance) {
       kind = _rng.nextBool() ? DropKind.bomb : DropKind.scam;
     } else {
       final p = _rng.nextDouble();
-      if (p < 0.045 && _lives < GameConfig.startingLives + 2) {
+      if (p < 0.04 && _lives < GameConfig.startingLives + 1) {
         kind = DropKind.heart;
       } else if (p < 0.08) {
         kind = DropKind.magnet;
-      } else if (p < 0.115) {
+      } else if (p < 0.12) {
         kind = DropKind.slow;
-      } else if (p < 0.20) {
+      } else if (p < 0.22) {
         kind = DropKind.card;
-      } else if (p < 0.40) {
+      } else if (p < 0.44) {
         kind = DropKind.gem;
-      } else if (p < 0.68) {
+      } else if (p < 0.72) {
         kind = DropKind.gold;
       } else {
         kind = DropKind.cash;
       }
     }
 
-    final radius = kind == DropKind.card ? 22.0 : 20.0;
+    final radius = switch (kind) {
+      DropKind.card => 22.0,
+      DropKind.bomb || DropKind.scam => 21.0,
+      _ => 20.0,
+    };
     final x =
         radius + 6 + _rng.nextDouble() * (_arena.width - 2 * (radius + 6));
     final base = ui.lerpDouble(
@@ -339,27 +626,28 @@ class _GameScreenState extends State<GameScreen>
       GameConfig.maxFallSpeed,
       _difficulty,
     )!;
-    // Item mahal jatuh lebih cepat, bikin makin menantang
+    // Item bernilai tinggi & scam jatuh lebih kencang
     final bonus = switch (kind) {
-      DropKind.card => 1.25,
-      DropKind.gem => 1.12,
+      DropKind.card => 1.28,
+      DropKind.gem => 1.15,
+      DropKind.scam => 1.12,
       _ => 1.0,
     };
-    final vy = base * bonus * (0.9 + _rng.nextDouble() * 0.25);
+    final vy = base * bonus * (0.92 + _rng.nextDouble() * 0.22);
     _drops.add(_Drop(kind, x, -radius, vy, radius, _rng.nextDouble() * 6.28));
 
-    // Kadang spawn pasangan agar pemain harus memilih jalur
-    if (_difficulty > 0.35 && _rng.nextDouble() < 0.22) {
+    // Spawn ganda pada tingkat kesulitan lebih tinggi (pemain harus bermanuver cepat)
+    if (_difficulty > 0.22 && _rng.nextDouble() < (0.26 + d * 0.20)) {
       final x2 =
-          (x + _arena.width * (0.35 + _rng.nextDouble() * 0.3)) %
+          (x + _arena.width * (0.32 + _rng.nextDouble() * 0.36)) %
               (_arena.width - 2 * (radius + 6)) +
           radius +
           6;
       final k2 = _rng.nextDouble() < 0.55
           ? (_rng.nextBool() ? DropKind.bomb : DropKind.scam)
-          : DropKind.gold;
+          : (_rng.nextBool() ? DropKind.gold : DropKind.cash);
       _drops.add(
-        _Drop(k2, x2, -radius - 60, vy, radius, _rng.nextDouble() * 6.28),
+        _Drop(k2, x2, -radius - 50, vy * 1.05, radius, _rng.nextDouble() * 6.28),
       );
     }
   }
@@ -503,7 +791,7 @@ class _GameScreenState extends State<GameScreen>
   Widget _buildHud() {
     return ValueListenableBuilder<int>(
       valueListenable: _frame,
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         final maxLives = GameConfig.startingLives + 2;
         return Padding(
           padding: const EdgeInsets.fromLTRB(8, 4, 14, 8),
@@ -517,7 +805,7 @@ class _GameScreenState extends State<GameScreen>
                 ),
                 onPressed: () => Navigator.pop(context),
               ),
-              // Nyawa
+              // Nyawa (Stylish Pixel Hearts)
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: List.generate(maxLives, (i) {
@@ -525,15 +813,11 @@ class _GameScreenState extends State<GameScreen>
                   if (!show) return const SizedBox.shrink();
                   final alive = i < _lives;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 2),
-                    child: Icon(
-                      alive
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
+                    padding: const EdgeInsets.only(right: 3),
+                    child: PixelSpriteWidget(
+                      kind: DropKind.heart,
                       size: 18,
-                      color: alive
-                          ? VaultColors.neg
-                          : VaultColors.ink3.withValues(alpha: 0.4),
+                      opacity: alive ? 1.0 : 0.22,
                     ),
                   );
                 }),
@@ -542,13 +826,13 @@ class _GameScreenState extends State<GameScreen>
               if (_phase == _Phase.playing || _phase == _Phase.paused) ...[
                 if (_magnet > 0)
                   _powerChip(
-                    'U',
+                    DropKind.magnet,
                     const Color(0xFF2563EB),
                     _magnet / GameConfig.magnetSeconds,
                   ),
                 if (_slow > 0)
                   _powerChip(
-                    '❄',
+                    DropKind.slow,
                     const Color(0xFF0EA5E9),
                     _slow / GameConfig.slowSeconds,
                   ),
@@ -613,7 +897,7 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  Widget _powerChip(String glyph, Color c, double ratio) {
+  Widget _powerChip(DropKind kind, Color c, double ratio) {
     return Container(
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -625,14 +909,7 @@ class _GameScreenState extends State<GameScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            glyph,
-            style: TextStyle(
-              fontSize: 11,
-              color: c,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
+          PixelSpriteWidget(kind: kind, size: 14),
           const SizedBox(width: 5),
           SizedBox(
             width: 26,
@@ -720,38 +997,45 @@ class _GameScreenState extends State<GameScreen>
     );
   }
 
-  Widget _legendRow(DropKind k, String text) {
-    final s = _specs[k]!;
+  Widget _legendRow({
+    required List<DropKind> kinds,
+    required String text,
+    bool isDanger = false,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: s.bad
-                  ? const Color(0xFFFEE2E2)
-                  : s.color.withValues(alpha: 0.14),
-              shape: BoxShape.circle,
-              border: Border.all(color: s.color.withValues(alpha: 0.6)),
-            ),
-            child: Text(
-              s.glyph,
-              style: TextStyle(
-                fontSize: 12,
-                color: s.color,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: kinds.map((k) {
+              final spec = _specs[k]!;
+              return Container(
+                width: 26,
+                height: 26,
+                margin: const EdgeInsets.only(right: 3),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isDanger
+                      ? const Color(0xFFFEF2F2)
+                      : VaultColors.background,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isDanger
+                        ? VaultColors.neg.withValues(alpha: 0.35)
+                        : spec.color.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: PixelSpriteWidget(kind: k, size: 18),
+              );
+            }).toList(),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
               style: VaultTypography.sans(
-                fontSize: 12,
+                fontSize: 11.5,
                 color: VaultColors.body,
               ),
             ),
@@ -777,14 +1061,55 @@ class _GameScreenState extends State<GameScreen>
           'Geser jari untuk menggerakkan Valto',
           style: VaultTypography.mono(fontSize: 10.5, color: VaultColors.ink2),
         ),
-        const SizedBox(height: 16),
-        _legendRow(DropKind.gold, 'Tangkap aset: cash, emas, gem, skin langka'),
+        const SizedBox(height: 14),
         _legendRow(
-          DropKind.bomb,
-          'Hindari bom & scam — kena = nyawa berkurang',
+          kinds: [DropKind.cash, DropKind.gold, DropKind.gem, DropKind.card],
+          text: 'Aset: Cash, Emas, Gem, & Skin Langka',
         ),
-        _legendRow(DropKind.magnet, 'Power-up: magnet, slow-mo, dan +nyawa'),
-        _legendRow(DropKind.heart, 'Tangkap beruntun untuk combo skor x2 – x5'),
+        _legendRow(
+          kinds: [DropKind.bomb, DropKind.scam],
+          text: 'Bahaya: Bom & Scam — kena = -1 nyawa!',
+          isDanger: true,
+        ),
+        _legendRow(
+          kinds: [DropKind.magnet, DropKind.slow, DropKind.heart],
+          text: 'Power-up: Magnet, Slow-mo, & +1 Nyawa',
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: VaultColors.badgeBg,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: VaultColors.accent.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Text(
+                  'x2-x5',
+                  style: VaultTypography.mono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: VaultColors.accent,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Combo skor beruntun tanpa terlewat',
+                  style: VaultTypography.sans(
+                    fontSize: 11.5,
+                    color: VaultColors.body,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 18),
         SizedBox(
           width: double.infinity,
@@ -963,8 +1288,8 @@ class _GameScreenState extends State<GameScreen>
             children: [
               _stat('SKOR', '$_score'),
               _stat('TERTANGKAP', '$_caught'),
+              _stat('TERLEWAT', '$_missed'),
               _stat('COMBO', '$_maxCombo'),
-              _stat('WAKTU', '${_elapsed.toStringAsFixed(0)}s'),
             ],
           ),
         ),
@@ -1111,11 +1436,17 @@ class _GamePainter extends CustomPainter {
       final c = Offset(d.x, d.y);
       final r = d.radius;
 
-      // Bayangan
-      canvas.drawCircle(
-        c.translate(0, 4),
-        r,
-        Paint()..color = VaultColors.ink.withValues(alpha: 0.06),
+      // Bayangan drop bergaya retro
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: c.translate(0, 4),
+            width: r * 2.05,
+            height: r * 2.05,
+          ),
+          const Radius.circular(8),
+        ),
+        Paint()..color = VaultColors.ink.withValues(alpha: 0.08),
       );
 
       if (spec.bad) {
@@ -1123,31 +1454,38 @@ class _GamePainter extends CustomPainter {
         continue;
       }
 
-      // Aura untuk item langka
+      // Aura berpendar untuk item langka (Card & Gem)
       if (d.kind == DropKind.card || d.kind == DropKind.gem) {
         final pulse = 0.5 + 0.5 * math.sin(g._elapsed * 6 + d.phase);
-        canvas.drawCircle(
-          c,
-          r + 6 + pulse * 3,
-          Paint()..color = spec.color.withValues(alpha: 0.14 + 0.08 * pulse),
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: c,
+              width: r * 2.05 + 8 + pulse * 4,
+              height: r * 2.05 + 8 + pulse * 4,
+            ),
+            const Radius.circular(11),
+          ),
+          Paint()..color = spec.color.withValues(alpha: 0.16 + 0.10 * pulse),
         );
       }
 
-      canvas.drawCircle(c, r, Paint()..color = VaultColors.card);
-      canvas.drawCircle(
-        c,
-        r,
+      // Cartridge porcelain retro
+      final cardRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: c, width: r * 2.05, height: r * 2.05),
+        const Radius.circular(8),
+      );
+      canvas.drawRRect(cardRect, Paint()..color = VaultColors.card);
+      canvas.drawRRect(
+        cardRect,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.4
-          ..color = spec.color,
+          ..strokeWidth = 1.8
+          ..color = spec.color.withValues(alpha: 0.65),
       );
-      canvas.drawCircle(
-        c,
-        r - 4,
-        Paint()..color = spec.color.withValues(alpha: 0.13),
-      );
-      _text(canvas, spec.glyph, c, r * 1.0, spec.color, bold: true);
+
+      // Gambar sprite pixel art 8x8 yang tajam
+      PixelSprite.paint(canvas, c, d.kind, r * 1.35, anim: g._elapsed);
     }
   }
 
@@ -1156,41 +1494,57 @@ class _GamePainter extends CustomPainter {
     final r = d.radius;
     canvas.save();
     canvas.translate(c.dx, c.dy);
+
+    final pulse = 0.5 + 0.5 * math.sin(g._elapsed * 8 + d.phase);
+    final hazardColor =
+        d.kind == DropKind.bomb ? VaultColors.warn : VaultColors.neg;
+    canvas.drawCircle(
+      Offset.zero,
+      r + 3 + pulse * 4,
+      Paint()..color = hazardColor.withValues(alpha: 0.18 + 0.10 * pulse),
+    );
+
     if (d.kind == DropKind.bomb) {
-      canvas.rotate(math.sin(d.spin * 2) * 0.25);
-      canvas.drawCircle(Offset.zero, r, Paint()..color = VaultColors.ink);
-      canvas.drawCircle(
-        Offset(-r * 0.3, -r * 0.3),
-        r * 0.25,
-        Paint()..color = Colors.white.withValues(alpha: 0.18),
+      canvas.rotate(math.sin(d.spin * 2) * 0.2);
+      final hazardRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: r * 2.05, height: r * 2.05),
+        const Radius.circular(8),
       );
-      // sumbu
-      final fuse = Paint()
-        ..color = VaultColors.ink2
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round;
-      canvas.drawLine(Offset(0, -r), Offset(r * 0.5, -r - 9), fuse);
-      final blink = (math.sin(g._elapsed * 18 + d.phase) > 0);
-      canvas.drawCircle(
-        Offset(r * 0.5, -r - 9),
-        4.2,
-        Paint()..color = blink ? VaultColors.warn : VaultColors.neg,
-      );
-    } else {
-      canvas.drawCircle(
-        Offset.zero,
-        r,
-        Paint()..color = const Color(0xFF7F1D1D),
-      );
-      canvas.drawCircle(
-        Offset.zero,
-        r,
+      canvas.drawRRect(hazardRect, Paint()..color = const Color(0xFF18181B));
+      canvas.drawRRect(
+        hazardRect,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.4
+          ..strokeWidth = 1.8
+          ..color = VaultColors.warn,
+      );
+      PixelSprite.paint(
+        canvas,
+        Offset.zero,
+        DropKind.bomb,
+        r * 1.45,
+        anim: g._elapsed + d.phase,
+      );
+    } else {
+      final hazardRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: r * 2.05, height: r * 2.05),
+        const Radius.circular(8),
+      );
+      canvas.drawRRect(hazardRect, Paint()..color = const Color(0xFF450A0A));
+      canvas.drawRRect(
+        hazardRect,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.8
           ..color = VaultColors.neg,
       );
-      _text(canvas, '☠', Offset.zero, r * 1.05, Colors.white, bold: true);
+      PixelSprite.paint(
+        canvas,
+        Offset.zero,
+        DropKind.scam,
+        r * 1.45,
+        anim: g._elapsed,
+      );
     }
     canvas.restore();
   }

@@ -8,6 +8,7 @@ import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/security/auth_service.dart';
 import '../core/services/notification_service.dart';
+import '../core/services/vault_settings.dart';
 import 'home_vault_screen.dart';
 import 'search_radar_screen.dart';
 import 'profile_screen.dart';
@@ -61,6 +62,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   // Sensor: Accelerometer — Emergency Shake to Auto Lock Vault
   void _initAccelerometerLock() {
     _accelerometerSubscription = accelerometerEventStream().listen((AccelerometerEvent event) {
+      if (!VaultSettings.instance.shakeLockEnabled) return;
       final gForce = sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
 
       if (gForce > shakeSensitivity) {

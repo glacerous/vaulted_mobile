@@ -9,13 +9,11 @@ import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 import '../core/database/database_helper.dart';
 import '../core/security/auth_service.dart';
+import '../core/services/vault_settings.dart';
 import 'login_screen.dart';
-import 'saran_kesan_screen.dart';
-import 'vault_converter_screen.dart';
-import 'warranty_lbs_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ProfileScreen — Ultra-luxury Sovereign Account Profile for VAULTED
+// ProfileScreen — Native Luxury Mobile Profile & Settings for VAULTED
 // ─────────────────────────────────────────────────────────────────────────────
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -32,7 +30,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProfile();
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    await VaultSettings.instance.init();
+    await _loadProfile();
   }
 
   Future<void> _loadProfile() async {
@@ -49,6 +52,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _openEditProfile() async {
+    if (VaultSettings.instance.hapticsEnabled) {
+      HapticFeedback.lightImpact();
+    }
     final updated = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -60,7 +66,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _clearCache() {
+    if (VaultSettings.instance.hapticsEnabled) {
+      HapticFeedback.mediumImpact();
+    }
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFF1D1D1B),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: Color(0xFF2A2A28)),
+        ),
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded,
+                color: VaultColors.pos, size: 18),
+            const SizedBox(width: 10),
+            Text(
+              'Local image & thumbnail cache cleared',
+              style: VaultTypography.sans(
+                fontSize: 12.5,
+                color: const Color(0xFFF2F2EF),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showLogoutConfirmation() {
+    if (VaultSettings.instance.hapticsEnabled) {
+      HapticFeedback.mediumImpact();
+    }
     showModalBottomSheet(
       context: context,
       backgroundColor: VaultColors.card,
@@ -205,279 +248,294 @@ class _ProfileScreenState extends State<ProfileScreen> {
             : RefreshIndicator(
                 color: VaultColors.accent,
                 onRefresh: _loadProfile,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── Brand Header ──────────────────────────────────────
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: ValueListenableBuilder<int>(
+                  valueListenable: VaultSettings.instance.changeNotifier,
+                  builder: (context, _, _) {
+                    final settings = VaultSettings.instance;
+                    return SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'VAULTED',
-                            style: VaultTypography.mono(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.5,
-                              color: VaultColors.ink,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: VaultColors.card,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: VaultColors.hairline),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: const BoxDecoration(
-                                    color: VaultColors.pos,
-                                    shape: BoxShape.circle,
+                          // ── Mobile Header ─────────────────────────────────
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'VAULTED',
+                                    style: VaultTypography.mono(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.2,
+                                      color: VaultColors.accent,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Profile & Settings',
+                                    style: VaultTypography.sans(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.6,
+                                      color: VaultColors.ink,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: _openEditProfile,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: VaultColors.card,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border:
+                                        Border.all(color: VaultColors.hairline),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF141413)
+                                            .withValues(alpha: 0.03),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.edit_outlined,
+                                        size: 14,
+                                        color: VaultColors.ink,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Edit',
+                                        style: VaultTypography.sans(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: VaultColors.ink,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'KEYSTORE ACTIVE',
-                                  style: VaultTypography.mono(
-                                    fontSize: 9,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+
+                          // ── Hero Profile Identity Card ────────────────────
+                          _HeroProfileCard(
+                            profile: _profile ?? {},
+                            itemCount: _itemCount,
+                            onEdit: _openEditProfile,
+                          ),
+                          const SizedBox(height: 24),
+
+                          // ── Settings Group 1: Vault Security ──────────────
+                          _SectionTitle(title: 'VAULT SECURITY & ACCESS'),
+                          const SizedBox(height: 8),
+                          _SettingsGroup(
+                            children: [
+                              _SettingsToggleTile(
+                                icon: Icons.fingerprint_rounded,
+                                iconColor: VaultColors.accent,
+                                title: 'Biometric Passkey',
+                                subtitle:
+                                    'Require Face ID / Touch ID on vault unlock',
+                                value: settings.biometricsEnabled,
+                                onChanged: (val) {
+                                  if (settings.hapticsEnabled) {
+                                    HapticFeedback.selectionClick();
+                                  }
+                                  settings.setBiometrics(val);
+                                },
+                              ),
+                              _SettingsToggleTile(
+                                icon: Icons.screen_rotation_rounded,
+                                iconColor: VaultColors.ink,
+                                title: 'Emergency Shake Lock',
+                                subtitle:
+                                    'Auto-lock vault when device is shaken',
+                                value: settings.shakeLockEnabled,
+                                onChanged: (val) {
+                                  if (settings.hapticsEnabled) {
+                                    HapticFeedback.selectionClick();
+                                  }
+                                  settings.setShakeLock(val);
+                                },
+                              ),
+                              _SettingsToggleTile(
+                                icon: Icons.visibility_off_outlined,
+                                iconColor: VaultColors.ink,
+                                title: 'Privacy Balance Mask',
+                                subtitle:
+                                    'Mask financial balances with bullet points',
+                                value: settings.privacyMaskEnabled,
+                                onChanged: (val) {
+                                  if (settings.hapticsEnabled) {
+                                    HapticFeedback.selectionClick();
+                                  }
+                                  settings.setPrivacyMask(val);
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 22),
+
+                          // ── Settings Group 2: App Preferences ─────────────
+                          _SectionTitle(title: 'PREFERENCES'),
+                          const SizedBox(height: 8),
+                          _SettingsGroup(
+                            children: [
+                              _SettingsToggleTile(
+                                icon: Icons.vibration_rounded,
+                                iconColor: VaultColors.accent,
+                                title: 'Haptic Tactile Feedback',
+                                subtitle:
+                                    'Tactile vibrations on interactions & taps',
+                                value: settings.hapticsEnabled,
+                                onChanged: (val) {
+                                  if (val) HapticFeedback.mediumImpact();
+                                  settings.setHaptics(val);
+                                },
+                              ),
+                              _SettingsToggleTile(
+                                icon: Icons.notifications_none_rounded,
+                                iconColor: VaultColors.ink,
+                                title: 'Security Alerts & Notifications',
+                                subtitle:
+                                    'Push notifications for critical sessions',
+                                value: settings.notificationsEnabled,
+                                onChanged: (val) {
+                                  if (settings.hapticsEnabled) {
+                                    HapticFeedback.selectionClick();
+                                  }
+                                  settings.setNotifications(val);
+                                },
+                              ),
+                              _SettingsActionTile(
+                                icon: Icons.monetization_on_outlined,
+                                iconColor: VaultColors.accent,
+                                title: 'Default Currency',
+                                subtitle:
+                                    'Primary denomination across portfolio',
+                                trailing: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: VaultColors.background,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border:
+                                        Border.all(color: VaultColors.hairline),
+                                  ),
+                                  child: Text(
+                                    settings.currency == 'IDR'
+                                        ? 'IDR (Rp)'
+                                        : 'USD (\$)',
+                                    style: VaultTypography.mono(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: VaultColors.ink,
+                                    ),
+                                  ),
+                                ),
+                                onTap: () {
+                                  if (settings.hapticsEnabled) {
+                                    HapticFeedback.lightImpact();
+                                  }
+                                  final next =
+                                      settings.currency == 'USD' ? 'IDR' : 'USD';
+                                  settings.setCurrency(next);
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 22),
+
+                          // ── Settings Group 3: Storage & Session ───────────
+                          _SectionTitle(title: 'SYSTEM & SESSION'),
+                          const SizedBox(height: 8),
+                          _SettingsGroup(
+                            children: [
+                              _SettingsActionTile(
+                                icon: Icons.cleaning_services_outlined,
+                                iconColor: VaultColors.ink,
+                                title: 'Clear Local Cache',
+                                subtitle:
+                                    'Release cached asset thumbnails & radar memory',
+                                trailing: Text(
+                                  'Clear',
+                                  style: VaultTypography.sans(
+                                    fontSize: 12.5,
                                     fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.6,
-                                    color: VaultColors.ink2,
+                                    color: VaultColors.accent,
+                                  ),
+                                ),
+                                onTap: _clearCache,
+                              ),
+                              _SettingsActionTile(
+                                icon: Icons.logout_rounded,
+                                iconColor: VaultColors.neg,
+                                title: 'Log Out of Vault',
+                                titleColor: VaultColors.neg,
+                                subtitle:
+                                    'End authenticated session on this device',
+                                trailing: const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 13,
+                                  color: VaultColors.neg,
+                                ),
+                                onTap: _showLogoutConfirmation,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          // ── Mobile App Footer ─────────────────────────────
+                          Center(
+                            child: Column(
+                              children: [
+                                Text(
+                                  'VAULTED · VERSION 1.4.2 (BUILD 48)',
+                                  style: VaultTypography.mono(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.8,
+                                    color: VaultColors.ink3,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  'Hardware Enclave Encrypted Sovereign Custody',
+                                  style: VaultTypography.sans(
+                                    fontSize: 11,
+                                    color: VaultColors.ink3,
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                          const SizedBox(height: 24),
                         ],
                       ),
-                      const SizedBox(height: 20),
-
-                      // ── Section Label ─────────────────────────────────────
-                      Text(
-                        'VAULT IDENTITY',
-                        style: VaultTypography.mono(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
-                          color: VaultColors.accent,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Account Profile',
-                        style: VaultTypography.sans(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.5,
-                          color: VaultColors.ink,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // ── User Profile Card ─────────────────────────────────
-                      _UserProfileCard(
-                        profile: _profile ?? {},
-                        itemCount: _itemCount,
-                        onEdit: _openEditProfile,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // ── Section: Security & Protocol ──────────────────────
-                      Text(
-                        'SECURITY & PROTOCOL',
-                        style: VaultTypography.mono(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.1,
-                          color: VaultColors.ink2,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      _SettingsGroupCard(
-                        items: [
-                          _SettingsItem(
-                            icon: Icons.shield_outlined,
-                            iconColor: VaultColors.accent,
-                            title: 'Hardware Keystore & Biometrics',
-                            subtitle: 'Enclave-backed AES-256 local authentication',
-                            trailing: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: VaultColors.pos.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'ACTIVE',
-                                style: VaultTypography.mono(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  color: VaultColors.pos,
-                                ),
-                              ),
-                            ),
-                          ),
-                          _SettingsItem(
-                            icon: Icons.screen_rotation_rounded,
-                            iconColor: VaultColors.ink,
-                            title: 'Emergency Shake Lock',
-                            subtitle: 'Accelerometer auto-lock threshold 17.0 m/s²',
-                            trailing: Text(
-                              'ENABLED',
-                              style: VaultTypography.mono(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                color: VaultColors.ink2,
-                              ),
-                            ),
-                          ),
-                          _SettingsItem(
-                            icon: Icons.hub_outlined,
-                            iconColor: VaultColors.ink,
-                            title: 'Network Synchronization',
-                            subtitle: 'Polygon Amoy Testnet (Chain ID 80002)',
-                            trailing: const Icon(
-                              Icons.check_circle_rounded,
-                              size: 16,
-                              color: VaultColors.pos,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // ── Section: Vault Tools & Preferences ────────────────
-                      Text(
-                        'VAULT SERVICES & TOOLS',
-                        style: VaultTypography.mono(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.1,
-                          color: VaultColors.ink2,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      _SettingsGroupCard(
-                        items: [
-                          _SettingsItem(
-                            icon: Icons.currency_exchange_rounded,
-                            iconColor: VaultColors.accent,
-                            title: 'Currency Conversion Desk',
-                            subtitle: 'Real-time multi-currency valuation (USD/IDR)',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const VaultConverterScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _SettingsItem(
-                            icon: Icons.storefront_outlined,
-                            iconColor: VaultColors.ink,
-                            title: 'Official Safehouses & Centers',
-                            subtitle: 'LBS warranty centers and authorized vaults',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const WarrantyLbsScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _SettingsItem(
-                            icon: Icons.rate_review_outlined,
-                            iconColor: VaultColors.ink,
-                            title: 'Experience Notes & Feedback',
-                            subtitle: 'System impressions and feedback log',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const SaranKesanScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 28),
-
-                      // ── Log Out Button ────────────────────────────────────
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: OutlinedButton.icon(
-                          onPressed: _showLogoutConfirmation,
-                          icon: const Icon(
-                            Icons.logout_rounded,
-                            size: 16,
-                            color: VaultColors.neg,
-                          ),
-                          label: Text(
-                            'Log Out of Vault',
-                            style: VaultTypography.sans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              color: VaultColors.neg,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: VaultColors.hairline),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // ── System Footer ─────────────────────────────────────
-                      Center(
-                        child: Column(
-                          children: [
-                            Text(
-                              'VAULTED PROTOCOL · VERSION 1.4.2',
-                              style: VaultTypography.mono(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.0,
-                                color: VaultColors.ink3,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Zero-Knowledge Sovereign Asset Custody',
-                              style: VaultTypography.sans(
-                                fontSize: 11,
-                                color: VaultColors.ink3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
       ),
@@ -486,14 +544,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _UserProfileCard — Clean luxury user card
+// _HeroProfileCard — Clean, focused profile overview
 // ─────────────────────────────────────────────────────────────────────────────
-class _UserProfileCard extends StatelessWidget {
+class _HeroProfileCard extends StatelessWidget {
   final Map<String, dynamic> profile;
   final int itemCount;
   final VoidCallback onEdit;
 
-  const _UserProfileCard({
+  const _HeroProfileCard({
     required this.profile,
     required this.itemCount,
     required this.onEdit,
@@ -532,7 +590,7 @@ class _UserProfileCard extends StatelessWidget {
           ? Text(
               initials,
               style: VaultTypography.mono(
-                fontSize: size * 0.35,
+                fontSize: size * 0.36,
                 fontWeight: FontWeight.w700,
                 color: VaultColors.accent,
               ),
@@ -548,7 +606,7 @@ class _UserProfileCard extends StatelessWidget {
     final bio = (profile['bio'] as String?) ?? '';
     final createdAt = (profile['created_at'] as String?) ?? '';
 
-    String memberSince = 'Active Member';
+    String memberSince = 'Active';
     if (createdAt.isNotEmpty) {
       try {
         final dt = DateTime.parse(createdAt);
@@ -561,7 +619,7 @@ class _UserProfileCard extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: VaultColors.card,
         borderRadius: BorderRadius.circular(20),
@@ -569,20 +627,22 @@ class _UserProfileCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF141413).withValues(alpha: 0.03),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top Row: Avatar & Edit Profile ───────────────────────────────
+          // ── Top User Row ──────────────────────────────────────────────────
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _avatar(72),
-              const SizedBox(width: 16),
+              GestureDetector(
+                onTap: onEdit,
+                child: _avatar(66),
+              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -590,7 +650,7 @@ class _UserProfileCard extends StatelessWidget {
                     Text(
                       fullName,
                       style: VaultTypography.sans(
-                        fontSize: 19,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: VaultColors.ink,
                       ),
@@ -605,11 +665,11 @@ class _UserProfileCard extends StatelessWidget {
                         color: VaultColors.ink2,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 4,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
                         color: VaultColors.badgeBg,
@@ -623,16 +683,16 @@ class _UserProfileCard extends StatelessWidget {
                         children: [
                           const Icon(
                             Icons.verified_rounded,
-                            size: 13,
+                            size: 12,
                             color: VaultColors.accent,
                           ),
                           const SizedBox(width: 5),
                           Text(
                             'SOVEREIGN CLIENT',
                             style: VaultTypography.mono(
-                              fontSize: 9.5,
+                              fontSize: 9,
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 0.6,
+                              letterSpacing: 0.5,
                               color: VaultColors.accent,
                             ),
                           ),
@@ -642,31 +702,15 @@ class _UserProfileCard extends StatelessWidget {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: onEdit,
-                child: Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: VaultColors.background,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: VaultColors.hairline),
-                  ),
-                  child: const Icon(
-                    Icons.edit_outlined,
-                    size: 16,
-                    color: VaultColors.ink,
-                  ),
-                ),
-              ),
             ],
           ),
 
-          // ── Bio (if present) ─────────────────────────────────────────────
+          // ── Bio (if set) ──────────────────────────────────────────────────
           if (bio.isNotEmpty) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: VaultColors.background,
                 borderRadius: BorderRadius.circular(10),
@@ -676,39 +720,31 @@ class _UserProfileCard extends StatelessWidget {
                 bio,
                 style: VaultTypography.sans(
                   fontSize: 12.5,
-                  height: 1.45,
+                  height: 1.4,
                   color: VaultColors.ink,
                 ),
               ),
             ),
           ],
 
-          const SizedBox(height: 18),
-          const Divider(color: VaultColors.hairline, height: 1),
           const SizedBox(height: 16),
+          const Divider(color: VaultColors.hairline, height: 1),
+          const SizedBox(height: 14),
 
-          // ── Metrics Row ──────────────────────────────────────────────────
+          // ── 3-Column Metrics ──────────────────────────────────────────────
           Row(
             children: [
-              _StatItem(
-                label: 'CUSTODIED ASSETS',
+              _MetricItem(
+                label: 'CUSTODIED',
                 value: '$itemCount Items',
               ),
-              Container(
-                width: 1,
-                height: 32,
-                color: VaultColors.hairline,
+              Container(width: 1, height: 28, color: VaultColors.hairline),
+              const _MetricItem(
+                label: 'SECURITY',
+                value: 'Enclave',
               ),
-              _StatItem(
-                label: 'ENCRYPTION',
-                value: 'Hardware',
-              ),
-              Container(
-                width: 1,
-                height: 32,
-                color: VaultColors.hairline,
-              ),
-              _StatItem(
+              Container(width: 1, height: 28, color: VaultColors.hairline),
+              _MetricItem(
                 label: 'MEMBER SINCE',
                 value: memberSince,
               ),
@@ -720,14 +756,11 @@ class _UserProfileCard extends StatelessWidget {
   }
 }
 
-class _StatItem extends StatelessWidget {
+class _MetricItem extends StatelessWidget {
   final String label;
   final String value;
 
-  const _StatItem({
-    required this.label,
-    required this.value,
-  });
+  const _MetricItem({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -744,11 +777,11 @@ class _StatItem extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             value,
             style: VaultTypography.sans(
-              fontSize: 12.5,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: VaultColors.ink,
             ),
@@ -761,30 +794,32 @@ class _StatItem extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _SettingsGroupCard & _SettingsItem — Clean luxury settings list
+// Settings Components
 // ─────────────────────────────────────────────────────────────────────────────
-class _SettingsItem {
-  final IconData icon;
-  final Color iconColor;
+class _SectionTitle extends StatelessWidget {
   final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
+  const _SectionTitle({required this.title});
 
-  _SettingsItem({
-    required this.icon,
-    this.iconColor = VaultColors.ink,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.onTap,
-  });
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        title,
+        style: VaultTypography.mono(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.0,
+          color: VaultColors.ink2,
+        ),
+      ),
+    );
+  }
 }
 
-class _SettingsGroupCard extends StatelessWidget {
-  final List<_SettingsItem> items;
-
-  const _SettingsGroupCard({required this.items});
+class _SettingsGroup extends StatelessWidget {
+  final List<Widget> children;
+  const _SettingsGroup({required this.children});
 
   @override
   Widget build(BuildContext context) {
@@ -796,22 +831,113 @@ class _SettingsGroupCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          for (int i = 0; i < items.length; i++) ...[
-            _buildRow(items[i]),
-            if (i < items.length - 1)
-              const Divider(color: VaultColors.hairline, height: 1, indent: 52),
+          for (int i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i < children.length - 1)
+              const Divider(color: VaultColors.hairline, height: 1, indent: 54),
           ],
         ],
       ),
     );
   }
+}
 
-  Widget _buildRow(_SettingsItem item) {
+class _SettingsToggleTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SettingsToggleTile({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: VaultColors.background,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: VaultColors.hairline),
+            ),
+            child: Icon(icon, size: 18, color: iconColor),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: VaultTypography.sans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: VaultColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: VaultTypography.mono(
+                    fontSize: 9.5,
+                    color: VaultColors.ink2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Switch.adaptive(
+            value: value,
+            activeThumbColor: VaultColors.accent,
+            activeTrackColor: VaultColors.accent.withValues(alpha: 0.35),
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsActionTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final Color? titleColor;
+  final String subtitle;
+  final Widget? trailing;
+  final VoidCallback onTap;
+
+  const _SettingsActionTile({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    this.titleColor,
+    required this.subtitle,
+    this.trailing,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
-      onTap: item.onTap,
+      onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
             Container(
@@ -822,7 +948,7 @@ class _SettingsGroupCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: VaultColors.hairline),
               ),
-              child: Icon(item.icon, size: 18, color: item.iconColor),
+              child: Icon(icon, size: 18, color: iconColor),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -830,32 +956,26 @@ class _SettingsGroupCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.title,
+                    title,
                     style: VaultTypography.sans(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
-                      color: VaultColors.ink,
+                      color: titleColor ?? VaultColors.ink,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    item.subtitle,
+                    subtitle,
                     style: VaultTypography.mono(
-                      fontSize: 10,
+                      fontSize: 9.5,
                       color: VaultColors.ink2,
                     ),
                   ),
                 ],
               ),
             ),
-            if (item.trailing != null)
-              item.trailing!
-            else if (item.onTap != null)
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 13,
-                color: VaultColors.ink2,
-              ),
+            const SizedBox(width: 8),
+            ?trailing,
           ],
         ),
       ),
@@ -864,7 +984,7 @@ class _SettingsGroupCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _EditProfileScreen — Simple luxury profile editor (Name, Bio, Photo)
+// _EditProfileScreen — Mobile-first Profile Editor
 // ─────────────────────────────────────────────────────────────────────────────
 class _EditProfileScreen extends StatefulWidget {
   final Map<String, dynamic> profile;
@@ -1004,14 +1124,16 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
     setState(() => _saving = false);
 
     if (ok) {
-      HapticFeedback.lightImpact();
+      if (VaultSettings.instance.hapticsEnabled) {
+        HapticFeedback.lightImpact();
+      }
       if (!mounted) return;
       _toast(
-        'Profil Vaulted berhasil diperbarui!',
+        'Profil berhasil diperbarui',
         icon: Icons.check_circle_rounded,
         iconColor: VaultColors.pos,
       );
-      await Future.delayed(const Duration(milliseconds: 600));
+      await Future.delayed(const Duration(milliseconds: 400));
       if (mounted) Navigator.pop(context, true);
     } else {
       if (!mounted) return;
@@ -1058,7 +1180,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
   }
 
   Widget _avatarPreview() {
-    const size = 84.0;
+    const size = 88.0;
     final name = _nameCtrl.text.trim();
     final initials = name.isNotEmpty
         ? () {
@@ -1096,7 +1218,7 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
                 ? Text(
                     initials,
                     style: VaultTypography.mono(
-                      fontSize: size * 0.32,
+                      fontSize: size * 0.34,
                       fontWeight: FontWeight.w700,
                       color: VaultColors.accent,
                     ),
@@ -1128,15 +1250,19 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
       appBar: AppBar(
         backgroundColor: VaultColors.background,
         elevation: 0,
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            size: 18,
-            color: VaultColors.ink,
-          ),
+        centerTitle: true,
+        leading: TextButton(
           onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Batal',
+            style: VaultTypography.sans(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: VaultColors.ink2,
+            ),
+          ),
         ),
+        leadingWidth: 70,
         title: Text(
           'Edit Profile',
           style: VaultTypography.sans(
@@ -1147,17 +1273,15 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 14),
             child: TextButton(
               onPressed: _saving ? null : _save,
               style: TextButton.styleFrom(
                 backgroundColor: VaultColors.primaryButton,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 8,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
               child: _saving
@@ -1185,129 +1309,117 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
         onTap: () => FocusScope.of(context).unfocus(),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Avatar Picker
-              Center(child: _avatarPreview()),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    'Tap avatar to update photo',
-                    style: VaultTypography.mono(
-                      fontSize: 11,
-                      color: VaultColors.ink2,
-                    ),
-                  ),
+              const SizedBox(height: 10),
+              _avatarPreview(),
+              const SizedBox(height: 8),
+              Text(
+                'Tap avatar untuk ganti foto',
+                style: VaultTypography.mono(
+                  fontSize: 11,
+                  color: VaultColors.ink2,
                 ),
               ),
               const SizedBox(height: 28),
 
-              // Form Fields (Full Name & Bio only — clean luxury profile)
-              _buildLabel('FULL NAME *'),
-              const SizedBox(height: 8),
-              _buildField(
-                controller: _nameCtrl,
-                hint: 'e.g. Azzaky Raihan',
-                icon: Icons.person_outline_rounded,
-                inputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 20),
-
-              _buildLabel('VAULT BIO'),
-              const SizedBox(height: 8),
-              _buildField(
-                controller: _bioCtrl,
-                hint: 'Personal motto, collector note, or profile tagline...',
-                icon: Icons.notes_rounded,
-                maxLines: 3,
-                inputAction: TextInputAction.done,
-              ),
-              const SizedBox(height: 32),
-
-              // Save Button (Bottom)
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _saving ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: VaultColors.primaryButton,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+              // Grouped Form Card
+              Container(
+                decoration: BoxDecoration(
+                  color: VaultColors.card,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: VaultColors.hairline),
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'FULL NAME *',
+                            style: VaultTypography.mono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: VaultColors.ink2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          TextField(
+                            controller: _nameCtrl,
+                            style: VaultTypography.sans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: VaultColors.ink,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'e.g. Azzaky Raihan',
+                              hintStyle: VaultTypography.sans(
+                                fontSize: 13.5,
+                                color: VaultColors.ink3,
+                              ),
+                              isDense: true,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 6),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: _saving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                    const Divider(
+                        color: VaultColors.hairline, height: 1, indent: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'VAULT BIO',
+                            style: VaultTypography.mono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: VaultColors.ink2,
+                            ),
                           ),
-                        )
-                      : Text(
-                          'Simpan Perubahan',
-                          style: VaultTypography.sans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                          const SizedBox(height: 4),
+                          TextField(
+                            controller: _bioCtrl,
+                            maxLines: 3,
+                            style: VaultTypography.sans(
+                              fontSize: 13.5,
+                              color: VaultColors.ink,
+                            ),
+                            decoration: InputDecoration(
+                              hintText:
+                                  'Personal motto, collector note, or profile tagline...',
+                              hintStyle: VaultTypography.sans(
+                                fontSize: 13,
+                                color: VaultColors.ink3,
+                              ),
+                              isDense: true,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 6),
+                              border: InputBorder.none,
+                            ),
                           ),
-                        ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) => Text(
-        text,
-        style: VaultTypography.mono(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.6,
-          color: VaultColors.ink2,
-        ),
-      );
-
-  Widget _buildField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-    TextInputAction inputAction = TextInputAction.next,
-    int maxLines = 1,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: VaultColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VaultColors.hairline),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        textInputAction: inputAction,
-        maxLines: maxLines,
-        style: VaultTypography.sans(fontSize: 14, color: VaultColors.ink),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: VaultTypography.sans(
-            fontSize: 13.5,
-            color: VaultColors.ink3,
-          ),
-          prefixIcon: Icon(icon, size: 18, color: VaultColors.ink2),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(
-            vertical: maxLines > 1 ? 14 : 0,
-            horizontal: 4,
           ),
         ),
       ),

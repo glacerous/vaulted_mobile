@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart' hide Path;
+import 'package:url_launcher/url_launcher.dart';
 import '../core/constants/colors.dart';
 import '../core/constants/typography.dart';
 
@@ -251,6 +252,29 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
       final lat = (item['lat'] as num).toDouble();
       final lng = (item['lng'] as num).toDouble();
       _mapController.move(LatLng(lat, lng), 15.2);
+    }
+  }
+
+  Future<void> _openDirections(Map<String, dynamic> item) async {
+    HapticFeedback.selectionClick();
+    final lat = item['lat'];
+    final lng = item['lng'];
+    final name = Uri.encodeComponent(item['name'] as String? ?? 'Service Center');
+    final googleMapsUrl = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving',
+    );
+    final geoUrl = Uri.parse('geo:$lat,$lng?q=$lat,$lng($name)');
+
+    try {
+      if (await canLaunchUrl(geoUrl)) {
+        await launchUrl(geoUrl);
+      } else if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(googleMapsUrl, mode: LaunchMode.platformDefault);
+      }
+    } catch (e) {
+      debugPrint('[Lbs] Failed to launch directions: $e');
     }
   }
 
@@ -762,7 +786,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                              'Alamat disalin ke clipboard!',
+                                              'Address copied to clipboard!',
                                               style: VaultTypography.sans(fontSize: 12),
                                             ),
                                             duration: const Duration(seconds: 2),
@@ -772,7 +796,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                       },
                                       icon: const Icon(Icons.copy_rounded, size: 13, color: VaultColors.ink),
                                       label: Text(
-                                        'Copy Alamat',
+                                        'Copy Address',
                                         style: VaultTypography.sans(fontSize: 11.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
                                       ),
                                       style: OutlinedButton.styleFrom(
@@ -785,13 +809,10 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: ElevatedButton.icon(
-                                      onPressed: () {
-                                        HapticFeedback.selectionClick();
-                                        _focusOnIndex(idx);
-                                      },
-                                      icon: const Icon(Icons.navigation_rounded, size: 13, color: Colors.white),
+                                      onPressed: () => _openDirections(item),
+                                      icon: const Icon(Icons.directions_rounded, size: 14, color: Colors.white),
                                       label: Text(
-                                        'Fokus Peta',
+                                        'Directions',
                                         style: VaultTypography.sans(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.white),
                                       ),
                                       style: ElevatedButton.styleFrom(

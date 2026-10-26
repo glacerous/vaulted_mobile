@@ -241,6 +241,7 @@ class PixelSprite {
     double size, {
     double anim = 0,
     double opacity = 1.0,
+    bool isShadow = false,
   }) {
     final matrix = _matrices[kind]!;
     final palette = _getPalette(kind, anim: anim);
@@ -253,12 +254,14 @@ class PixelSprite {
       for (int x = 0; x < 8; x++) {
         final char = row[x];
         if (char == '.') continue;
-        final color = palette[char];
+        final color = isShadow ? const Color(0xFF141413) : palette[char];
         if (color == null) continue;
         final paint = Paint()
-          ..color = opacity < 1.0
-              ? color.withValues(alpha: color.a * opacity)
-              : color
+          ..color = isShadow
+              ? color.withValues(alpha: 0.14 * opacity)
+              : (opacity < 1.0
+                  ? color.withValues(alpha: color.a * opacity)
+                  : color)
           ..style = PaintingStyle.fill;
         canvas.drawRect(
           Rect.fromLTWH(
@@ -526,11 +529,12 @@ class _GameScreenState extends State<GameScreen>
 
     final slowFactor = _slow > 0 ? 0.55 : 1.0;
     final playerTop = _arena.height - _playerH - 14;
+    final trayTop = playerTop - 12;
     final playerRect = Rect.fromLTWH(
-      _playerX - _playerW / 2 + 6,
-      playerTop + 10,
-      _playerW - 12,
-      _playerH - 10,
+      _playerX - (_playerW + 12) / 2,
+      trayTop,
+      _playerW + 12,
+      _playerH + 12,
     );
 
     for (final drop in List<_Drop>.from(_drops)) {
@@ -1436,56 +1440,33 @@ class _GamePainter extends CustomPainter {
       final c = Offset(d.x, d.y);
       final r = d.radius;
 
-      // Bayangan drop bergaya retro
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: c.translate(0, 4),
-            width: r * 2.05,
-            height: r * 2.05,
-          ),
-          const Radius.circular(8),
-        ),
-        Paint()..color = VaultColors.ink.withValues(alpha: 0.08),
-      );
-
       if (spec.bad) {
         _paintHazard(canvas, d, spec);
         continue;
       }
 
+      // Bayangan pixel art halus di bawah aset (tanpa kotak container)
+      PixelSprite.paint(
+        canvas,
+        c.translate(2.0, 3.5),
+        d.kind,
+        r * 1.85,
+        opacity: 0.20,
+        isShadow: true,
+      );
+
       // Aura berpendar untuk item langka (Card & Gem)
       if (d.kind == DropKind.card || d.kind == DropKind.gem) {
         final pulse = 0.5 + 0.5 * math.sin(g._elapsed * 6 + d.phase);
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-              center: c,
-              width: r * 2.05 + 8 + pulse * 4,
-              height: r * 2.05 + 8 + pulse * 4,
-            ),
-            const Radius.circular(11),
-          ),
-          Paint()..color = spec.color.withValues(alpha: 0.16 + 0.10 * pulse),
+        canvas.drawCircle(
+          c,
+          r + 4 + pulse * 4,
+          Paint()..color = spec.color.withValues(alpha: 0.18 + 0.12 * pulse),
         );
       }
 
-      // Cartridge porcelain retro
-      final cardRect = RRect.fromRectAndRadius(
-        Rect.fromCenter(center: c, width: r * 2.05, height: r * 2.05),
-        const Radius.circular(8),
-      );
-      canvas.drawRRect(cardRect, Paint()..color = VaultColors.card);
-      canvas.drawRRect(
-        cardRect,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.8
-          ..color = spec.color.withValues(alpha: 0.65),
-      );
-
-      // Gambar sprite pixel art 8x8 yang tajam
-      PixelSprite.paint(canvas, c, d.kind, r * 1.35, anim: g._elapsed);
+      // Gambar sprite pixel art 8x8 langsung TANPA container kotak
+      PixelSprite.paint(canvas, c, d.kind, r * 1.85, anim: g._elapsed);
     }
   }
 
@@ -1500,53 +1481,91 @@ class _GamePainter extends CustomPainter {
         d.kind == DropKind.bomb ? VaultColors.warn : VaultColors.neg;
     canvas.drawCircle(
       Offset.zero,
-      r + 3 + pulse * 4,
+      r + 3 + pulse * 3,
       Paint()..color = hazardColor.withValues(alpha: 0.18 + 0.10 * pulse),
     );
 
+    // Bayangan hazard pixel art
+    PixelSprite.paint(
+      canvas,
+      const Offset(2.0, 3.5),
+      d.kind,
+      r * 1.95,
+      opacity: 0.22,
+      isShadow: true,
+    );
+
     if (d.kind == DropKind.bomb) {
-      canvas.rotate(math.sin(d.spin * 2) * 0.2);
-      final hazardRect = RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset.zero, width: r * 2.05, height: r * 2.05),
-        const Radius.circular(8),
-      );
-      canvas.drawRRect(hazardRect, Paint()..color = const Color(0xFF18181B));
-      canvas.drawRRect(
-        hazardRect,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.8
-          ..color = VaultColors.warn,
-      );
+      canvas.rotate(math.sin(d.spin * 2) * 0.18);
+      // Gambar bom pixel art langsung TANPA kotak container
       PixelSprite.paint(
         canvas,
         Offset.zero,
         DropKind.bomb,
-        r * 1.45,
+        r * 1.95,
         anim: g._elapsed + d.phase,
       );
     } else {
-      final hazardRect = RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset.zero, width: r * 2.05, height: r * 2.05),
-        const Radius.circular(8),
-      );
-      canvas.drawRRect(hazardRect, Paint()..color = const Color(0xFF450A0A));
-      canvas.drawRRect(
-        hazardRect,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.8
-          ..color = VaultColors.neg,
-      );
+      // Gambar tengkorak scam pixel art langsung TANPA kotak container
       PixelSprite.paint(
         canvas,
         Offset.zero,
         DropKind.scam,
-        r * 1.45,
+        r * 1.95,
         anim: g._elapsed,
       );
     }
     canvas.restore();
+  }
+
+  void _paintPixelTray(Canvas canvas, double cx, double trayY, double width) {
+    const matrix = [
+      'BB................BB',
+      'BYYYYYYYYYYYYYYYYYYB',
+      'BGGGGGGGGGGGGGGGGGGB',
+      'BDDDDDDDDDDDDDDDDDDB',
+      '.BBBBBBBBBBBBBBBBBB.',
+      '........BBBB........',
+      '........BGGB........',
+    ];
+
+    const palette = {
+      'B': Color(0xFF18181B),
+      'Y': Color(0xFFFEF08A),
+      'G': Color(0xFFEAB308),
+      'D': Color(0xFFB45309),
+    };
+
+    const cols = 20;
+    const rows = 7;
+    final pixelSize = width / cols;
+    final startX = cx - width / 2.0;
+    final startY = trayY;
+
+    // Bayangan pixel tray di atas Valto
+    canvas.drawRect(
+      Rect.fromLTWH(startX + 2, startY + 4 * pixelSize + 1, width - 4, 2.5),
+      Paint()..color = VaultColors.ink.withValues(alpha: 0.14),
+    );
+
+    for (int y = 0; y < rows; y++) {
+      final row = matrix[y];
+      for (int x = 0; x < cols; x++) {
+        final char = row[x];
+        if (char == '.') continue;
+        final color = palette[char];
+        if (color == null) continue;
+        canvas.drawRect(
+          Rect.fromLTWH(
+            startX + x * pixelSize,
+            startY + y * pixelSize,
+            pixelSize + 0.35,
+            pixelSize + 0.35,
+          ),
+          Paint()..color = color,
+        );
+      }
+    }
   }
 
   void _paintPlayer(Canvas canvas, Size size) {
@@ -1615,14 +1634,11 @@ class _GamePainter extends CustomPainter {
         Paint()..color = VaultColors.vowlCharcoal,
       );
     }
-    canvas.restore();
 
-    // Keranjang/dompet vault di depan Valto sebagai area tangkap
-    final tray = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx, top + 6), width: w + 4, height: 7),
-      const Radius.circular(4),
-    );
-    canvas.drawRRect(tray, Paint()..color = VaultColors.accent);
+    // Gambar pixel catching tray yang serasi di atas kepala Valto (ikut miring saat bergerak)
+    _paintPixelTray(canvas, cx, top - 12, w + 12);
+
+    canvas.restore();
   }
 
   void _paintParticles(Canvas canvas) {

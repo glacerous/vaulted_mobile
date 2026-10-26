@@ -733,6 +733,12 @@ class _GameScreenState extends State<GameScreen>
 
   void _endGame() {
     _lives = 0;
+    // Bersihkan sisa drop agar arena bersih dan tenang saat Game Over
+    for (final d in _drops) {
+      _burst(d.x, d.y, _specs[d.kind]!.color, 6);
+    }
+    _drops.clear();
+
     if (_score > _best) {
       _best = _score;
       _newBest = _score > 0;
@@ -977,25 +983,38 @@ class _GameScreenState extends State<GameScreen>
   Widget _overlayCard({required List<Widget> children}) {
     return Positioned.fill(
       child: Container(
-        color: VaultColors.background.withValues(alpha: 0.82),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        color: VaultColors.ink.withValues(alpha: 0.40),
+        alignment: Alignment.bottomCenter,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 26),
           decoration: BoxDecoration(
             color: VaultColors.card,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border.all(color: VaultColors.hairline),
             boxShadow: [
               BoxShadow(
-                color: VaultColors.ink.withValues(alpha: 0.06),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
+                color: VaultColors.ink.withValues(alpha: 0.14),
+                blurRadius: 32,
+                offset: const Offset(0, -8),
               ),
             ],
           ),
-          child: Column(mainAxisSize: MainAxisSize.min, children: children),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: VaultColors.hairline,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 14),
+              ...children,
+            ],
+          ),
         ),
       ),
     );
@@ -1145,30 +1164,36 @@ class _GameScreenState extends State<GameScreen>
   Widget _buildPausedOverlay() {
     return _overlayCard(
       children: [
-        const Icon(
-          Icons.pause_circle_outline_rounded,
-          size: 40,
-          color: VaultColors.ink2,
-        ),
-        const SizedBox(height: 8),
         Text(
-          'Dijeda',
+          'GAME PAUSED',
+          style: VaultTypography.mono(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+            color: VaultColors.ink2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Skor Sementara: $_score',
           style: VaultTypography.sans(
             fontSize: 18,
             fontWeight: FontWeight.w700,
+            color: VaultColors.ink,
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
         Row(
           children: [
             Expanded(
+              flex: 4,
               child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   side: const BorderSide(color: VaultColors.hairline),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: Text(
@@ -1183,23 +1208,29 @@ class _GameScreenState extends State<GameScreen>
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: ElevatedButton(
+              flex: 6,
+              child: ElevatedButton.icon(
                 onPressed: _togglePause,
+                icon: const Icon(
+                  Icons.play_arrow_rounded,
+                  size: 20,
+                  color: VaultColors.background,
+                ),
+                label: Text(
+                  'Lanjutkan',
+                  style: VaultTypography.sans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: VaultColors.background,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   backgroundColor: VaultColors.ink,
                   foregroundColor: VaultColors.background,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'Lanjut',
-                  style: VaultTypography.sans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: VaultColors.background,
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),
@@ -1212,12 +1243,14 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _stat(String label, String value) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
           style: VaultTypography.mono(
             fontSize: 9,
             fontWeight: FontWeight.w600,
+            letterSpacing: 0.6,
             color: VaultColors.ink3,
           ),
         ),
@@ -1225,8 +1258,8 @@ class _GameScreenState extends State<GameScreen>
         Text(
           value,
           style: VaultTypography.mono(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
             color: VaultColors.ink,
           ),
         ),
@@ -1236,78 +1269,105 @@ class _GameScreenState extends State<GameScreen>
 
   Widget _buildOverOverlay() {
     final rank = _score >= 3000
-        ? '👑 Vault Legend'
+        ? 'VAULT LEGEND'
         : _score >= 1500
-        ? '💼 Master Collector'
+        ? 'MASTER APPRAISER'
         : _score >= 600
-        ? '🔎 Sharp Appraiser'
-        : '🐾 Rookie Guardian';
+        ? 'SHARP GUARDIAN'
+        : 'ROOKIE GUARDIAN';
+
+    final totalAssets = _caught + _missed;
+    final accuracy = totalAssets > 0
+        ? ((_caught / totalAssets) * 100).toStringAsFixed(0)
+        : '100';
+
     return _overlayCard(
       children: [
-        Text(
-          'GAME OVER',
-          style: VaultTypography.sans(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.4,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          rank,
-          style: VaultTypography.mono(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: VaultColors.accent,
-          ),
-        ),
-        if (_newBest) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-            decoration: BoxDecoration(
-              color: VaultColors.badgeBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              'REKOR BARU!',
-              style: VaultTypography.mono(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                color: VaultColors.accent,
+        // Badge Status / Personal Best
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: VaultColors.badgeBg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: VaultColors.accent.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Text(
+                _newBest ? 'NEW PERSONAL BEST' : rank,
+                style: VaultTypography.mono(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                  color: VaultColors.accent,
+                ),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // Hero Score Display
+        Text(
+          '$_score',
+          style: VaultTypography.mono(
+            fontSize: 46,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -1.5,
+            color: VaultColors.ink,
           ),
-        ],
+        ),
+        Text(
+          'TOTAL VAULT SCORE',
+          style: VaultTypography.mono(
+            fontSize: 9.5,
+            letterSpacing: 1.5,
+            color: VaultColors.ink3,
+          ),
+        ),
         const SizedBox(height: 18),
+
+        // 4-Column Performance Telemetry Dashboard
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: VaultColors.background,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: VaultColors.hairline),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _stat('SKOR', '$_score'),
               _stat('TERTANGKAP', '$_caught'),
+              Container(width: 1, height: 24, color: VaultColors.hairline),
               _stat('TERLEWAT', '$_missed'),
-              _stat('COMBO', '$_maxCombo'),
+              Container(width: 1, height: 24, color: VaultColors.hairline),
+              _stat('AKURASI', '$accuracy%'),
+              Container(width: 1, height: 24, color: VaultColors.hairline),
+              _stat(
+                'MAX COMBO',
+                'x${1 + _maxCombo ~/ GameConfig.comboForMultiplier}',
+              ),
             ],
           ),
         ),
         const SizedBox(height: 20),
+
+        // Bottom Ergonomic Thumb Actions
         Row(
           children: [
             Expanded(
+              flex: 4,
               child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   side: const BorderSide(color: VaultColors.hairline),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: Text(
@@ -1322,23 +1382,29 @@ class _GameScreenState extends State<GameScreen>
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: ElevatedButton(
+              flex: 6,
+              child: ElevatedButton.icon(
                 onPressed: _startGame,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: VaultColors.ink,
-                  foregroundColor: VaultColors.background,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                icon: const Icon(
+                  Icons.replay_rounded,
+                  size: 18,
+                  color: VaultColors.background,
+                ),
+                label: Text(
+                  'MAIN LAGI',
+                  style: VaultTypography.sans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: VaultColors.background,
                   ),
                 ),
-                child: Text(
-                  'Main Lagi',
-                  style: VaultTypography.sans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: VaultColors.background,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: VaultColors.ink,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),

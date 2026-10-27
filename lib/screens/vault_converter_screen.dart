@@ -242,12 +242,12 @@ class _VaultConverterScreenState extends State<VaultConverterScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Valuasi Portofolio Multi-Valuta',
+                        'Multi-Currency Portfolio Valuation',
                         style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w700, color: VaultColors.ink),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Konversi nilai aset riil & digital (Steam Market) secara instan.',
+                        'Real-time valuation for tangible assets & Steam gaming inventory.',
                         style: VaultTypography.sans(fontSize: 11, color: VaultColors.ink2),
                       ),
                     ],

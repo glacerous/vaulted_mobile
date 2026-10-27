@@ -115,10 +115,10 @@ class SaranKesanScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Mata kuliah Pemrograman Aplikasi Mobile memberikan pemahaman yang sangat mendalam dan aplikatif mengenai ekosistem aplikasi modern. Praktik langsung pembuatan aplikasi dengan integrasi AI (Google Gemini LLM), Web3 / Blockchain sederhana, sensor hardware (Accelerometer & Gyroscope), serta Location-Based Services (LBS) sangat menantang dan memacu kreativitas kami dalam menghasilkan arsitektur mobile berkualitas industri.',
+                      'Jujur, awalnya kami mengira membuat aplikasi mobile itu mudah kek cuman 6 hari selesai. Tetapi kenyataannya yaitu sangat ribet dan susah selain itu juga kami banyak sekali mendapatkan kendala dan kesusahan membagi waktu tapi justru dari situ kami paham kenapa sebuah fitur bisa jalan atau tidak. Rasanya terharu dan bangga sih ketika aplikasi kami yaitu "Vaulted" akhirnya bisa selesai dan bisa dipakai di hp sendiri, dan itu jadi pengalaman yang paling berkesan buat kami.',
                       style: VaultTypography.sans(
-                        fontSize: 12.5,
-                        height: 1.55,
+                        fontSize: 13,
+                        height: 1.6,
                         color: VaultColors.body,
                       ),
                     ),
@@ -171,10 +171,10 @@ class SaranKesanScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Semoga studi kasus integrasi arsitektur cloud modern (seperti Supabase / BaaS), manajemen state skala besar (BLoC / Riverpod), serta optimasi performa dan CI/CD deployment mobile dapat terus diperkaya dalam silabus, sehingga mahasiswa semakin siap memenuhi standar tinggi di industri rekayasa perangkat lunak internasional.',
+                      'Untuk pengembangan ke depan, mungkin bisa diberikan contoh proyek sederhana di awal semester sebagai gambaran, sehingga mahasiswa tahu apa yang perlu dipersiapkan sejak awal. Secara keseluruhan, mata kuliah ini membantu kami memahami pembuatan aplikasi mobile.',
                       style: VaultTypography.sans(
-                        fontSize: 12.5,
-                        height: 1.55,
+                        fontSize: 13,
+                        height: 1.6,
                         color: VaultColors.body,
                       ),
                     ),

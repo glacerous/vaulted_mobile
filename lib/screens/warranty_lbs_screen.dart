@@ -427,215 +427,171 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
           ),
 
           // ============================================================
-          // 2. FLOATING TOP HEADER & BRAND FILTER DOCK
+          // 2. FLOATING TOP HEADER (Glance Only, Pristine Apple Glass)
           // ============================================================
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // App Bar Capsule
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.94),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                      border: Border.all(color: VaultColors.hairline),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
-                    child: Row(
-                      children: [
-                        if (Navigator.of(context).canPop())
-                          GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => Navigator.pop(context),
-                            child: const Padding(
-                              padding: EdgeInsets.only(right: 12),
-                              child: Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 18,
-                                color: VaultColors.ink,
-                              ),
-                            ),
-                          ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Official Service Centers',
-                                style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w700, color: VaultColors.ink),
-                              ),
-                              Text(
-                                _locationName,
-                                style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                  ],
+                  border: Border.all(color: VaultColors.hairline),
+                ),
+                child: Row(
+                  children: [
+                    if (Navigator.of(context).canPop())
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => Navigator.pop(context),
+                        child: const Padding(
+                          padding: EdgeInsets.only(right: 12),
+                          child: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 18,
+                            color: VaultColors.ink,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: VaultColors.badgeBg,
-                            borderRadius: BorderRadius.circular(8),
+                      ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Official Service Centers',
+                            style: VaultTypography.sans(fontSize: 13.5, fontWeight: FontWeight.w700, color: VaultColors.ink),
                           ),
-                          child: Text(
-                            '${_filteredList.length} Partners',
-                            style: VaultTypography.mono(fontSize: 9.5, fontWeight: FontWeight.w700, color: VaultColors.accent),
+                          Text(
+                            _locationName,
+                            style: VaultTypography.mono(fontSize: 10, color: VaultColors.ink2),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Brand Pills Dock
-                  SizedBox(
-                    height: 34,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: brands.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 6),
-                      itemBuilder: (ctx, idx) {
-                        final b = brands[idx];
-                        final isSel = _selectedBrand == b;
-                        return GestureDetector(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            setState(() => _selectedBrand = b);
-                            _sortAndFilter();
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            decoration: BoxDecoration(
-                              color: isSel ? VaultColors.primaryButton : Colors.white.withValues(alpha: 0.94),
-                              borderRadius: BorderRadius.circular(17),
-                              border: Border.all(
-                                color: isSel ? VaultColors.primaryButton : VaultColors.hairline,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 6,
-                                ),
-                              ],
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              b,
-                              style: VaultTypography.sans(
-                                fontSize: 11.5,
-                                fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                color: isSel ? Colors.white : VaultColors.ink,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                      decoration: BoxDecoration(
+                        color: VaultColors.badgeBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${_filteredList.length} Partners',
+                        style: VaultTypography.mono(fontSize: 9.5, fontWeight: FontWeight.w700, color: VaultColors.accent),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
 
           // ============================================================
-          // 3. FLOATING MAP CONTROLS (Right side thumb reach)
+          // 3. FLOATING RECENTER GPS BUTTON (Thumb reachable)
           // ============================================================
           Positioned(
             right: 16,
-            bottom: 235,
-            child: Column(
-              children: [
-                // Recenter My Location Button (Crosshair)
-                GestureDetector(
-                  onTap: _recenterToUser,
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.14),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                      border: Border.all(color: VaultColors.hairline),
+            bottom: 270,
+            child: GestureDetector(
+              onTap: _recenterToUser,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.16),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.my_location_rounded,
-                      size: 20,
-                      color: Color(0xFF007AFF),
-                    ),
-                  ),
+                  ],
+                  border: Border.all(color: VaultColors.hairline),
                 ),
-                const SizedBox(height: 8),
-
-                // Zoom In
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    final z = _mapController.camera.zoom;
-                    _mapController.move(_mapController.camera.center, z + 1);
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                      border: Border.all(color: VaultColors.hairline),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.add_rounded, size: 18, color: VaultColors.ink),
-                  ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.my_location_rounded,
+                  size: 20,
+                  color: Color(0xFF007AFF),
                 ),
-
-                // Zoom Out
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    final z = _mapController.camera.zoom;
-                    _mapController.move(_mapController.camera.center, z - 1);
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
-                      border: Border.all(color: VaultColors.hairline),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.remove_rounded, size: 18, color: VaultColors.ink),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
 
           // ============================================================
-          // 4. BOTTOM HORIZONTAL CAROUSEL (Mobile Thumb Zone)
+          // 4. FLOATING BRAND FILTER DOCK (Thumb Reachable)
           // ============================================================
           Positioned(
             left: 0,
             right: 0,
-            bottom: 24,
+            bottom: 224,
             child: SizedBox(
-              height: 195,
+              height: 36,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: brands.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (ctx, idx) {
+                  final b = brands[idx];
+                  final isSel = _selectedBrand == b;
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _selectedBrand = b);
+                      _sortAndFilter();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: isSel ? VaultColors.primaryButton : Colors.white.withValues(alpha: 0.94),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isSel ? VaultColors.primaryButton : VaultColors.hairline,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.10),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        b,
+                        style: VaultTypography.sans(
+                          fontSize: 12,
+                          fontWeight: isSel ? FontWeight.w700 : FontWeight.w600,
+                          color: isSel ? Colors.white : VaultColors.ink,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // ============================================================
+          // 5. BOTTOM HORIZONTAL CAROUSEL (Mobile Thumb Zone)
+          // ============================================================
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 12,
+            child: SizedBox(
+              height: 204,
               child: _filteredList.isEmpty
                   ? Center(
                       child: Container(
@@ -647,7 +603,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                         ),
                         child: Text(
                           'No official partners found for this brand.',
-                          style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink2),
+                          style: VaultTypography.sans(fontSize: 12.5, color: VaultColors.ink2),
                         ),
                       ),
                     )
@@ -662,7 +618,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                         final item = _filteredList[idx];
                         final dist = _distanceTo(item);
                         final brand = item['brand'] as String? ?? '';
-                            final isSelected = idx == _selectedCenterIndex;
+                        final isSelected = idx == _selectedCenterIndex;
 
                         return Container(
                           margin: const EdgeInsets.symmetric(horizontal: 6),
@@ -676,8 +632,8 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.10),
-                                blurRadius: 18,
+                                color: Colors.black.withValues(alpha: 0.12),
+                                blurRadius: 20,
                                 offset: const Offset(0, 6),
                               ),
                             ],
@@ -690,10 +646,10 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: isSelected ? VaultColors.badgeBg : VaultColors.background,
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.circular(7),
                                       border: Border.all(
                                         color: isSelected
                                             ? VaultColors.accent.withValues(alpha: 0.45)
@@ -703,27 +659,27 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                     child: Text(
                                       brand.toUpperCase(),
                                       style: VaultTypography.mono(
-                                        fontSize: 9.5,
+                                        fontSize: 10,
                                         fontWeight: FontWeight.w700,
                                         color: isSelected ? VaultColors.accent : VaultColors.ink,
                                       ),
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: VaultColors.posBg,
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.circular(7),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.near_me_rounded, size: 10, color: VaultColors.pos),
+                                        const Icon(Icons.near_me_rounded, size: 11, color: VaultColors.pos),
                                         const SizedBox(width: 4),
                                         Text(
                                           '${dist.toStringAsFixed(1)} km away',
                                           style: VaultTypography.mono(
-                                            fontSize: 9.5,
+                                            fontSize: 10,
                                             fontWeight: FontWeight.w700,
                                             color: VaultColors.pos,
                                           ),
@@ -739,7 +695,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                               Text(
                                 item['name'] as String? ?? 'Service Partner',
                                 style: VaultTypography.sans(
-                                  fontSize: 14,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                   color: VaultColors.ink,
                                 ),
@@ -752,7 +708,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                               Text(
                                 item['address'] as String? ?? '',
                                 style: VaultTypography.sans(
-                                  fontSize: 11,
+                                  fontSize: 11.5,
                                   color: VaultColors.body,
                                 ),
                                 maxLines: 1,
@@ -764,7 +720,7 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                               Text(
                                 item['status'] as String? ?? '',
                                 style: VaultTypography.sans(
-                                  fontSize: 10.5,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: VaultColors.accent,
                                 ),
@@ -794,15 +750,15 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                           ),
                                         );
                                       },
-                                      icon: const Icon(Icons.copy_rounded, size: 13, color: VaultColors.ink),
+                                      icon: const Icon(Icons.copy_rounded, size: 14, color: VaultColors.ink),
                                       label: Text(
                                         'Copy Address',
-                                        style: VaultTypography.sans(fontSize: 11.5, fontWeight: FontWeight.w600, color: VaultColors.ink),
+                                        style: VaultTypography.sans(fontSize: 12, fontWeight: FontWeight.w600, color: VaultColors.ink),
                                       ),
                                       style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
                                         side: const BorderSide(color: VaultColors.hairline),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                       ),
                                     ),
                                   ),
@@ -810,15 +766,15 @@ class _WarrantyLbsScreenState extends State<WarrantyLbsScreen> {
                                   Expanded(
                                     child: ElevatedButton.icon(
                                       onPressed: () => _openDirections(item),
-                                      icon: const Icon(Icons.directions_rounded, size: 14, color: Colors.white),
+                                      icon: const Icon(Icons.directions_rounded, size: 15, color: Colors.white),
                                       label: Text(
                                         'Directions',
-                                        style: VaultTypography.sans(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.white),
+                                        style: VaultTypography.sans(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
                                       ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: VaultColors.primaryButton,
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                       ),
                                     ),
                                   ),

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/constants/colors.dart';
@@ -29,6 +30,24 @@ void main() async {
   runApp(VaultedApp(initialLoggedIn: loggedIn));
 }
 
+/// Enables natural touch gestures, mouse drag scrolling, and elastic physics on all platforms
+class VaultAppScrollBehavior extends MaterialScrollBehavior {
+  const VaultAppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+  }
+}
+
 class VaultedApp extends StatelessWidget {
   final bool initialLoggedIn;
 
@@ -39,6 +58,7 @@ class VaultedApp extends StatelessWidget {
     return MaterialApp(
       title: 'VAULTED',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const VaultAppScrollBehavior(),
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: VaultColors.background,
@@ -48,6 +68,20 @@ class VaultedApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
+      builder: (context, child) {
+        // On widescreen desktop/web, frame the app in a realistic mobile viewport (440px max width)
+        // while on actual mobile devices, it spans full screen seamlessly.
+        return Container(
+          color: const Color(0xFF141413),
+          alignment: Alignment.center,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: ClipRect(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ),
+        );
+      },
       home: initialLoggedIn ? const MainNavigationScreen() : const LoginScreen(),
     );
   }

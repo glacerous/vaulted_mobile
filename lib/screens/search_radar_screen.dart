@@ -344,48 +344,14 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Brand Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'VAULTED',
-                          style: VaultTypography.mono(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.5,
-                            color: VaultColors.ink,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
-                          decoration: BoxDecoration(
-                            color: VaultColors.posBg,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: VaultColors.pos,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'LIVE RADAR',
-                                style: VaultTypography.mono(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: VaultColors.pos,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'VAULTED',
+                      style: VaultTypography.mono(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                        color: VaultColors.ink,
+                      ),
                     ),
                     const SizedBox(height: 20),
 

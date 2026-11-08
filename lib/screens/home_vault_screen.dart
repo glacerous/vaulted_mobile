@@ -30,13 +30,17 @@ class HomeVaultScreen extends StatefulWidget {
   State<HomeVaultScreen> createState() => _HomeVaultScreenState();
 }
 
-class _HomeVaultScreenState extends State<HomeVaultScreen>
-    with SingleTickerProviderStateMixin {
+class _HomeVaultScreenState extends State<HomeVaultScreen> {
+  // Ganti background header di sini
+  // Contoh opsi:
+  // 1. 'assets/images/alpine_dawn_frames/f_0.png'  (Alpine Dawn frame 0..35)
+  // 2. 'assets/images/dither_landscape.png'        (Vibrant mountain landscape)
+  static const String _headerBackgroundAsset =
+      'assets/images/alpine_dawn_frames/f_0.png';
+
   final TextEditingController _promptController = TextEditingController();
   final FocusNode _promptFocus = FocusNode();
 
-  late AnimationController _animController;
-  static const int _frameCount = 36;
 
   double _inventoryTotal = 0.0;
   double _collectiblesTotal = 0.0;
@@ -80,10 +84,6 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   void initState() {
     super.initState();
     HomeVaultScreen.isBalanceVisible.addListener(_onPrivacyChanged);
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2800),
-    )..repeat();
     _loadVaultData();
   }
 
@@ -92,20 +92,8 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    for (int i = 0; i < _frameCount; i++) {
-      precacheImage(
-        AssetImage('assets/images/alpine_dawn_frames/f_$i.png'),
-        context,
-      );
-    }
-  }
-
-  @override
   void dispose() {
     HomeVaultScreen.isBalanceVisible.removeListener(_onPrivacyChanged);
-    _animController.dispose();
     _promptController.dispose();
     _promptFocus.dispose();
     super.dispose();
@@ -324,61 +312,52 @@ class _HomeVaultScreenState extends State<HomeVaultScreen>
               width: double.infinity,
               child: Stack(
                 children: [
-                  // Animated Scenic Dithered Background (Full vivid scenery, NO fading gradient)
+                  // Static Alpine Dawn Scenic Header (Frame 0 from animated sequence)
                   Positioned.fill(
-                    child: AnimatedBuilder(
-                      animation: _animController,
-                      builder: (context, _) {
-                        final frameIndex =
-                            (_animController.value * _frameCount).floor() %
-                            _frameCount;
-                        return Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.asset(
-                              'assets/images/alpine_dawn_frames/f_$frameIndex.png',
-                              fit: BoxFit.cover,
-                              alignment: Alignment.center,
-                              gaplessPlayback: true,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          _headerBackgroundAsset,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                        ),
+                        // Contrast Scrim ensuring crystal-clear text readability over mountains
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withValues(alpha: 0.40),
+                                Colors.black.withValues(alpha: 0.16),
+                                Colors.black.withValues(alpha: 0.48),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
-                            // Contrast Scrim ensuring crystal-clear text readability over mountains
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.black.withValues(alpha: 0.40),
-                                    Colors.black.withValues(alpha: 0.16),
-                                    Colors.black.withValues(alpha: 0.48),
-                                  ],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
+                          ),
+                        ),
+                        // Glowing celestial moon in upper right as in reference photo
+                        Positioned(
+                          top: 48,
+                          right: 28,
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: 0.22),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.white.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                  blurRadius: 18,
                                 ),
-                              ),
+                              ],
                             ),
-                            // Glowing celestial moon in upper right as in reference photo
-                            Positioned(
-                              top: 48,
-                              right: 28,
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white.withValues(alpha: 0.22),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.35,
-                                      ),
-                                      blurRadius: 18,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 

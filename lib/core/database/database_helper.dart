@@ -88,15 +88,27 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: (db, oldVersion, newVersion) async {
+        // v1→v2: items columns
         if (oldVersion < 2) {
           try {
             await db.execute('ALTER TABLE items ADD COLUMN is_marketable INTEGER NOT NULL DEFAULT 0');
           } catch (_) {}
           try {
             await db.execute('ALTER TABLE items ADD COLUMN market_hash_name TEXT');
+          } catch (_) {}
+        }
+        // v2→v4: profile columns in users table and user_id in items
+        if (oldVersion < 4) {
+          for (final col in ['bio TEXT', 'photo_path TEXT', 'nim TEXT', 'prodi TEXT']) {
+            try {
+              await db.execute('ALTER TABLE users ADD COLUMN $col');
+            } catch (_) {}
+          }
+          try {
+            await db.execute('ALTER TABLE items ADD COLUMN user_id TEXT NOT NULL DEFAULT ''azzaky''');
           } catch (_) {}
         }
       },
@@ -110,13 +122,18 @@ class DatabaseHelper {
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         full_name TEXT NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        bio TEXT,
+        photo_path TEXT,
+        nim TEXT,
+        prodi TEXT
       )
     ''');
 
     await db.execute('''
       CREATE TABLE items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL DEFAULT 'azzaky',
         name TEXT NOT NULL,
         category TEXT NOT NULL,
         purchase_price REAL NOT NULL,
@@ -305,10 +322,16 @@ class DatabaseHelper {
         }).toList());
       }
 
-      // Ensure user_id column exists
+      // Ensure user_id column exists on items table before any query or insert
       try {
-        await db.execute("ALTER TABLE items ADD COLUMN user_id TEXT NOT NULL DEFAULT 'azzaky'");
-      } catch (_) {}
+        final itemsInfo = await db.rawQuery('PRAGMA table_info(items)');
+        final itemCols = itemsInfo.map((r) => r['name'].toString().toLowerCase()).toSet();
+        if (!itemCols.contains('user_id')) {
+          await db.execute("ALTER TABLE items ADD COLUMN user_id TEXT NOT NULL DEFAULT 'azzaky'");
+        }
+      } catch (e) {
+        debugPrint('[DatabaseHelper] items table_info check notice: $e');
+      }
 
       // Seed initial Steam items for azzaky demo if empty
       final allItemsCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM items')) ?? 0;
@@ -568,8 +591,8 @@ class DatabaseHelper {
     }
   }
 
-  /// Update editable profile fields: full_name, bio, photo_path, nim, prodi.
-  Future<bool> updateUserProfile(
+  /// Update editable profile fields: returns null on success, or error message on failure
+  Future<String?> updateUserProfileDetailed(
     String username,
     Map<String, dynamic> updates,
   ) async {
@@ -579,40 +602,75 @@ class DatabaseHelper {
       for (final e in updates.entries)
         if (allowed.contains(e.key)) e.key: e.value,
     };
-    if (clean.isEmpty) return false;
+    if (clean.isEmpty) return 'No valid fields to update';
 
     if (kIsWeb) {
       final user = _webUsers[key];
-      if (user == null) return false;
-      _webUsers[key] = {...user, ...clean};
-      return true;
+      if (user == null) {
+        _webUsers[key] = {
+          'username': key,
+          'full_name': clean['full_name'] ?? key,
+          ...clean,
+        };
+      } else {
+        _webUsers[key] = {...user, ...clean};
+      }
+      return null;
     }
 
     try {
       final db = await database;
       if (db == null) {
         final user = _webUsers[key];
-        if (user == null) return false;
+        if (user == null) return 'Database unavailable';
         _webUsers[key] = {...user, ...clean};
-        return true;
+        return null;
       }
 
-      for (final col in ['bio', 'photo_path', 'nim', 'prodi']) {
-        try {
-          await db.execute('ALTER TABLE users ADD COLUMN $col TEXT');
-        } catch (_) {}
+      // Check current user columns in DB
+      try {
+        final info = await db.rawQuery('PRAGMA table_info(users)');
+        final colNames = info.map((r) => r['name'].toString().toLowerCase()).toSet();
+        for (final col in ['bio', 'photo_path', 'nim', 'prodi']) {
+          if (!colNames.contains(col)) {
+            await db.execute('ALTER TABLE users ADD COLUMN $col TEXT');
+          }
+        }
+      } catch (alterErr) {
+        debugPrint('[DatabaseHelper] Migration notice: $alterErr');
       }
 
-      final count = await db.update(
+      int count = await db.update(
         'users',
         clean,
         where: 'LOWER(username) = ?',
         whereArgs: [key],
       );
-      return count > 0;
-    } catch (e) {
-      debugPrint('[DatabaseHelper] updateUserProfile error: $e');
-      return false;
+      debugPrint('[DatabaseHelper] updateUserProfileDetailed: updated $count row(s) for $key');
+
+      if (count == 0) {
+        debugPrint('[DatabaseHelper] User $key not in users table. Inserting new record...');
+        final defaultHash = sha256.convert(utf8.encode('admin123')).toString();
+        await db.insert('users', {
+          'username': key,
+          'password_hash': defaultHash,
+          'full_name': clean['full_name'] ?? key,
+          'created_at': DateTime.now().toIso8601String(),
+          ...clean,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      return null; // success
+    } catch (e, st) {
+      debugPrint('[DatabaseHelper] updateUserProfileDetailed error: $e\n$st');
+      return e.toString();
     }
+  }
+
+  Future<bool> updateUserProfile(
+    String username,
+    Map<String, dynamic> updates,
+  ) async {
+    final err = await updateUserProfileDetailed(username, updates);
+    return err == null;
   }
 }

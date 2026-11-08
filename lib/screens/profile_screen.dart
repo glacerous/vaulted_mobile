@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,9 +11,9 @@ import '../core/database/database_helper.dart';
 import '../core/security/auth_service.dart';
 import 'login_screen.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ProfileScreen — VAULTED Account Profile (Mobile Native UI/UX)
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ProfileScreen â€” VAULTED Account Profile (Mobile Native UI/UX)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -266,7 +266,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       const SizedBox(height: 12),
 
-                      // ── 1. Hero Avatar ────────────────────────────────────
+                      // â”€â”€ 1. Hero Avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                       GestureDetector(
                         onTap: _openEditProfile,
                         child: Stack(
@@ -330,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // ── 2. Name & Handle ──────────────────────────────────
+                      // â”€â”€ 2. Name & Handle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                       Text(
                         fullName,
                         style: VaultTypography.sans(
@@ -369,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                       const SizedBox(height: 16),
 
-                      // ── 3. Edit Profile Button ────────────────────────────
+                      // â”€â”€ 3. Edit Profile Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                       SizedBox(
                         width: double.infinity,
                         height: 42,
@@ -400,7 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // ── 4. Account Information ────────────────────────────
+                      // â”€â”€ 4. Account Information â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -469,7 +469,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // ── 5. Sign Out Button ────────────────────────────────
+                      // â”€â”€ 5. Sign Out Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                       SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -507,9 +507,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// _InfoTile — Native Mobile Info Row
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// _InfoTile â€” Native Mobile Info Row
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -573,9 +573,9 @@ class _InfoTile extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// _EditProfileScreen — Profile Editor (Photo, Name, Bio)
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// _EditProfileScreen â€” Profile Editor (Photo, Name, Bio)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _EditProfileScreen extends StatefulWidget {
   final Map<String, dynamic> profile;
   const _EditProfileScreen({required this.profile});
@@ -709,11 +709,11 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
       if (_photoPath != null) 'photo_path': _photoPath,
     };
 
-    final ok = await AuthService.instance.updateProfile(updates);
+    final errorMsg = await AuthService.instance.updateProfile(updates);
     if (!mounted) return;
     setState(() => _saving = false);
 
-    if (ok) {
+    if (errorMsg == null) {
       HapticFeedback.lightImpact();
       if (!mounted) return;
       _toast(
@@ -725,8 +725,9 @@ class _EditProfileScreenState extends State<_EditProfileScreen> {
       if (mounted) Navigator.pop(context, true);
     } else {
       if (!mounted) return;
+      debugPrint('[EditProfile] Error: $errorMsg');
       _toast(
-        'Failed to save changes. Please try again.',
+        'Error: $errorMsg',
         icon: Icons.error_outline_rounded,
         iconColor: VaultColors.neg,
       );

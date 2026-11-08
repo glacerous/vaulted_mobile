@@ -255,20 +255,31 @@ class AuthService {
   }
 
   /// Update profile data in DB and sync in-memory name / secure storage.
-  Future<bool> updateProfile(Map<String, dynamic> updates) async {
-    if (_activeSessionUser == null) return false;
-    final ok = await DatabaseHelper.instance.updateUserProfile(
-      _activeSessionUser!,
-      updates,
-    );
-    if (ok && updates.containsKey('full_name')) {
-      _activeFullName = updates['full_name'] as String?;
-      if (!kIsWeb) {
-        try {
-          await _storage.write(key: _userNameKey, value: _activeFullName);
-        } catch (_) {}
+  Future<String?> updateProfile(Map<String, dynamic> updates) async {
+    try {
+      final username = await getCurrentUser();
+      debugPrint('[AuthService] updateProfile for: $username');
+      final resultError = await DatabaseHelper.instance.updateUserProfileDetailed(
+        username,
+        updates,
+      );
+      if (resultError != null) {
+        return resultError;
       }
+      if (updates.containsKey('full_name')) {
+        _activeFullName = updates['full_name'] as String?;
+        if (!kIsWeb) {
+          try {
+            await _storage.write(key: _userNameKey, value: _activeFullName);
+          } catch (e) {
+            debugPrint('[AuthService] Storage write error: $e');
+          }
+        }
+      }
+      return null; // success
+    } catch (e) {
+      debugPrint('[AuthService] updateProfile exception: $e');
+      return e.toString();
     }
-    return ok;
   }
 }

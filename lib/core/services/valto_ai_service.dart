@@ -156,7 +156,7 @@ Return ONLY valid JSON with no markdown formatting:
 }
 ''';
 
-      for (final model in ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-flash-lite-latest', 'gemini-flash-latest']) {
+      for (final model in ['gemini-3-flash-preview', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash']) {
         try {
           final uri = Uri.parse(
             'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey',

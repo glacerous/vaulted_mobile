@@ -9,6 +9,8 @@ class SteamMarketService {
   /// Fetches live market price from Valve Steam Community Market
   Future<double?> fetchLiveMarketPrice(String marketHashName) async {
     try {
+
+      // contoh endpoint full: https://steamcommunity.com/market/priceoverview/?appid=753&currency=1&market_hash_name=105600-The%20Guide      
       final uri = Uri.parse(
         'https://steamcommunity.com/market/priceoverview/?appid=753&currency=1&market_hash_name=${Uri.encodeComponent(marketHashName)}',
       );
@@ -20,7 +22,7 @@ class SteamMarketService {
           return double.tryParse(raw);
         }
       }
-    } catch (e) {
+    } catch (e) { 
       debugPrint('Live Steam Market price check notice: $e');
     }
     return null;

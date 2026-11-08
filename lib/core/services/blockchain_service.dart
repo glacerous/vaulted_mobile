@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants/colors.dart';
 import '../constants/typography.dart';
 import '../constants/vault_config.dart';
@@ -9,7 +11,7 @@ class BlockchainService {
   BlockchainService._();
   static final BlockchainService instance = BlockchainService._();
 
-  static const String contractAddress = '0x8A12F4b78912Cd7b3E51e89Ad51d02c914b1E190';
+  static const String contractAddress = '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582';
   static const String networkName = 'Polygon Amoy Testnet';
   static const int chainId = 80002;
 
@@ -117,6 +119,8 @@ class BlockchainService {
                           hash.length > 20
                               ? '${hash.substring(0, 10)}...${hash.substring(hash.length - 8)}'
                               : hash,
+                          context: context,
+                          copyText: hash,
                         ),
                       ],
                     ),
@@ -168,11 +172,16 @@ class BlockchainService {
                       ),
                       child: Column(
                         children: [
-                          _buildRow('REGISTRY CONTRACT', '${contractAddress.substring(0, 10)}...${contractAddress.substring(contractAddress.length - 6)}'),
+                          _buildRow(
+                            'REGISTRY CONTRACT',
+                            '${contractAddress.substring(0, 10)}...${contractAddress.substring(contractAddress.length - 6)}',
+                            context: context,
+                            copyText: contractAddress,
+                          ),
                           const Divider(color: VaultColors.hairline, height: 14),
                           _buildRow('CHAIN ID / NETWORK', '$chainId ($networkName)'),
                           const Divider(color: VaultColors.hairline, height: 14),
-                          _buildRow('RPC ENDPOINT', rpcUrl),
+                          _buildRow('RPC ENDPOINT', rpcUrl, context: context, copyText: rpcUrl),
                         ],
                       ),
                     ),
@@ -184,29 +193,37 @@ class BlockchainService {
                     width: double.infinity,
                     height: 46,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: VaultColors.card,
-                            content: Row(
-                              children: [
-                                const Icon(Icons.check_circle_rounded, color: VaultColors.pos, size: 18),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    'Cryptographic proof verified! Signature matches Polygon ERC-721 ledger.',
-                                    style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            behavior: SnackBarBehavior.floating,
-                          ),
+                      onPressed: () async {
+                        final explorerUri = Uri.parse(
+                          'https://amoy.polygonscan.com/address/$contractAddress?q=${Uri.encodeComponent(hash)}',
                         );
+                        try {
+                          await launchUrl(explorerUri, mode: LaunchMode.externalApplication);
+                        } catch (_) {}
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: VaultColors.card,
+                              content: Row(
+                                children: [
+                                  const Icon(Icons.check_circle_rounded, color: VaultColors.pos, size: 18),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      'Opening PolygonScan Amoy Explorer... Signature verified on ledger.',
+                                      style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
                       },
-                      icon: const Icon(Icons.fingerprint_rounded, size: 18),
-                      label: Text('Verify on Blockchain', style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.background)),
+                      icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                      label: Text('Verify on PolygonScan Explorer', style: VaultTypography.sans(fontSize: 13, fontWeight: FontWeight.w600, color: VaultColors.background)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: VaultColors.accent,
                         foregroundColor: VaultColors.background,
@@ -244,21 +261,62 @@ class BlockchainService {
     );
   }
 
-  Widget _buildRow(String label, String value, {Color? valueColor}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: VaultTypography.mono(fontSize: 10, letterSpacing: 0.8, color: VaultColors.ink2)),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            value,
-            style: VaultTypography.mono(fontSize: 11, fontWeight: FontWeight.w600, color: valueColor ?? VaultColors.ink),
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.right,
-          ),
+  Widget _buildRow(
+    String label,
+    String value, {
+    BuildContext? context,
+    Color? valueColor,
+    String? copyText,
+  }) {
+    final bool canCopy = copyText != null && copyText.isNotEmpty;
+    return InkWell(
+      onTap: canCopy && context != null
+          ? () {
+              Clipboard.setData(ClipboardData(text: copyText));
+              HapticFeedback.lightImpact();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: VaultColors.card,
+                  content: Text(
+                    'Copied $label to clipboard',
+                    style: VaultTypography.sans(fontSize: 12, color: VaultColors.ink),
+                  ),
+                  duration: const Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          : null,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: VaultTypography.mono(fontSize: 10, letterSpacing: 0.8, color: VaultColors.ink2)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      value,
+                      style: VaultTypography.mono(fontSize: 11, fontWeight: FontWeight.w600, color: valueColor ?? VaultColors.ink),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                  if (canCopy) ...[
+                    const SizedBox(width: 4),
+                    const Icon(Icons.copy_rounded, size: 12, color: VaultColors.accent),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -18,6 +18,24 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
+  // ===========================================================================
+  // PENGATURAN GAMBAR TENGAH (Ubah di sini jika diminta dosen)
+  // ===========================================================================
+  // 1. Pilih ekspresi maskot Valto:
+  //    ValtoMood.vigilant  (kucing duduk siaga - default)
+  //    ValtoMood.sleeping  (kucing tidur)
+  //    ValtoMood.playful   (kucing melambaikan tangan)
+  //    ValtoMood.happy     (kucing senang)
+  //    ValtoMood.detective (kucing detektif)
+  //    ValtoMood.peeking   (kucing mengintip)
+  static const ValtoMood _heroMascotMood = ValtoMood.vigilant;
+
+  // 2. ATAU ganti gambar custom sendiri:
+  //    Isi path file, contoh: ''assets/images/azzaky.png''
+  //    Kosongkan string '' jika ingin kembali memakai maskot Valto di atas.
+  static const String _customHeroImagePath = '';
+  // ===========================================================================
+
   final TextEditingController _signInUsernameController = TextEditingController();
   final TextEditingController _signInPasswordController = TextEditingController();
 
@@ -820,13 +838,20 @@ class _LoginScreenState extends State<LoginScreen>
                                   ),
                                 ),
 
-                                // VALTO GUARDIAN (16-bit retro pixel cat nestled in the dither valley)
+                                // VALTO GUARDIAN / HERO IMAGE (Nestled in the dither valley)
                                 Transform.translate(
                                   offset: Offset(0, _levitateAnim.value),
-                                  child: const ValtoMascot(
-                                    size: 185,
-                                    mood: ValtoMood.vigilant,
-                                  ),
+                                  child: _customHeroImagePath.isNotEmpty
+                                      ? Image.asset(
+                                          _customHeroImagePath,
+                                          width: 185,
+                                          height: 185,
+                                          fit: BoxFit.contain,
+                                        )
+                                      : const ValtoMascot(
+                                          size: 185,
+                                          mood: _heroMascotMood,
+                                        ),
                                 ),
                               ],
                             ),

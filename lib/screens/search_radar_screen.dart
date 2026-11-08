@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
+
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
@@ -78,12 +79,16 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
             final shortDesc = cleanDesc.length > 180
                 ? '${cleanDesc.substring(0, 180)}...'
                 : cleanDesc;
-            final imgMatch = RegExp(r'https?://[^\s"<>]+?\.(?:jpg|jpeg|png|webp)')
-                .firstMatch(contents);
-            final imageUrl = imgMatch?.group(0) ??
+            final imgMatch = RegExp(
+              r'https?://[^\s"<>]+?\.(?:jpg|jpeg|png|webp)',
+            ).firstMatch(contents);
+            final imageUrl =
+                imgMatch?.group(0) ??
                 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=300';
             final nowUtc = DateTime.now().toUtc();
-            final scheduledStart = nowUtc.add(Duration(hours: (i + 1) * 6, minutes: i * 20));
+            final scheduledStart = nowUtc.add(
+              Duration(hours: (i + 1) * 6, minutes: i * 20),
+            );
 
             liveList.add({
               'id': 'live_steam_${item['gid'] ?? i}',
@@ -94,9 +99,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
               'start': scheduledStart,
               'venue': 'Steam Community Market (Global)',
               'floor_price': 'Live Steam Feed',
-              'description': shortDesc.isNotEmpty
-                  ? shortDesc
-                  : 'Official Steam Counter-Strike 2 community announcement and market event.',
+              'description': shortDesc.isNotEmpty ? shortDesc : 'Official Steam Counter-Strike 2 community announcement and market event.',
               'image': imageUrl,
               'is_live': true,
               'url': item['url']?.toString(),
@@ -186,7 +189,8 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         'venue': 'Online · Steam Community Market',
         'floor_price': '\$4,250.00',
         'description': 'Official Valve Major Championship tournament items, souvenir packages, and team autograph capsules trade live on the Community Market.',
-        'image': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300',
+        'image':
+            'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300',
       },
       {
         'id': 'evt_spring',
@@ -198,7 +202,8 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         'venue': 'Steam Community Market · Auction Room',
         'floor_price': '\$12,400.00',
         'description': 'Curated high-tier Steam Community Market showcase featuring Case Hardened Blue Gems, Doppler Gems, and rare contraband skins. Prices benchmarked directly against Steam Community Market history.',
-        'image': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300',
+        'image':
+            'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300',
       },
     ];
   }
@@ -292,7 +297,8 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
         context,
         icon: Icons.notifications_active_rounded,
         iconColor: VaultColors.accent,
-        message: 'Alert set · you will be notified at ${_formatTime(start, _selectedZone)}',
+        message:
+            'Alert set · you will be notified at ${_formatTime(start, _selectedZone)}',
       );
     }
   }
@@ -399,11 +405,15 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                                   color: isSel ? VaultColors.ink : Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: isSel ? VaultColors.ink : VaultColors.hairline,
+                                    color: isSel
+                                        ? VaultColors.ink
+                                        : VaultColors.hairline,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.03),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.03,
+                                      ),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -413,8 +423,12 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                                   cat,
                                   style: VaultTypography.sans(
                                     fontSize: 12.5,
-                                    fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSel ? Colors.white : VaultColors.ink2,
+                                    fontWeight: isSel
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: isSel
+                                        ? Colors.white
+                                        : VaultColors.ink2,
                                   ),
                                 ),
                               ),
@@ -439,7 +453,10 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: VaultColors.cardHover,
                             borderRadius: BorderRadius.circular(6),
@@ -476,7 +493,9 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                         ),
                       )
                     else
-                      ...filteredEvents.map((evt) => _buildUnifiedEventCard(evt)),
+                      ...filteredEvents.map(
+                        (evt) => _buildUnifiedEventCard(evt),
+                      ),
                   ],
                 ),
               ),
@@ -565,9 +584,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                 style: VaultTypography.mono(
                   fontSize: 8.5,
                   fontWeight: FontWeight.w500,
-                  color: isSelected
-                      ? VaultColors.accent
-                      : VaultColors.ink2,
+                  color: isSelected ? VaultColors.accent : VaultColors.ink2,
                 ),
               ),
             ],
@@ -666,7 +683,10 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                   child: SizedBox(
                     width: 58,
                     height: 58,
-                    child: _buildVaultArtwork(event['image'] as String, size: 58),
+                    child: _buildVaultArtwork(
+                      event['image'] as String,
+                      size: 58,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -751,7 +771,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 7,
-                    ),
+                    ), //set alert box color
                     decoration: BoxDecoration(
                       color: alertOn ? VaultColors.ink : VaultColors.cardHover,
                       borderRadius: BorderRadius.circular(10),
@@ -795,6 +815,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      //detail card bacground
       backgroundColor: VaultColors.card,
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.92,
@@ -824,7 +845,7 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                       width: 36,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: VaultColors.hairline,
+                        color: VaultColors.hairline, 
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -1011,12 +1032,14 @@ class _SearchRadarScreenState extends State<SearchRadarScreen> {
                         alertOn
                             ? 'Remove Alert'
                             : (event['is_test'] == true
-                                ? 'Send Test Alert to Phone'
-                                : 'Set Alert for this Drop'),
+                                  ? 'Send Test Alert to Phone'
+                                  : 'Set Alert for this Drop'),
                         style: VaultTypography.sans(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w600,
-                          color: alertOn ? VaultColors.ink : VaultColors.background,
+                          color: alertOn
+                              ? VaultColors.ink
+                              : VaultColors.background,
                         ),
                       ),
                     ),
